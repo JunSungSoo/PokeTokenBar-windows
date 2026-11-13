@@ -1,0 +1,50 @@
+name: Publish signed Windows x64 release
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  publish:
+    runs-on: windows-2025
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '22'
+          architecture: x64
+      - name: Verify release tag
+        shell: pwsh
+        run: |
+          $version = (Get-Content package.json -Raw | ConvertFrom-Json).version
+          if ($env:GITHUB_REF -ne "refs/tags/v$version" -or $version -notmatch '^\d+\.\d+\.\d+$') {
+            throw 'Run this workflow from the vX.Y.Z tag matching package.json.'
+          }
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm typecheck
+      - run: pnpm test
+      - name: Build signed NSIS installer
+        run: pnpm package:win
+        env:
+          CSC_LINK: ${{ secrets.WINDOWS_CSC_LINK }}
+          CSC_KEY_PASSWORD: ${{ secrets.WINDOWS_CSC_KEY_PASSWORD }}
+          POKE_WINDOWS_PUBLISHER: ${{ vars.WINDOWS_PUBLISHER_NAME }}
+      - name: Publish installer and update manifest
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $installer = @(Get-ChildItem release/*-Setup.exe)
+          if ($installer.Count -ne 1) { throw 'Expected one Windows setup executable.' }
+          $signature = Get-AuthenticodeSignature $installer[0].FullName
+          if ($signature.Status -ne 'Valid') { throw "Installer signature is not valid: $($signature.Status)" }
+          $blockmap = $installer[0].FullName + '.blockmap'
+          $manifest = (Resolve-Path release/latest.yml).Path
+          gh release create $env:GITHUB_REF_NAME --verify-tag --generate-notes --title "PokeTokenBar Windows $env:GITHUB_REF_NAME" $installer[0].FullName $blockmap $manifest
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
