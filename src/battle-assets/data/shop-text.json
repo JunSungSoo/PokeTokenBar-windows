@@ -1,0 +1,160 @@
+{
+  "fullRecovery": {
+    "names": {
+      "ko": "완전 회복",
+      "en": "Full recovery",
+      "ja": "完全回復",
+      "es": "Recuperación completa",
+      "fr": "Récupération complète",
+      "pt": "Recuperação completa",
+      "de": "Vollständige Heilung",
+      "ru": "Полное восстановление"
+    },
+    "descriptions": {
+      "ko": "선발 전원의 HP·모든 기술 PP·상태이상을 완전히 회복하며 기절한 포켓몬도 부활합니다.",
+      "en": "Fully restore the whole team's HP, all PP and status, reviving fainted members.",
+      "ja": "全員のHP・全技PP・状態異常を全回復。ひんしも復活。",
+      "es": "Restaura PS, todos los PP y estados de todo el equipo, reviviendo debilitados.",
+      "fr": "Restaure PV, tous les PP et statut de toute l’équipe, et ranime les K.O.",
+      "pt": "Restaura PS, todos os PP e estado de toda a equipe, revivendo desmaiados.",
+      "de": "Heilt KP, alle AP und Status des gesamten Teams und belebt K.O.-Mitglieder wieder.",
+      "ru": "Полностью восстанавливает ОЗ, все ОД и статус всей команды и оживляет потерявших сознание."
+    }
+  },
+  "ppRecovery": {
+    "names": {
+      "ko": "PP 전체 회복",
+      "en": "Restore all PP",
+      "ja": "全PP回復",
+      "es": "Recuperar todos los PP",
+      "fr": "Tous les PP",
+      "pt": "Restaurar todos os PP",
+      "de": "Alle AP auffüllen",
+      "ru": "Все ОД"
+    },
+    "descriptions": {
+      "ko": "선택한 한 마리의 모든 기술 PP를 회복합니다. 기절한 포켓몬에게도 사용 가능하며 부활시키지는 않습니다.",
+      "en": "Restore all move PP, including for a fainted Pokémon. Does not revive.",
+      "ja": "ひんしを含む1匹の全技PPを回復。復活はしません。",
+      "es": "Restaura todos los PP, incluso debilitado. No revive.",
+      "fr": "Restaure tous les PP, même K.O., sans ranimer.",
+      "pt": "Restaura todos os PP, mesmo desmaiado. Não revive.",
+      "de": "Füllt alle AP auf, auch bei K.O. Keine Wiederbelebung.",
+      "ru": "Восстанавливает все ОД, в том числе в обмороке. Не оживляет."
+    }
+  },
+  "ppMoveRecovery": {
+    "names": {
+      "ko": "PP 선택 기술 회복",
+      "en": "Restore selected move PP",
+      "ja": "選んだ技のPP回復",
+      "es": "Recuperar PP de un movimiento",
+      "fr": "PP d’une capacité",
+      "pt": "PP de um golpe",
+      "de": "AP einer Attacke",
+      "ru": "ОД выбранного приёма"
+    },
+    "descriptions": {
+      "ko": "선택한 한 마리의 기술 하나를 골라 PP를 최대치로 회복합니다. 기절 대상도 사용 가능하며 부활시키지는 않습니다.",
+      "en": "Fully restore PP of one selected move. Usable on fainted Pokémon without reviving.",
+      "ja": "選んだ1匹の技1つのPPを全回復。ひんしも対象、復活なし。",
+      "es": "Restaura todos los PP de un movimiento elegido, incluso debilitado, sin revivir.",
+      "fr": "Restaure tous les PP d’une capacité choisie, même K.O., sans ranimer.",
+      "pt": "Restaura todos os PP de um golpe escolhido, mesmo desmaiado, sem reviver.",
+      "de": "Füllt alle AP einer gewählten Attacke auf, auch bei K.O., ohne Wiederbelebung.",
+      "ru": "Полностью восстанавливает ОД выбранного приёма, даже в обмороке, без оживления."
+    }
+  },
+  "heal20": {
+    "names": {
+      "ko": "HP 20% 회복",
+      "en": "Restore 20% HP",
+      "ja": "HP20%回復",
+      "es": "Recuperar 20% de PS",
+      "fr": "Rendre 20 % des PV",
+      "pt": "Restaurar 20% dos PS",
+      "de": "20 % KP heilen",
+      "ru": "Восстановить 20% ОЗ"
+    }
+  },
+  "heal40": {
+    "names": {
+      "ko": "HP 40% 회복",
+      "en": "Restore 40% HP",
+      "ja": "HP40%回復",
+      "es": "Recuperar 40% de PS",
+      "fr": "Rendre 40 % des PV",
+      "pt": "Restaurar 40% dos PS",
+      "de": "40 % KP heilen",
+      "ru": "Восстановить 40% ОЗ"
+    }
+  },
+  "statusCure": {
+    "names": {
+      "ko": "상태이상 회복",
+      "en": "Status cure",
+      "ja": "状態異常回復",
+      "es": "Curar estados",
+      "fr": "Soin du statut",
+      "pt": "Curar estado",
+      "de": "Statusheilung",
+      "ru": "Лечение статуса"
+    },
+    "descriptions": {
+      "ko": "살아 있고 상태이상이 있는 한 마리의 상태이상을 해제합니다. HP·PP는 회복하지 않습니다.",
+      "en": "Cure status on one living, affected Pokémon. No HP or PP recovery.",
+      "ja": "ひんしでない1匹の状態異常を治す。HP・PPは回復しません。",
+      "es": "Cura estados de un Pokémon no debilitado. No restaura PS ni PP.",
+      "fr": "Soigne le statut d’un Pokémon non K.O., sans PV ni PP.",
+      "pt": "Cura o estado de um Pokémon consciente, sem PS ou PP.",
+      "de": "Heilt den Status eines kampffähigen Pokémon, ohne KP oder AP.",
+      "ru": "Лечит статус покемона не в обмороке, без ОЗ и ОД."
+    }
+  },
+  "revive": {
+    "names": {
+      "ko": "기력의 조각",
+      "en": "Revive",
+      "ja": "げんきのかけら",
+      "es": "Revivir",
+      "fr": "Rappel",
+      "pt": "Reviver",
+      "de": "Beleber",
+      "ru": "Оживление"
+    }
+  },
+  "teamHeal30": {
+    "names": {
+      "ko": "전체 HP 50% 회복",
+      "en": "Team HP +50%",
+      "ja": "全員HP50%回復",
+      "es": "Equipo: PS +50%",
+      "fr": "Équipe : PV +50 %",
+      "pt": "Equipe: PS +50%",
+      "de": "Team: KP +50 %",
+      "ru": "Команда: ОЗ +50%"
+    },
+    "descriptions": {
+      "ko": "선발 전원의 HP를 각 최대 HP의 50%만큼 회복하며 기절 시 부활·상태이상 해제합니다. 살아 있는 포켓몬의 상태이상과 모든 PP는 유지합니다.",
+      "en": "Restore 50% maximum HP to the whole team, reviving and curing fainted members. Living members keep status; PP is unchanged.",
+      "ja": "全員の最大HPの50%を回復。ひんしは復活し状態回復。生存者の状態と全PPは維持。",
+      "es": "Recupera 50% de PS máximos del equipo; revive y cura a los debilitados. Conserva estados de los demás y todos los PP.",
+      "fr": "Rend 50 % des PV max à l’équipe ; ranime et soigne les K.O. Conserve le statut des autres et les PP.",
+      "pt": "Restaura 50% dos PS máximos da equipe; revive e cura desmaiados. Mantém estado dos demais e todos os PP.",
+      "de": "Heilt 50 % der maximalen Team-KP; belebt K.O.-Mitglieder wieder und heilt deren Status. Sonst bleiben Status und alle AP erhalten.",
+      "ru": "Восстанавливает 50% макс. ОЗ всей команде, оживляет и лечит потерявших сознание. Сохраняет статус остальных и все ОД."
+    }
+  },
+  "maxRevive": {
+    "names": {
+      "ko": "기력의 덩어리",
+      "en": "Max Revive",
+      "ja": "げんきのかたまり",
+      "es": "Revivir máximo",
+      "fr": "Rappel Max",
+      "pt": "Reviver Máximo",
+      "de": "Top-Beleber",
+      "ru": "Полное оживление"
+    }
+  }
+}

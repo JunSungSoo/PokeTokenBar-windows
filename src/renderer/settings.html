@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'self'; script-src 'self'; img-src 'self'">
+  <title>PokeTokenBar 설정</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="theme.css">
+  <script src="locale-data.js" defer></script>
+  <script src="localization.js" defer></script>
+  <script src="sprite-timing.js" defer></script>
+  <script src="sprite-player.js" defer></script>
+  <script src="token-format.js" defer></script>
+  <script src="preferences.js" defer></script>
+  <script src="settings.js" defer></script>
+  <script src="windows.js" defer></script>
+  <script src="save-transfer.js" defer></script>
+</head>
+<body class="settings-window">
+<main>
+  <header><h1>설정 <small class="platform-label">Windows</small></h1><span id="settings-saved" role="status">불러오는 중…</span></header>
+  <section aria-labelledby="general-settings"><h2 id="general-settings">일반</h2><div class="surface settings-group">
+    <label>언어<select data-setting="language"><option value="system">시스템 설정</option><option value="ko">한국어</option><option value="en">English</option><option value="ja">日本語</option><option value="es">Español</option><option value="fr">Français</option><option value="pt">Português</option><option value="de">Deutsch</option><option value="ru">Русский</option></select></label>
+    <label>테마<select data-setting="theme"><option value="system">시스템 설정</option><option value="light">라이트</option><option value="dark">다크</option></select></label>
+    <label>대표 포켓몬<select id="settings-representative"></select></label>
+    <label>새로고침 주기<select data-setting="refreshSeconds"><option value="0">수동</option><option value="60">1분</option><option value="120">2분</option><option value="300">5분</option><option value="600">10분</option><option value="900">15분</option></select></label>
+    <label>포켓몬 애니메이션<input type="checkbox" data-setting="animated"></label>
+    <label>애니메이션 품질<select data-setting="animationQuality"><option value="powerSaver">저전력 · 2.5fps</option><option value="balanced">균형 · 5fps</option><option value="smooth">부드럽게 · 10fps</option></select></label>
+    <label>프로바이더 상태 확인<input type="checkbox" data-setting="statusChecks"></label>
+    <label>공식 한도 표시<select data-setting="limitMode"><option value="used">사용량</option><option value="remaining">남은 양</option></select></label>
+    <label>그래프 기간<select data-setting="trend"><option value="14">최근 14일</option><option value="30">최근 30일</option><option value="month">이번 달</option></select></label>
+  </div></section>
+  <section aria-labelledby="difficulty-settings"><h2 id="difficulty-settings">난이도</h2><div class="surface settings-group">
+    <label>성장 배율<span><input id="difficulty-growth" type="range" min="0.1" max="2" step="0.1" value="1"><output id="difficulty-growth-value">1×</output></span></label>
+    <label>상점 가격 배율<span><input id="difficulty-shop" type="range" min="0.1" max="2" step="0.1" value="1"><output id="difficulty-shop-value">1×</output></span></label>
+  </div></section>
+  <section aria-labelledby="trade-settings"><h2 id="trade-settings">교환</h2><div class="surface settings-group">
+    <label>교환 별명<input type="text" maxlength="40" data-setting="tradeNickname" placeholder="PokeTokenBar Windows"></label>
+  </div></section>
+  <section aria-labelledby="tray-settings"><h2 id="tray-settings">알림 영역 요약</h2><div class="surface settings-group">
+    <label>오늘 토큰<input type="checkbox" data-setting="trayTokens"></label>
+    <label>오늘 비용<input type="checkbox" data-setting="trayCost"></label>
+    <label>포켓몬 성장률<input type="checkbox" data-setting="trayGrowth"></label>
+    <label>사용 한도<input type="checkbox" data-setting="trayLimits"></label>
+  </div><p class="settings-hint">작업 표시줄 오른쪽 아이콘의 툴팁과 우클릭 메뉴에 표시합니다.</p></section>
+  <section aria-labelledby="tracking-settings"><h2 id="tracking-settings">추적 제공자</h2><div class="surface settings-group" id="settings-providers"></div></section>
+  <section aria-labelledby="pet-settings"><h2 id="pet-settings">플로팅 펫</h2><div class="surface settings-group">
+    <label>플로팅 펫 표시<input type="checkbox" data-setting="petEnabled"></label>
+    <label>펫 에이전트 반응<input type="checkbox" data-setting="petAgentActivity"></label>
+    <label>뒷모습<input type="checkbox" data-setting="back"></label>
+    <label>크기<span><input type="range" min="48" max="384" step="8" data-setting="petSize"><output id="pet-size-label">96px</output></span></label>
+  </div></section>
+  <section aria-labelledby="notification-settings"><h2 id="notification-settings">알림</h2><div class="surface settings-group">
+    <label>사용 한도 알림<input type="checkbox" data-setting="limitNotifications"></label>
+    <label>경고<span><input type="range" min="50" max="95" step="5" data-setting="warnThreshold"><output id="warnThreshold-label">80%</output></span></label>
+    <label>위험<span><input type="range" min="80" max="100" step="5" data-setting="criticalThreshold"><output id="criticalThreshold-label">95%</output></span></label>
+    <label>이상한사탕 획득 알림<input type="checkbox" data-setting="companionNotifications"></label>
+  </div></section>
+  <section aria-labelledby="system-settings"><h2 id="system-settings">자동 실행·업데이트</h2>
+    <div class="surface settings-group"><label>업데이트 알림<input type="checkbox" data-setting="updateNotifications"></label></div><div class="surface">
+      <details id="desktop-settings" hidden>
+        <summary>Windows 설정</summary>
+        <p>설치된 버전 <span id="desktop-version"></span></p>
+        <label><input type="checkbox" id="desktop-login"> 로그인할 때 자동 실행</label>
+        <p id="desktop-login-status" role="status"></p>
+        <button id="desktop-pet" type="button">플로팅 펫 표시/숨기기</button>
+        <button id="desktop-update" type="button">업데이트 확인</button>
+        <p id="desktop-update-status" role="status"></p>
+      </details>
+  <p id="desktop-development" hidden>자동 실행과 업데이트는 설치된 Windows 앱에서 사용할 수 있습니다.</p>
+  </div></section>
+  <section aria-labelledby="save-settings"><h2 id="save-settings">저장·가져오기</h2><div class="surface">
+    <button id="settings-backup" type="button">Windows 저장 내보내기</button>
+    <button id="settings-snapshot" type="button">스냅샷 만들기</button>
+    <button id="settings-data-folder" type="button">저장 폴더 열기</button><p id="backup-status" role="status"></p>
+      <details>
+        <summary>저장 가져오기·복원</summary>
+        <label>파일 형식<select id="import-format"><option value="windows">Windows 백업</option><option value="mac">Mac poketokenbar.save v2</option></select></label>
+        <p>가져오기 전에 현재 육성 상태와 비교할 수 있습니다.</p>
+        <button id="select-save" type="button">저장 파일 선택</button>
+        <p id="import-status" role="status"></p>
+        <section id="import-preview" aria-label="가져오기 미리보기" hidden>
+          <p id="import-source"></p>
+          <dl>
+            <dt>현재 Windows 저장</dt><dd id="import-current"></dd>
+            <dt>가져올 저장</dt><dd id="import-incoming"></dd>
+          </dl>
+          <p>가져오면 Windows 육성 기록을 교체합니다. 기존 저장이 있으면 교체 전에 백업합니다.</p>
+          <button id="cancel-import" type="button">취소</button>
+          <button id="confirm-import" type="button">Windows 저장 교체</button>
+        </section>
+      </details>
+  </div></section>
+  <section aria-labelledby="snapshot-settings"><h2 id="snapshot-settings">스냅샷 기록</h2><div class="surface">
+    <p class="settings-hint">앱의 첫 집계 시 하루에 한 번 자동 저장합니다. 복원 전에는 현재 상태를 백업합니다.</p>
+    <ul id="settings-snapshots"></ul>
+  </div></section>
+  <section aria-labelledby="advanced-settings"><h2 id="advanced-settings">고급</h2><div class="surface">
+      <details>
+        <summary>계정·로그인 정보</summary>
+        <p>Windows에 설치된 도구의 로그인 정보를 읽어 공식 한도를 조회합니다.</p>
+        <button id="settings-refresh-login" type="button">로그인 정보 다시 읽기</button>
+        <p id="settings-login-status" role="status"></p>
+        <h3>추가 Claude Code 계정</h3>
+        <p class="settings-hint">계정별 .credentials.json 파일이 있는 폴더를 선택하세요.</p>
+        <button id="settings-add-account" type="button">계정 폴더 추가</button>
+        <ul id="settings-accounts"></ul>
+      </details>
+      <details>
+        <summary>추가 로그 폴더 설정</summary>
+        <p>기본 위치와 함께 검색할 JSONL 로그 폴더를 선택하세요.</p>
+        <div class="folder">
+          <label for="provider">제공자</label>
+          <select id="provider"></select>
+          <button id="choose-root" type="button" disabled>선택</button>
+          <button id="reset-root" type="button" disabled>해제</button>
+        </div>
+        <p id="root-path"></p>
+      </details>
+  </div></section>
+  <section aria-labelledby="about-settings"><h2 id="about-settings">정보</h2><div class="surface"><p>PokeTokenBar Windows <span id="settings-version"></span></p></div></section>
+  <footer class="settings-actions">
+    <button id="difficulty-save" class="primary" type="button">저장</button>
+  </footer>
+</main>
+</body>
+</html>

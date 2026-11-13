@@ -1,0 +1,4 @@
+// Link a test-only peer against the already-built, unmodified original Mac module.
+import{readdir,mkdir}from'node:fs/promises';import{resolve,join}from'node:path';import{execFileSync}from'node:child_process';
+const reference=resolve(process.argv[2]??'../PokeTokenBar'),build=join(reference,'.build/debug'),out=resolve(process.argv[3]??'/private/tmp/poketokenbar-recap-parity');await mkdir(out,{recursive:true});const objectDir=join(build,'PokeTokenBar.build'),objects=(await readdir(objectDir)).filter(name=>name.endsWith('.swift.o')).map(name=>join(objectDir,name));
+try{execFileSync('swiftc',['-parse-as-library','-profile-generate','-module-cache-path',join(out,'module-cache'),'-I',join(build,'Modules'),'-F',build,'-Xlinker','-rpath','-Xlinker',build,resolve('tests/macos-usage-recap-oracle.swift'),...objects,'-o',join(out,'oracle')],{stdio:'inherit'});}catch{process.exit(1);}console.log(join(out,'oracle'));

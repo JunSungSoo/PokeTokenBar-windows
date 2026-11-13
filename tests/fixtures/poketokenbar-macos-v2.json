@@ -1,0 +1,116 @@
+{
+  "appVersion" : "3.1.2",
+  "exportedAt" : "2026-06-17T03:00:00Z",
+  "format" : "poketokenbar.save",
+  "schema" : 2,
+  "sourceDevice" : "Fixture Mac",
+  "state" : {
+    "active" : {
+      "baseID" : 16,
+      "dittoRevealed" : false,
+      "hasGrowthBoost" : false,
+      "isShiny" : true,
+      "nature" : "jolly",
+      "pathIDs" : [
+        16,
+        17
+      ],
+      "plannedPathIDs" : [
+        16,
+        17,
+        18
+      ],
+      "profile" : {
+        "abilityIsHidden" : false,
+        "growthTokens" : 0,
+        "instanceID" : "fixture-active",
+        "ivs" : {
+          "attack" : 3,
+          "defense" : 18,
+          "hp" : 21,
+          "specialAttack" : 20,
+          "specialDefense" : 18,
+          "speed" : 6
+        },
+        "level" : 21,
+        "moves" : [
+
+        ],
+        "seed" : 42
+      },
+      "rarity" : "uncommon",
+      "stageIndex" : 1,
+      "totalForms" : 3,
+      "usedAtStage" : 42000000
+    },
+    "candyFeatureSeeded" : false,
+    "candyGrantTier" : {
+
+    },
+    "candyWindowEpoch" : {
+
+    },
+    "claimedTodayTokensByProvider" : {
+      "codex" : 64000000
+    },
+    "collectedFinals" : [
+
+    ],
+    "dex" : [
+      {
+        "baseID" : 133,
+        "caughtAt" : "2026-06-17T03:00:00Z",
+        "chainOrder" : [
+          133,
+          197
+        ],
+        "finalID" : 197,
+        "id" : "fixture-graduated",
+        "isShiny" : false,
+        "names" : {
+          "133" : {
+            "ko" : "이브이"
+          },
+          "197" : {
+            "ko" : "블래키"
+          }
+        },
+        "namesVersion" : 1,
+        "nature" : "calm",
+        "rarity" : "rare"
+      },
+      {
+        "baseID" : 201,
+        "chainOrder" : [
+          201
+        ],
+        "finalID" : 201,
+        "form" : "b",
+        "id" : "fixture-released",
+        "isShiny" : false,
+        "names" : {
+          "201" : {
+            "ko" : "안농"
+          }
+        },
+        "namesVersion" : 1,
+        "nature" : "hardy",
+        "rarity" : "common",
+        "releasedAt" : "2026-06-17T03:00:00Z"
+      }
+    ],
+    "dexCompletionsSeeded" : false,
+    "eggUsage" : 0,
+    "installBaselineSet" : true,
+    "inventory" : {
+
+    },
+    "language" : "ko",
+    "lastDate" : "",
+    "notifiedDexCompletions" : [
+
+    ],
+    "spentTokens" : 0,
+    "usedSinceInstall" : 911000000
+  }
+}

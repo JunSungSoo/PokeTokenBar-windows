@@ -1,0 +1,17 @@
+[
+  {
+    "file": "rare-candy.png",
+    "url": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/rare-candy.png",
+    "sha256": "e68ad7f41cbd5e0e1ce20fb5be5068e2d976b1370f06b2cef1c5c614a19e79ab"
+  },
+  {
+    "file": "shiny-charm.png",
+    "url": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/shiny-charm.png",
+    "sha256": "dad28a37f454ec14588c809945c985d8e4b72c108781a29f7ec09cbe828b2aa8"
+  },
+  {
+    "file": "egg.png",
+    "url": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/egg.png",
+    "sha256": "368c7b805ef6b2bbafcc97a9a2abe09cac3984fd3efdc4c9c931735e2bc0f288"
+  }
+]

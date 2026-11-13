@@ -1,0 +1,7 @@
+allowBuilds:
+  # Only Squirrel.Windows uses this package. The Windows installer uses NSIS.
+  electron-winstaller: false
+  # The vendored engine uses the prebuilt simulator, not Showdown's server or build tooling.
+  better-sqlite3: false
+  sqlite3: false
+  esbuild: false

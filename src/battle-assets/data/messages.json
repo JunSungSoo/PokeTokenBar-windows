@@ -1,0 +1,2752 @@
+[
+  [
+    "전체 회복 · 선발 전원 HP·PP 최대, 부활·상태이상 해제",
+    "Full recovery · Team HP/PP, revive and cure",
+    "全回復・全員のHP・PP、復活と状態回復",
+    "Recuperación total · PS/PP, revivir y curar",
+    "Récupération complète · PV/PP, rappel et soin",
+    "Recuperação total · PS/PP, reviver e curar",
+    "Komplettheilung · Team-KP/AP, Wiederbelebung und Heilung",
+    "Полное восстановление команды · ОЗ/ОД, оживление и лечение"
+  ],
+  [
+    "선택한 포켓몬 HP 최대 회복·부활",
+    "Restore full HP; revive if fainted",
+    "1匹のHP全回復",
+    "Recuperar todos los PS",
+    "Tous les PV",
+    "Restaurar todos os PS",
+    "Alle KP heilen",
+    "Восстановить все ОЗ"
+  ],
+  [
+    "선택한 포켓몬의 기술 4개 PP 최대 회복",
+    "Restore all move PP of one Pokémon",
+    "選んだ1匹の全技PPを全回復",
+    "Recuperar todos los PP de un Pokémon",
+    "Tous les PP du Pokémon choisi",
+    "Restaurar todos os PP de um Pokémon",
+    "Alle AP eines gewählten Pokémon auffüllen",
+    "Все ОД всех приёмов выбранного покемона"
+  ],
+  [
+    "팀 전체 공격 +1",
+    "Team Attack +1",
+    "全員の攻撃 +1",
+    "Equipo: Ataque +1",
+    "Équipe : Attaque +1",
+    "Equipe: Ataque +1",
+    "Team: Angriff +1",
+    "Команда: Атака +1"
+  ],
+  [
+    "팀 전체 특수공격 +1",
+    "Team Sp. Atk +1",
+    "全員の特攻 +1",
+    "Equipo: At. Esp. +1",
+    "Équipe : Atq. Spé. +1",
+    "Equipe: At. Esp. +1",
+    "Team: Sp.-Ang. +1",
+    "Команда: Сп. атака +1"
+  ],
+  [
+    "팀 전체 스피드 +1",
+    "Team Speed +1",
+    "全員の素早さ +1",
+    "Equipo: Velocidad +1",
+    "Équipe : Vitesse +1",
+    "Equipe: Velocidade +1",
+    "Team: Initiative +1",
+    "Команда: Скорость +1"
+  ],
+  [
+    "팀 전체 방어 +1",
+    "Team Defense +1",
+    "全員の防御 +1",
+    "Equipo: Defensa +1",
+    "Équipe : Défense +1",
+    "Equipe: Defesa +1",
+    "Team: Verteidigung +1",
+    "Команда: Защита +1"
+  ],
+  [
+    "팀 전체 특수방어 +1",
+    "Team Sp. Def +1",
+    "全員の特防 +1",
+    "Equipo: Def. Esp. +1",
+    "Équipe : Déf. Spé. +1",
+    "Equipe: Def. Esp. +1",
+    "Team: Sp.-Vert. +1",
+    "Команда: Сп. защита +1"
+  ],
+  [
+    "팀 전체 공격·특공 +1",
+    "Team Attack/Sp. Atk +1",
+    "全員の攻撃・特攻 +1",
+    "Equipo: Ataque/At. Esp. +1",
+    "Équipe : Attaque/Atq. Spé. +1",
+    "Equipe: Ataque/At. Esp. +1",
+    "Team: Angriff/Sp.-Ang. +1",
+    "Команда: Атака/Сп. атака +1"
+  ],
+  [
+    "다음 3전 지속 · 중복 적용",
+    "Lasts 3 battles · Stacks",
+    "次の3戦・重複可",
+    "Dura 3 combates · Acumulable",
+    "Dure 3 combats · Cumulable",
+    "Dura 3 batalhas · Acumulável",
+    "Gilt 3 Kämpfe · Stapelbar",
+    "На 3 боя · Складывается"
+  ],
+  [
+    "2세대",
+    "Gen II",
+    "第2世代",
+    "2.ª generación",
+    "2e génération",
+    "2ª geração",
+    "2. Generation",
+    "2-е поколение"
+  ],
+  [
+    "다음 트레이너 (테스트)",
+    "Next trainer (test)",
+    "次のトレーナー（テスト）",
+    "Siguiente entrenador (prueba)",
+    "Dresseur suivant (test)",
+    "Próximo treinador (teste)",
+    "Nächster Trainer (Test)",
+    "Следующий тренер (тест)"
+  ],
+  [
+    "테스트 데이터 · 실제 보유 목록의 사본",
+    "Test data · Copy of your collection",
+    "テストデータ・所持一覧のコピー",
+    "Datos de prueba · Copia de tu colección",
+    "Données de test · Copie de la collection",
+    "Dados de teste · Cópia da coleção",
+    "Testdaten · Kopie deiner Sammlung",
+    "Тестовые данные · Копия коллекции"
+  ],
+  [
+    "챔피언 보상 · 이로치 변경",
+    "Champion reward · Shiny conversion",
+    "王者報酬・色違いに変更",
+    "Recompensa de campeón · Variocolor",
+    "Récompense du champion · Chromatique",
+    "Recompensa de campeão · Shiny",
+    "Champion-Belohnung · Schillernd",
+    "Награда чемпиона · Шайни"
+  ],
+  [
+    "졸업한 포켓몬 한 마리를 선택해 이로치로 변경하세요. 클리어마다 한 번 받을 수 있습니다.",
+    "Choose one graduated Pokémon to make Shiny. Claim once per completed challenge.",
+    "育成済みの1匹を色違いにできます。クリアごとに1回受け取れます。",
+    "Elige un Pokémon graduado para volverlo variocolor. Una vez por desafío completado.",
+    "Choisis un Pokémon élevé à rendre chromatique. Une récompense par défi terminé.",
+    "Escolha um Pokémon formado para torná-lo Shiny. Uma vez por desafio concluído.",
+    "Wähle ein fertig trainiertes Pokémon aus. Einmal pro abgeschlossenem Durchlauf.",
+    "Выберите одного выращенного покемона. Одна награда за прохождение."
+  ],
+  [
+    "이로치로 변경하고 닫기",
+    "Make Shiny and close",
+    "色違いにして閉じる",
+    "Hacer variocolor y cerrar",
+    "Rendre chromatique et fermer",
+    "Tornar Shiny e fechar",
+    "Schillernd machen und schließen",
+    "Сделать шайни и закрыть"
+  ],
+  [
+    "나중에 받기",
+    "Claim later",
+    "あとで受け取る",
+    "Recibir después",
+    "Recevoir plus tard",
+    "Receber depois",
+    "Später abholen",
+    "Получить позже"
+  ],
+  [
+    "변경할 수 있는 졸업 포켓몬이 없습니다. 이미 이로치이거나 놓아준 포켓몬은 선택할 수 없습니다. 보상은 보관됩니다.",
+    "No eligible graduates. Shiny or released Pokémon cannot be selected. Your reward is saved.",
+    "対象がいません。色違いや逃がした個体は選べません。報酬は保存されます。",
+    "No hay candidatos. Los variocolor o liberados no se pueden elegir. La recompensa se conserva.",
+    "Aucun candidat. Les Pokémon chromatiques ou relâchés sont exclus. La récompense est conservée.",
+    "Nenhum candidato. Shiny ou liberados não podem ser escolhidos. A recompensa fica salva.",
+    "Keine passenden Pokémon. Schillernde und freigelassene sind ausgeschlossen. Die Belohnung bleibt gespeichert.",
+    "Нет подходящих покемонов. Шайни и отпущенные исключены. Награда сохранится."
+  ],
+  [
+    "챌린지 챔피언",
+    "Challenge champion",
+    "チャレンジ王者",
+    "Campeón del desafío",
+    "Champion du défi",
+    "Campeão do desafio",
+    "Herausforderungs-Champion",
+    "Чемпион испытания"
+  ],
+  [
+    "닫기",
+    "Close",
+    "閉じる",
+    "Cerrar",
+    "Fermer",
+    "Fechar",
+    "Schließen",
+    "Закрыть"
+  ],
+  [
+    "즉시 승리 (테스트)",
+    "Instant win (test)",
+    "即勝利（テスト）",
+    "Victoria inmediata (prueba)",
+    "Victoire immédiate (test)",
+    "Vitória imediata (teste)",
+    "Sofortsieg (Test)",
+    "Мгновенная победа (тест)"
+  ],
+  [
+    "챌린지",
+    "Challenge",
+    "チャレンジ",
+    "Desafío",
+    "Défi",
+    "Desafio",
+    "Herausforderung",
+    "Испытание"
+  ],
+  [
+    "챌린지 도전",
+    "Enter challenge",
+    "チャレンジに挑む",
+    "Entrar al desafío",
+    "Commencer le défi",
+    "Entrar no desafio",
+    "Herausforderung starten",
+    "Начать испытание"
+  ],
+  [
+    "더블 · 6마리",
+    "Doubles · 6 Pokémon",
+    "ダブル・6匹",
+    "Dobles · 6 Pokémon",
+    "Duo · 6 Pokémon",
+    "Duplas · 6 Pokémon",
+    "Doppel · 6 Pokémon",
+    "Парный · 6 покемонов"
+  ],
+  [
+    "싱글 · 6마리",
+    "Singles · 6 Pokémon",
+    "シングル・6匹",
+    "Individual · 6 Pokémon",
+    "Solo · 6 Pokémon",
+    "Individual · 6 Pokémon",
+    "Einzel · 6 Pokémon",
+    "Одиночный · 6 покемонов"
+  ],
+  [
+    "더블 · 6마리 등록 · 4마리 출전 · 14연전 · HP·PP 유지",
+    "Doubles · register 6, field 4 · 14 battles · HP and PP carry over",
+    "ダブル・6匹登録、4匹出場・14連戦・HPとPPを引き継ぐ",
+    "Dobles · registra 6, elige 4 · 14 combates · Conserva PS y PP",
+    "Duo · inscris 6, choisis 4 · 14 combats · PV et PP conservés",
+    "Duplas · registre 6, escolha 4 · 14 batalhas · PS e PP mantidos",
+    "Doppel · 6 anmelden, 4 einsetzen · 14 Kämpfe · KP und AP bleiben erhalten",
+    "Парные · регистрация 6, выходят 4 · 14 боёв · ОЗ и ОД сохраняются"
+  ],
+  [
+    "6대6 싱글 · 27연전 · HP·PP 유지",
+    "6v6 singles · 27 battles · HP and PP carry over",
+    "6対6シングル・27連戦・HPとPPを引き継ぐ",
+    "Individuales 6 contra 6 · 27 combates · Conserva PS y PP",
+    "Solo 6 contre 6 · 27 combats · PV et PP conservés",
+    "Individual 6 contra 6 · 27 batalhas · PS e PP mantidos",
+    "6-gegen-6-Einzel · 27 Kämpfe · KP und AP bleiben erhalten",
+    "6 на 6 · 27 боёв · ОЗ и ОД сохраняются"
+  ],
+  [
+    "등록한 6마리 중 이번 경기에 출전할 4마리를 순서대로 선택하세요. 도구도 수정할 수 있습니다.",
+    "Choose four of your six registered Pokémon in deployment order. You can also change held items.",
+    "登録した6匹から今回出場する4匹を順に選んでください。持ち物も変更できます。",
+    "Elige cuatro de tus seis Pokémon registrados en orden de salida. Puedes cambiar sus objetos.",
+    "Choisis quatre Pokémon sur les six inscrits, dans leur ordre d’entrée. Tu peux modifier leurs objets.",
+    "Escolha quatro dos seis Pokémon registrados na ordem de entrada. Você pode mudar os itens.",
+    "Wähle vier der sechs registrierten Pokémon in Einsatzreihenfolge. Items können geändert werden.",
+    "Выберите четырёх из шести зарегистрированных покемонов в порядке выхода. Предметы можно менять."
+  ],
+  [
+    "첫 두 마리가 선발로 출전합니다. 기절한 포켓몬은 건너뜁니다.",
+    "The first two available Pokémon lead. Fainted Pokémon are skipped.",
+    "先頭の出場可能な2匹が先発します。ひんしのポケモンは飛ばします。",
+    "Salen los dos primeros Pokémon disponibles. Se omiten los debilitados.",
+    "Les deux premiers Pokémon disponibles ouvrent le combat. Les Pokémon K.O. sont ignorés.",
+    "Os dois primeiros Pokémon disponíveis saem primeiro. Pokémon desmaiados são ignorados.",
+    "Die ersten zwei einsatzfähigen Pokémon starten. Besiegte Pokémon werden übersprungen.",
+    "Первыми выходят два доступных покемона. Потерявшие сознание пропускаются."
+  ],
+  [
+    "이어하기",
+    "Continue",
+    "続きから",
+    "Continuar",
+    "Continuer",
+    "Continuar",
+    "Fortsetzen",
+    "Продолжить"
+  ],
+  [
+    "시작",
+    "Start",
+    "開始",
+    "Empezar",
+    "Commencer",
+    "Iniciar",
+    "Starten",
+    "Начать"
+  ],
+  [
+    "새 도전",
+    "New challenge",
+    "新しい挑戦",
+    "Nuevo desafío",
+    "Nouveau défi",
+    "Novo desafio",
+    "Neue Herausforderung",
+    "Новое испытание"
+  ],
+  [
+    "세이브 후 종료",
+    "Save and exit",
+    "セーブして終了",
+    "Guardar y salir",
+    "Sauvegarder et quitter",
+    "Salvar e sair",
+    "Speichern und beenden",
+    "Сохранить и выйти"
+  ],
+  [
+    "다음",
+    "Next",
+    "次へ",
+    "Siguiente",
+    "Suivant",
+    "Próximo",
+    "Weiter",
+    "Далее"
+  ],
+  [
+    "승리 보상 · 하나를 선택하세요",
+    "Victory reward · Choose one",
+    "勝利報酬・1つ選ぶ",
+    "Recompensa · Elige una",
+    "Récompense · Choisis-en une",
+    "Recompensa · Escolha uma",
+    "Siegesbelohnung · Eine wählen",
+    "Награда · Выберите одну"
+  ],
+  [
+    "선택한 포켓몬 HP 35% 회복·부활",
+    "Restore 35% max HP; revive if fainted",
+    "1匹のHP35%回復",
+    "Recuperar 35% de PS",
+    "Rendre 35 % des PV",
+    "Restaurar 35% dos PS",
+    "35 % KP heilen",
+    "Восстановить 35% ОЗ"
+  ],
+  [
+    "선택한 기술 PP 3 회복",
+    "Restore 3 PP to one move",
+    "選んだ技のPPを3回復",
+    "Recupera 3 PP de un movimiento",
+    "Restaure 3 PP à une capacité",
+    "Restaura 3 PP de um golpe",
+    "3 AP einer Attacke auffüllen",
+    "Восстановить 3 ОД одного приёма"
+  ],
+  [
+    "선발 포켓몬 한 마리 교체",
+    "Replace one team member",
+    "チームの1匹を入れ替える",
+    "Sustituye un miembro del equipo",
+    "Remplace un membre de l’équipe",
+    "Substitui um membro da equipe",
+    "Ein Teammitglied austauschen",
+    "Заменить одного члена команды"
+  ],
+  [
+    "교체된 개체는 이번 도전에 다시 출전할 수 없습니다. 남은 호환 도구는 이어받습니다.",
+    "A replaced individual cannot return this run. Compatible remaining gear transfers.",
+    "交代した個体は今回再出場できません。対応する残りの道具を引き継ぎます。",
+    "El Pokémon sustituido no puede volver en este desafío. Se transfiere su objeto compatible.",
+    "Le Pokémon remplacé ne peut plus revenir. Son objet compatible est transféré.",
+    "O Pokémon substituído não pode voltar neste desafio. O item compatível é transferido.",
+    "Ausgetauschte Pokémon können nicht zurückkehren. Passende verbleibende Items werden übertragen.",
+    "Заменённый покемон не сможет вернуться. Совместимый оставшийся предмет передаётся."
+  ],
+  [
+    "교체할 포켓몬",
+    "Outgoing Pokémon",
+    "交代するポケモン",
+    "Pokémon que sale",
+    "Pokémon à remplacer",
+    "Pokémon que sai",
+    "Auszuwechselndes Pokémon",
+    "Кого заменить"
+  ],
+  [
+    "새로 출전할 포켓몬",
+    "Incoming Pokémon",
+    "新しく出場するポケモン",
+    "Pokémon que entra",
+    "Nouveau Pokémon",
+    "Pokémon que entra",
+    "Neues Pokémon",
+    "Новый покемон"
+  ],
+  [
+    "보상 적용",
+    "Apply reward",
+    "報酬を適用",
+    "Aplicar recompensa",
+    "Appliquer la récompense",
+    "Aplicar recompensa",
+    "Belohnung anwenden",
+    "Получить награду"
+  ],
+  [
+    "보상이 저장되었습니다.",
+    "Reward saved.",
+    "報酬を保存しました。",
+    "Recompensa guardada.",
+    "Récompense sauvegardée.",
+    "Recompensa salva.",
+    "Belohnung gespeichert.",
+    "Награда сохранена."
+  ],
+  [
+    "사용 가능한 보상 없음 · 계속",
+    "No available reward · Continue",
+    "利用できる報酬なし・続ける",
+    "Sin recompensas disponibles · Continuar",
+    "Aucune récompense disponible · Continuer",
+    "Sem recompensa disponível · Continuar",
+    "Keine Belohnung verfügbar · Weiter",
+    "Нет доступной награды · Продолжить"
+  ],
+  [
+    "챌린지 클리어!",
+    "Challenge cleared!",
+    "チャレンジクリア！",
+    "¡Desafío completado!",
+    "Défi terminé !",
+    "Desafio concluído!",
+    "Herausforderung geschafft!",
+    "Испытание пройдено!"
+  ],
+  [
+    "도전 종료 · 새 도전은 처음부터 시작합니다.",
+    "Run ended · A new challenge starts from the beginning.",
+    "挑戦終了・次は最初からです。",
+    "Fin del intento · El siguiente empieza desde el principio.",
+    "Défi terminé · Le prochain repart du début.",
+    "Tentativa encerrada · A próxima começa do início.",
+    "Versuch beendet · Der nächste beginnt von vorne.",
+    "Попытка завершена · Новая начнётся с начала."
+  ],
+  [
+    "선택한 순서대로 출전합니다. 첫 포켓몬이 선발입니다.",
+    "Your selection order is the team order. The first Pokémon leads.",
+    "選んだ順に並び、最初のポケモンが先発です。",
+    "El orden de selección es el del equipo. El primero abre el combate.",
+    "L’ordre de sélection est celui de l’équipe. Le premier commence.",
+    "A ordem de seleção define a equipe. O primeiro inicia a batalha.",
+    "Die Auswahl bestimmt die Reihenfolge. Das erste Pokémon beginnt.",
+    "Порядок выбора определяет команду. Первый покемон выходит первым."
+  ],
+  [
+    "진행할 수 없습니다. 저장된 데이터는 유지됩니다. 다시 시도해 주세요.",
+    "Unable to continue. Saved data is preserved. Please try again.",
+    "進められません。保存データは保持されています。再試行してください。",
+    "No se puede continuar. Se conservan los datos. Vuelve a intentarlo.",
+    "Impossible de continuer. La sauvegarde est conservée. Réessaie.",
+    "Não foi possível continuar. Os dados salvos foram preservados. Tente novamente.",
+    "Fortsetzen nicht möglich. Gespeicherte Daten bleiben erhalten. Bitte erneut versuchen.",
+    "Не удалось продолжить. Сохранение не изменено. Попробуйте снова."
+  ],
+  [
+    "도전이 저장되었습니다. 이어하기로 계속할 수 있습니다.",
+    "Challenge saved. Use Continue to resume.",
+    "保存しました。「続きから」で再開できます。",
+    "Desafío guardado. Usa Continuar para retomarlo.",
+    "Défi sauvegardé. Choisis Continuer pour reprendre.",
+    "Desafio salvo. Use Continuar para retomar.",
+    "Herausforderung gespeichert. Mit Fortsetzen weiterspielen.",
+    "Испытание сохранено. Выберите «Продолжить»."
+  ],
+  [
+    "포켓몬을 클릭한 순서로 6마리의 출전 순서가 정해집니다. 다시 누르면 선택이 해제됩니다. 마지막 선택의 상성: 초록 유리 · 빨강 불리. 도구도 수정할 수 있습니다.",
+    "Click all six Pokémon in deployment order. Click again to deselect. The last selection highlights opponents: green favorable, red unfavorable. Held items can also be changed.",
+    "6匹をクリックした順に出場します。再クリックで解除。最後に選んだポケモンの相性：緑は有利、赤は不利。持ち物も変更できます。",
+    "Elige los seis en orden de salida. Pulsa de nuevo para quitar. El último marca rivales: verde favorable, rojo desfavorable. Puedes cambiar objetos.",
+    "Clique les six dans l’ordre de sortie, puis à nouveau pour désélectionner. Le dernier choix indique les adversaires : vert favorable, rouge défavorable. Les objets sont modifiables.",
+    "Clique nos seis na ordem de entrada. Clique novamente para desmarcar. A última escolha destaca rivais: verde favorável, vermelho desfavorável. Os itens podem ser alterados.",
+    "Klicke alle sechs in Einsatzreihenfolge an; erneut klicken hebt die Auswahl auf. Der letzte markiert Gegner: grün günstig, rot ungünstig. Items sind änderbar.",
+    "Выберите всех шестерых в порядке выхода. Повторное нажатие отменяет выбор. Последний отмечает соперников: зелёный — преимущество, красный — невыгодно. Предметы можно менять."
+  ],
+  [
+    "효과음 볼륨",
+    "Sound effects volume",
+    "効果音音量",
+    "Volumen de efectos",
+    "Volume des effets",
+    "Volume dos efeitos",
+    "Effektlautstärke",
+    "Громкость эффектов"
+  ],
+  [
+    "BGM 볼륨",
+    "BGM volume",
+    "BGM音量",
+    "Volumen de música",
+    "Volume de la musique",
+    "Volume da música",
+    "Musiklautstärke",
+    "Громкость музыки"
+  ],
+  [
+    "같은 팀에는 같은 종을 한 마리만 선택할 수 있습니다. 폼이 달라도 같은 종으로 취급합니다.",
+    "Choose only one Pokémon of each species per team. Different forms count as the same species.",
+    "同じチームには同じ種類を1匹だけ選べます。フォルムが違っても同じ種類として扱います。",
+    "Solo se permite un Pokémon de cada especie por equipo, aunque tenga otra forma.",
+    "Un seul Pokémon de chaque espèce par équipe, même avec des formes différentes.",
+    "Apenas um Pokémon de cada espécie por equipe, mesmo com formas diferentes.",
+    "Nur ein Pokémon jeder Art pro Team, auch bei unterschiedlichen Formen.",
+    "В команде может быть только один покемон каждого вида, даже если формы различаются."
+  ],
+  [
+    "도구에 따라 타입이 정해지는 포켓몬은 배틀에 참가할 수 없습니다.",
+    "Pokémon whose type depends on a held item cannot battle.",
+    "持ち物でタイプが決まるポケモンは参加できません。",
+    "Los Pokémon cuyo tipo depende de un objeto no pueden combatir.",
+    "Les Pokémon dont le type dépend d’un objet ne peuvent pas combattre.",
+    "Pokémon cujo tipo depende de um item não podem batalhar.",
+    "Pokémon mit einem vom Item abhängigen Typ können nicht kämpfen.",
+    "Покемоны, чей тип зависит от предмета, не могут участвовать в бою."
+  ],
+  [
+    "배틀",
+    "Battle",
+    "バトル",
+    "Combate",
+    "Combat",
+    "Batalha",
+    "Kampf",
+    "Бой"
+  ],
+  [
+    "싱글 · 3마리",
+    "Singles · 3",
+    "シングル・3匹",
+    "Individual · 3",
+    "Solo · 3",
+    "Individual · 3",
+    "Einzel · 3",
+    "Одиночный · 3"
+  ],
+  [
+    "더블 · 4마리",
+    "Doubles · 4",
+    "ダブル・4匹",
+    "Doble · 4",
+    "Duo · 4",
+    "Dupla · 4",
+    "Doppel · 4",
+    "Парный · 4"
+  ],
+  [
+    "BW2 + 메가진화 · 현재 스탯",
+    "BW2 + Mega Evolution · Current stats",
+    "BW2＋メガシンカ・現在の能力",
+    "BW2 + Megaevolución · Estadísticas actuales",
+    "BW2 + Méga-Évolution · Stats actuelles",
+    "BW2 + Mega Evolução · Atributos atuais",
+    "BW2 + Mega-Entwicklung · Aktuelle Werte",
+    "BW2 + Мегаэволюция · Текущие характеристики"
+  ],
+  [
+    "매칭 요청",
+    "Find a Wi-Fi/LAN opponent",
+    "Wi-Fi/LANの相手を探す",
+    "Buscar rival Wi-Fi/LAN",
+    "Chercher un adversaire Wi-Fi/LAN",
+    "Buscar oponente Wi-Fi/LAN",
+    "WLAN/LAN-Gegner suchen",
+    "Найти соперника Wi-Fi/LAN"
+  ],
+  [
+    "매칭 요청 중…",
+    "Finding a match…",
+    "マッチング中…",
+    "Buscando partida…",
+    "Recherche en cours…",
+    "Buscando partida…",
+    "Gegnersuche…",
+    "Поиск соперника…"
+  ],
+  [
+    "같은 Wi-Fi/LAN에서 매칭을 요청한 상대입니다. 선택하거나 매칭을 취소할 때까지 계속 검색합니다.",
+    "Players requesting a match on your Wi-Fi/LAN. Searching continues until you select someone or cancel.",
+    "同じWi-Fi/LANで対戦を希望する相手です。選択またはキャンセルするまで検索します。",
+    "Jugadores que buscan partida en tu Wi-Fi/LAN. La búsqueda continúa hasta elegir o cancelar.",
+    "Joueurs en recherche sur votre Wi-Fi/LAN. La recherche continue jusqu’au choix ou à l’annulation.",
+    "Jogadores buscando partida no seu Wi-Fi/LAN. A busca continua até escolher ou cancelar.",
+    "Suchende im selben WLAN/LAN. Die Suche läuft bis zur Auswahl oder zum Abbruch.",
+    "Игроки, ищущие бой в вашей Wi-Fi/LAN. Поиск продолжается до выбора или отмены."
+  ],
+  [
+    "아직 매칭을 요청한 상대가 없습니다.",
+    "No players are requesting a match yet.",
+    "対戦を希望する相手はまだいません。",
+    "Aún no hay jugadores buscando partida.",
+    "Aucun joueur en recherche pour le moment.",
+    "Ainda não há jogadores buscando partida.",
+    "Noch keine suchenden Spieler.",
+    "Пока никто не ищет бой."
+  ],
+  [
+    "상대방과 연결 중…",
+    "Connecting to opponent…",
+    "相手に接続中…",
+    "Conectando al rival…",
+    "Connexion à l’adversaire…",
+    "Conectando ao oponente…",
+    "Verbindung zum Gegner…",
+    "Подключение к сопернику…"
+  ],
+  [
+    "수동 연결",
+    "Manual connection",
+    "手動接続",
+    "Conexión manual",
+    "Connexion manuelle",
+    "Conexão manual",
+    "Manuelle Verbindung",
+    "Ручное подключение"
+  ],
+  [
+    "선택됨",
+    "Selected",
+    "選択中",
+    "Seleccionado",
+    "Sélectionné",
+    "Selecionado",
+    "Ausgewählt",
+    "Выбран"
+  ],
+  [
+    "상대 포켓몬 6마리 · 비공개",
+    "Opponent’s six Pokémon · Hidden",
+    "相手の6匹・非公開",
+    "Seis Pokémon rivales · Ocultos",
+    "Six Pokémon adverses · Cachés",
+    "Seis Pokémon rivais · Ocultos",
+    "Sechs gegnerische Pokémon · Verborgen",
+    "Шесть покемонов соперника · Скрыты"
+  ],
+  [
+    "선택한 순서대로 출전합니다. 싱글은 1번, 더블은 1·2번이 먼저 나갑니다. 상대의 출전 선택은 공개되지 않습니다.",
+    "Selection sets team order. Singles leads with #1; doubles with #1 and #2. Your opponent’s lineup choices stay hidden.",
+    "選択順で出場します。シングルは1番、ダブルは1・2番が先発。相手の選出は非公開です。",
+    "El orden de selección decide la salida: 1 en individual, 1 y 2 en doble. La selección rival permanece oculta.",
+    "L’ordre de sélection définit l’entrée : 1 en solo, 1 et 2 en duo. La sélection adverse reste cachée.",
+    "A ordem de seleção define a entrada: 1 em individual, 1 e 2 em dupla. A seleção rival fica oculta.",
+    "Auswahlreihenfolge ist Teamreihenfolge: 1 im Einzel, 1 und 2 im Doppel. Die gegnerische Auswahl bleibt verborgen.",
+    "Порядок выбора задаёт выход: №1 в одиночном, №1 и №2 в парном. Выбор соперника скрыт."
+  ],
+  [
+    "출전 포켓몬",
+    "Your team",
+    "出場ポケモン",
+    "Tu equipo",
+    "Ton équipe",
+    "Sua equipe",
+    "Dein Team",
+    "Ваша команда"
+  ],
+  [
+    "동의하고 준비 완료",
+    "Agree and ready",
+    "同意して準備完了",
+    "Aceptar y listo",
+    "Accepter et prêt",
+    "Concordar e pronto",
+    "Zustimmen und bereit",
+    "Согласиться и готов"
+  ],
+  [
+    "준비 취소",
+    "Cancel readiness",
+    "準備を取り消す",
+    "Cancelar preparación",
+    "Annuler la préparation",
+    "Cancelar prontidão",
+    "Bereitschaft aufheben",
+    "Отменить готовность"
+  ],
+  [
+    "상대방을 기다리고 있어요…",
+    "Waiting for your opponent…",
+    "相手を待っています…",
+    "Esperando al rival…",
+    "En attente de l’adversaire…",
+    "Aguardando o oponente…",
+    "Warte auf den Gegner…",
+    "Ожидание соперника…"
+  ],
+  [
+    "배틀 이력",
+    "Battle history",
+    "バトル履歴",
+    "Historial de combates",
+    "Historique des combats",
+    "Histórico de batalhas",
+    "Kampfverlauf",
+    "История боёв"
+  ],
+  [
+    "아직 배틀 이력이 없어요.",
+    "No battles yet.",
+    "まだバトル履歴がありません。",
+    "Aún no hay combates.",
+    "Aucun combat pour l’instant.",
+    "Nenhuma batalha ainda.",
+    "Noch keine Kämpfe.",
+    "Пока нет боёв."
+  ],
+  [
+    "배틀 창 열기",
+    "Open battle window",
+    "バトル画面を開く",
+    "Abrir ventana de combate",
+    "Ouvrir le combat",
+    "Abrir janela de batalha",
+    "Kampffenster öffnen",
+    "Открыть окно боя"
+  ],
+  [
+    "정말 종료하겠습니까?",
+    "Are you sure you want to quit?",
+    "本当に終了しますか？",
+    "¿Seguro que quieres salir?",
+    "Veux-tu vraiment quitter ?",
+    "Quer mesmo sair?",
+    "Möchtest du wirklich beenden?",
+    "Вы действительно хотите выйти?"
+  ],
+  [
+    "배틀을 종료하면 항복으로 처리되며 상대방이 승리합니다.",
+    "Quitting forfeits the battle. Your opponent wins.",
+    "終了すると降参となり、相手の勝利になります。",
+    "Salir cuenta como rendición. Tu rival gana.",
+    "Quitter vaut abandon. Ton adversaire gagne.",
+    "Sair conta como desistência. Seu oponente vence.",
+    "Beenden zählt als Aufgabe. Dein Gegner gewinnt.",
+    "Выход считается сдачей. Соперник побеждает."
+  ],
+  [
+    "확인",
+    "Confirm",
+    "確認",
+    "Confirmar",
+    "Confirmer",
+    "Confirmar",
+    "Bestätigen",
+    "Подтвердить"
+  ],
+  [
+    "매칭 취소",
+    "Cancel matching",
+    "キャンセル",
+    "Cancelar",
+    "Annuler",
+    "Cancelar",
+    "Abbrechen",
+    "Отмена"
+  ],
+  [
+    "공격",
+    "Fight",
+    "たたかう",
+    "Luchar",
+    "Attaquer",
+    "Lutar",
+    "Kämpfen",
+    "Атака"
+  ],
+  [
+    "교체",
+    "Switch",
+    "交代",
+    "Cambiar",
+    "Changer",
+    "Trocar",
+    "Wechseln",
+    "Замена"
+  ],
+  [
+    "항복",
+    "Surrender",
+    "降参",
+    "Rendirse",
+    "Abandonner",
+    "Desistir",
+    "Aufgeben",
+    "Сдаться"
+  ],
+  [
+    "선봉 순서를 선택하세요",
+    "Choose your lead order",
+    "先発の順番を選ぶ",
+    "Elige el orden inicial",
+    "Choisis l’ordre de départ",
+    "Escolha a ordem inicial",
+    "Startreihenfolge wählen",
+    "Выберите порядок выхода"
+  ],
+  [
+    "선택 확정",
+    "Confirm choices",
+    "選択を確定",
+    "Confirmar opciones",
+    "Confirmer les choix",
+    "Confirmar escolhas",
+    "Auswahl bestätigen",
+    "Подтвердить выбор"
+  ],
+  [
+    "대상",
+    "Target",
+    "対象",
+    "Objetivo",
+    "Cible",
+    "Alvo",
+    "Ziel",
+    "Цель"
+  ],
+  [
+    "골드·실버 배틀 BGM",
+    "Gold/Silver battle music",
+    "金・銀バトルBGM",
+    "Música de combate Oro/Plata",
+    "Musique de combat Or/Argent",
+    "Música de batalha Gold/Silver",
+    "Gold/Silber-Kampfmusik",
+    "Музыка боя Gold/Silver"
+  ],
+  [
+    "연결 복구 중… 30초 후 중단",
+    "Reconnecting… interrupted after 30s",
+    "再接続中…30秒で中断",
+    "Reconectando… se interrumpe en 30 s",
+    "Reconnexion… interruption après 30 s",
+    "Reconectando… interrupção após 30 s",
+    "Verbinde erneut… Abbruch nach 30 s",
+    "Переподключение… прерывание через 30 с"
+  ],
+  [
+    "배틀 데이터 준비 중…",
+    "Preparing battle…",
+    "バトル準備中…",
+    "Preparando combate…",
+    "Préparation du combat…",
+    "Preparando batalha…",
+    "Kampf wird vorbereitet…",
+    "Подготовка боя…"
+  ],
+  [
+    "두 기기에서 같은 Wi-Fi/LAN에 연결한 후 매칭 요청을 눌러주세요.",
+    "Open Battle on both Macs to find each other.",
+    "両方のMacでバトルを開いてください。",
+    "Abre Combate en ambos Mac.",
+    "Ouvrez Combat sur les deux Mac.",
+    "Abra Batalha nos dois Macs.",
+    "Auf beiden Macs Kampf öffnen.",
+    "Откройте Бой на обоих Mac."
+  ],
+  [
+    "승리",
+    "Victory",
+    "勝利",
+    "Victoria",
+    "Victoire",
+    "Vitória",
+    "Sieg",
+    "Победа"
+  ],
+  [
+    "패배",
+    "Defeat",
+    "敗北",
+    "Derrota",
+    "Défaite",
+    "Derrota",
+    "Niederlage",
+    "Поражение"
+  ],
+  [
+    "무승부",
+    "Draw",
+    "引き分け",
+    "Empate",
+    "Égalité",
+    "Empate",
+    "Unentschieden",
+    "Ничья"
+  ],
+  [
+    "중단",
+    "Interrupted",
+    "中断",
+    "Interrumpido",
+    "Interrompu",
+    "Interrompida",
+    "Unterbrochen",
+    "Прерван"
+  ],
+  [
+    "기술을 선택하면 상세 정보가 표시됩니다.",
+    "Select a move to see its details.",
+    "技を選ぶと詳細を表示します。",
+    "Elige un movimiento para ver detalles.",
+    "Choisis une capacité pour voir ses détails.",
+    "Selecione um golpe para ver detalhes.",
+    "Wähle eine Attacke für Details.",
+    "Выберите приём для просмотра сведений."
+  ],
+  [
+    "위력",
+    "Power",
+    "威力",
+    "Potencia",
+    "Puissance",
+    "Poder",
+    "Stärke",
+    "Мощность"
+  ],
+  [
+    "기술 속성 × 현재 상대 타입 기준입니다. 특성·날씨 등의 효과는 포함하지 않습니다.",
+    "Move type vs current opposing types only. Abilities, weather and other effects are excluded.",
+    "技のタイプと現在の相手タイプのみ。特性・天候などは含みません。",
+    "Solo tipos actuales. No incluye habilidades ni clima.",
+    "Types actuels uniquement, sans talents ni météo.",
+    "Apenas tipos atuais, sem habilidades ou clima.",
+    "Nur aktuelle Typen, ohne Fähigkeiten oder Wetter.",
+    "Только текущие типы, без способностей и погоды."
+  ],
+  [
+    "물리",
+    "Physical",
+    "物理",
+    "Físico",
+    "Physique",
+    "Físico",
+    "Physisch",
+    "Физический"
+  ],
+  [
+    "특수",
+    "Special",
+    "特殊",
+    "Especial",
+    "Spécial",
+    "Especial",
+    "Speziell",
+    "Специальный"
+  ],
+  [
+    "변화",
+    "Status",
+    "変化",
+    "Estado",
+    "Statut",
+    "Status",
+    "Status",
+    "Статусный"
+  ],
+  [
+    "효과 없음",
+    "No effect",
+    "効果なし",
+    "Sin efecto",
+    "Sans effet",
+    "Sem efeito",
+    "Wirkungslos",
+    "Нет эффекта"
+  ],
+  [
+    "효과가 굉장함",
+    "Super effective",
+    "効果抜群",
+    "Supereficaz",
+    "Super efficace",
+    "Supereficaz",
+    "Sehr effektiv",
+    "Суперэффективно"
+  ],
+  [
+    "효과가 별로",
+    "Not very effective",
+    "いまひとつ",
+    "Poco eficaz",
+    "Peu efficace",
+    "Pouco eficaz",
+    "Nicht sehr effektiv",
+    "Малоэффективно"
+  ],
+  [
+    "보통",
+    "Normal",
+    "通常",
+    "Normal",
+    "Normal",
+    "Normal",
+    "Normal",
+    "Обычно"
+  ],
+  [
+    "턴 로그",
+    "Turn log",
+    "ターンログ",
+    "Registro de turnos",
+    "Journal des tours",
+    "Registro de turnos",
+    "Rundenprotokoll",
+    "Журнал ходов"
+  ],
+  [
+    "펼쳐짐",
+    "Expanded",
+    "展開中",
+    "Expandido",
+    "Développé",
+    "Expandido",
+    "Ausgeklappt",
+    "Развёрнуто"
+  ],
+  [
+    "접힘",
+    "Collapsed",
+    "折りたたみ中",
+    "Contraído",
+    "Réduit",
+    "Recolhido",
+    "Eingeklappt",
+    "Свёрнуто"
+  ],
+  [
+    "아직 기록된 행동이 없습니다.",
+    "No actions recorded yet.",
+    "まだ行動の記録はありません。",
+    "Aún no hay acciones registradas.",
+    "Aucune action enregistrée.",
+    "Nenhuma ação registrada ainda.",
+    "Noch keine Aktionen protokolliert.",
+    "Действий пока нет."
+  ],
+  [
+    "이전 기록",
+    "Earlier records",
+    "以前の記録",
+    "Registros anteriores",
+    "Historique précédent",
+    "Registros anteriores",
+    "Frühere Einträge",
+    "Предыдущие записи"
+  ],
+  [
+    "배틀 시작",
+    "Battle start",
+    "バトル開始",
+    "Inicio del combate",
+    "Début du combat",
+    "Início da batalha",
+    "Kampfbeginn",
+    "Начало боя"
+  ],
+  [
+    "전체",
+    "All",
+    "すべて",
+    "Todos",
+    "Tous",
+    "Todos",
+    "Alle",
+    "Все"
+  ],
+  [
+    "메가스톤",
+    "Mega Stones",
+    "メガストーン",
+    "Megapiedras",
+    "Méga-Gemmes",
+    "Megapedras",
+    "Mega-Steine",
+    "Мегакамни"
+  ],
+  [
+    "회복",
+    "Recovery",
+    "回復",
+    "Recuperación",
+    "Soin",
+    "Recuperação",
+    "Heilung",
+    "Восстановление"
+  ],
+  [
+    "공격강화",
+    "Attack boosts",
+    "攻撃強化",
+    "Potencia",
+    "Puissance",
+    "Poder",
+    "Angriffsverstärkung",
+    "Усиление атак"
+  ],
+  [
+    "타입강화",
+    "Type boosts",
+    "タイプ強化",
+    "Tipos",
+    "Types",
+    "Tipos",
+    "Typverstärkung",
+    "Усиление типов"
+  ],
+  [
+    "생존",
+    "Survival",
+    "生存",
+    "Supervivencia",
+    "Survie",
+    "Sobrevivência",
+    "Überleben",
+    "Выживание"
+  ],
+  [
+    "행동순서",
+    "Turn order",
+    "行動順",
+    "Orden de turno",
+    "Ordre du tour",
+    "Ordem do turno",
+    "Zugreihenfolge",
+    "Порядок ходов"
+  ],
+  [
+    "명중",
+    "Accuracy",
+    "命中",
+    "Precisión",
+    "Précision",
+    "Precisão",
+    "Genauigkeit",
+    "Точность"
+  ],
+  [
+    "열매",
+    "Berries",
+    "きのみ",
+    "Bayas",
+    "Baies",
+    "Frutas",
+    "Beeren",
+    "Ягоды"
+  ],
+  [
+    "지닌도구",
+    "Held item",
+    "持ち物",
+    "Objeto equipado",
+    "Objet tenu",
+    "Item equipado",
+    "Getragenes Item",
+    "Предмет"
+  ],
+  [
+    "없음",
+    "None",
+    "なし",
+    "Ninguno",
+    "Aucun",
+    "Nenhum",
+    "Keines",
+    "Нет"
+  ],
+  [
+    "소모됨",
+    "Consumed",
+    "消費",
+    "Consumido",
+    "Consommé",
+    "Consumido",
+    "Verbraucht",
+    "Израсходован"
+  ],
+  [
+    "메가진화",
+    "Mega Evolution",
+    "メガシンカ",
+    "Megaevolución",
+    "Méga-Évolution",
+    "Mega Evolução",
+    "Mega-Entwicklung",
+    "Мегаэволюция"
+  ],
+  [
+    "배틀 중 소모된 도구는 다음 배틀에서 복구됩니다.",
+    "Items consumed in battle return for the next battle.",
+    "消費した道具は次のバトルで戻ります。",
+    "Los objetos consumidos vuelven para el próximo combate.",
+    "Les objets consommés reviennent au prochain combat.",
+    "Itens consumidos voltam na próxima batalha.",
+    "Verbrauchte Items sind im nächsten Kampf wieder verfügbar.",
+    "Израсходованные предметы возвращаются к следующему бою."
+  ],
+  [
+    "선발 프리셋",
+    "Roster Presets",
+    "選出プリセット",
+    "Equipos guardados",
+    "Équipes enregistrées",
+    "Equipes salvas",
+    "Teamvorlagen",
+    "Шаблоны команд"
+  ],
+  [
+    "프리셋 불러오기",
+    "Load Preset",
+    "プリセットを読み込む",
+    "Cargar equipo",
+    "Charger une équipe",
+    "Carregar equipe",
+    "Vorlage laden",
+    "Загрузить шаблон"
+  ],
+  [
+    "프리셋 저장",
+    "Save Preset",
+    "プリセットを保存",
+    "Guardar equipo",
+    "Enregistrer l’équipe",
+    "Salvar equipe",
+    "Vorlage speichern",
+    "Сохранить шаблон"
+  ],
+  [
+    "비어 있음",
+    "Empty",
+    "未登録",
+    "Vacío",
+    "Vide",
+    "Vazio",
+    "Leer",
+    "Пусто"
+  ],
+  [
+    "사용 불가",
+    "Unavailable",
+    "使用不可",
+    "No disponible",
+    "Indisponible",
+    "Indisponível",
+    "Nicht verfügbar",
+    "Недоступно"
+  ],
+  [
+    "6마리 등록",
+    "Register six",
+    "6匹を登録",
+    "Registrar seis",
+    "Inscrire six",
+    "Registrar seis",
+    "Sechs registrieren",
+    "Заявить шесть"
+  ],
+  [
+    "상대방이 6마리를 등록하면 양쪽 팀을 보고 출전 포켓몬을 선택할 수 있습니다.",
+    "Once your opponent registers six, choose your lineup while viewing both teams.",
+    "相手が6匹を登録すると両チームを見て出場ポケモンを選べます。",
+    "Cuando tu rival registre seis, elige viendo ambos equipos.",
+    "Après l’inscription adverse, choisis en regardant les deux équipes.",
+    "Quando o rival registrar seis, escolha vendo as duas equipes.",
+    "Sobald der Gegner sechs registriert, wählst du mit Blick auf beide Teams.",
+    "Когда соперник заявит шесть, выберите участников, видя обе команды."
+  ],
+  [
+    "나의 포켓몬 · 6마리",
+    "Your Pokémon · Six",
+    "自分のポケモン・6匹",
+    "Tus Pokémon · Seis",
+    "Tes Pokémon · Six",
+    "Seus Pokémon · Seis",
+    "Deine Pokémon · Sechs",
+    "Ваши покемоны · Шесть"
+  ],
+  [
+    "상대 포켓몬 · 6마리",
+    "Opponent’s Pokémon · Six",
+    "相手のポケモン・6匹",
+    "Pokémon rivales · Seis",
+    "Pokémon adverses · Six",
+    "Pokémon rivais · Seis",
+    "Gegnerische Pokémon · Sechs",
+    "Покемоны соперника · Шесть"
+  ],
+  [
+    "등록 포켓몬",
+    "Registered roster",
+    "登録ポケモン",
+    "Equipo registrado",
+    "Équipe inscrite",
+    "Equipe registrada",
+    "Registriertes Team",
+    "Заявленная команда"
+  ],
+  [
+    "먼저 포켓몬 6마리를 등록한 뒤, 실제 출전할 포켓몬을 선택합니다.",
+    "Register six Pokémon, then choose the battle lineup.",
+    "まず6匹を登録し、出場するポケモンを選びます。",
+    "Registra seis Pokémon y luego elige cuáles combatirán.",
+    "Inscris six Pokémon, puis choisis ceux qui combattront.",
+    "Registre seis Pokémon e depois escolha os participantes.",
+    "Registriere sechs Pokémon und wähle dann die Kampfaufstellung.",
+    "Заявите шесть покемонов, затем выберите участников боя."
+  ],
+  [
+    "출전 포켓몬 선택",
+    "Choose battle lineup",
+    "出場ポケモンを選ぶ",
+    "Elegir participantes",
+    "Choisir les participants",
+    "Escolher participantes",
+    "Kampfaufstellung wählen",
+    "Выбрать участников"
+  ],
+  [
+    "기본 명중률",
+    "Base accuracy",
+    "基本命中率",
+    "Precisión base",
+    "Précision de base",
+    "Precisão base",
+    "Basisgenauigkeit",
+    "Базовая точность"
+  ],
+  [
+    "필중",
+    "Always hits",
+    "必中",
+    "No falla",
+    "Touche toujours",
+    "Não falha",
+    "Trifft immer",
+    "Всегда попадает"
+  ],
+  [
+    "육성이 완료된 BW2 기준 최종 진화체만 출전할 수 있습니다. 진화하지 않는 포켓몬도 포함됩니다.",
+    "Only graduated Pokémon in their final BW2 evolution can battle, including species that do not evolve.",
+    "育成を完了したBW2時点の最終進化形のみ参加できます。進化しないポケモンも含みます。",
+    "Solo pueden combatir Pokémon con crianza completada y evolución final de B2N2, incluidos los que no evolucionan.",
+    "Seuls les Pokémon élevés jusqu’au bout et à leur évolution finale de NB2 peuvent combattre, y compris ceux sans évolution.",
+    "Apenas Pokémon com criação concluída e evolução final de B2W2 podem batalhar, incluindo os que não evoluem.",
+    "Nur fertig aufgezogene Pokémon auf ihrer letzten SW2-Entwicklungsstufe dürfen kämpfen, auch Arten ohne Entwicklung.",
+    "Участвуют только покемоны с завершённым выращиванием на последней стадии B2W2, включая неэволюционирующих."
+  ],
+  [
+    "기술 선택",
+    "Choose move",
+    "技を選ぶ",
+    "Elegir movimiento",
+    "Choisir une capacité",
+    "Escolher golpe",
+    "Attacke wählen",
+    "Выбрать приём"
+  ],
+  [
+    "BW2 기술과 습득 가능한 6세대 페어리 기술 중 최대 4개를 선택합니다. 레벨 제한을 적용하며 선택은 즉시 저장됩니다.",
+    "Choose up to four BW2 or compatible Gen VI Fairy moves. Level limits apply; choices save immediately.",
+    "BW2の技と習得可能な第6世代フェアリー技から最大4つ。レベル制限が適用され、即時保存されます。",
+    "Elige hasta cuatro movimientos de BW2 o Hada de sexta generación compatibles. Se aplican límites de nivel y se guardan al instante.",
+    "Choisis jusqu’à quatre capacités NB2 ou Fée de 6e génération compatibles. Limites de niveau et sauvegarde immédiate.",
+    "Escolha até quatro golpes de B2W2 ou Fada da 6ª geração compatíveis. Limites de nível e salvamento imediato.",
+    "Bis zu vier SW2- oder passende Feen-Attacken der 6. Generation. Levelgrenzen gelten; sofortige Speicherung.",
+    "До четырёх приёмов B2W2 или доступных волшебных приёмов VI поколения. Учитывается уровень; выбор сохраняется сразу."
+  ],
+  [
+    "포켓몬",
+    "Pokémon",
+    "ポケモン",
+    "Pokémon",
+    "Pokémon",
+    "Pokémon",
+    "Pokémon",
+    "Покемон"
+  ],
+  [
+    "기술",
+    "Move",
+    "技",
+    "Movimiento",
+    "Capacité",
+    "Golpe",
+    "Attacke",
+    "Приём"
+  ],
+  [
+    "속성",
+    "Type",
+    "タイプ",
+    "Tipo",
+    "Type",
+    "Tipo",
+    "Typ",
+    "Тип"
+  ],
+  [
+    "기술 설명을 불러올 수 없습니다.",
+    "Move description unavailable.",
+    "技の説明を読み込めません。",
+    "No se puede cargar la descripción.",
+    "Description indisponible.",
+    "Descrição indisponível.",
+    "Beschreibung nicht verfügbar.",
+    "Описание недоступно."
+  ],
+  [
+    "특성",
+    "Ability",
+    "特性",
+    "Habilidad",
+    "Talent",
+    "Habilidade",
+    "Fähigkeit",
+    "Способность"
+  ],
+  [
+    "체력",
+    "HP",
+    "HP",
+    "PS",
+    "PV",
+    "PS",
+    "KP",
+    "ОЗ"
+  ],
+  [
+    "PP",
+    "PP",
+    "PP",
+    "PP",
+    "PP",
+    "PP",
+    "AP",
+    "ОД"
+  ],
+  [
+    "배틀 기록",
+    "Battle log",
+    "バトルログ",
+    "Registro del combate",
+    "Journal du combat",
+    "Registro da batalha",
+    "Kampfprotokoll",
+    "Журнал боя"
+  ],
+  [
+    "배틀 이력을 읽거나 저장할 수 없습니다. 저장 폴더를 확인해 주세요.",
+    "Battle history could not be read or saved. Check the save folder.",
+    "履歴を読み込み・保存できません。保存先を確認してください。",
+    "No se pudo leer o guardar el historial. Revisa la carpeta.",
+    "Impossible de lire ou sauvegarder l’historique. Vérifie le dossier.",
+    "Não foi possível ler ou salvar o histórico. Verifique a pasta.",
+    "Verlauf konnte nicht gelesen oder gespeichert werden. Prüfe den Ordner.",
+    "Не удалось прочитать или сохранить историю. Проверьте папку."
+  ],
+  [
+    "아군",
+    "Ally",
+    "味方",
+    "Aliado",
+    "Allié",
+    "Aliado",
+    "Verbündet",
+    "Союзник"
+  ],
+  [
+    "상대",
+    "Opponent",
+    "相手",
+    "Rival",
+    "Adversaire",
+    "Oponente",
+    "Gegner",
+    "Противник"
+  ],
+  [
+    "상대와 같은 배틀 방식(싱글/더블)으로 매칭을 요청해 주세요.",
+    "Request the same battle format (singles/doubles) as your opponent.",
+    "相手と同じ形式（シングル・ダブル）でマッチングしてください。",
+    "Solicita el mismo formato (individual/doble) que tu rival.",
+    "Choisis le même format (simple/double) que ton adversaire.",
+    "Escolha o mesmo formato (individual/dupla) do oponente.",
+    "Wähle dasselbe Kampfformat (Einzel/Doppel) wie dein Gegner.",
+    "Выберите одинаковый формат боя (одиночный/двойной)."
+  ],
+  [
+    "두 기기의 앱을 같은 버전으로 업데이트해 주세요.",
+    "Update both apps to the same version.",
+    "両方のアプリを同じ版に更新してください。",
+    "Actualiza ambas apps a la misma versión.",
+    "Mets les deux apps à la même version.",
+    "Atualize os dois apps para a mesma versão.",
+    "Aktualisiere beide Apps auf dieselbe Version.",
+    "Обновите оба приложения до одной версии."
+  ],
+  [
+    "배틀 엔진을 실행할 수 없습니다. 최신 앱으로 다시 시도해 주세요.",
+    "The battle engine is unavailable. Try the latest app.",
+    "エンジンを起動できません。最新版で再試行してください。",
+    "El motor no está disponible. Prueba la última app.",
+    "Moteur indisponible. Réessaie avec la dernière app.",
+    "O motor está indisponível. Tente o app mais recente.",
+    "Kampf-Engine nicht verfügbar. Versuche die aktuelle App.",
+    "Движок боя недоступен. Используйте последнюю версию."
+  ],
+  [
+    "상대와의 연결을 확인해 주세요.",
+    "Check the connection to your opponent.",
+    "相手との接続を確認してください。",
+    "Comprueba la conexión con tu rival.",
+    "Vérifie la connexion avec l’adversaire.",
+    "Verifique a conexão com o oponente.",
+    "Prüfe die Verbindung zum Gegner.",
+    "Проверьте соединение с противником."
+  ],
+  [
+    "배틀 선택 또는 데이터를 확인한 뒤 다시 시도해 주세요.",
+    "Check the battle choices and data, then try again.",
+    "バトルの選択・データを確認して再試行してください。",
+    "Revisa las opciones y los datos e inténtalo de nuevo.",
+    "Vérifie les choix et les données, puis réessaie.",
+    "Verifique as escolhas e os dados e tente novamente.",
+    "Prüfe Auswahl und Daten und versuche es erneut.",
+    "Проверьте выбор и данные боя и повторите попытку."
+  ],
+  [
+    "화상",
+    "Burn",
+    "やけど",
+    "Quemadura",
+    "Brûlure",
+    "Queimadura",
+    "Verbrennung",
+    "Ожог"
+  ],
+  [
+    "마비",
+    "Paralysis",
+    "まひ",
+    "Parálisis",
+    "Paralysie",
+    "Paralisia",
+    "Paralyse",
+    "Паралич"
+  ],
+  [
+    "잠듦",
+    "Sleep",
+    "ねむり",
+    "Sueño",
+    "Sommeil",
+    "Sono",
+    "Schlaf",
+    "Сон"
+  ],
+  [
+    "얼음",
+    "Frozen",
+    "こおり",
+    "Congelación",
+    "Gel",
+    "Congelado",
+    "Eingefroren",
+    "Заморозка"
+  ],
+  [
+    "독",
+    "Poison",
+    "どく",
+    "Veneno",
+    "Poison",
+    "Veneno",
+    "Vergiftung",
+    "Отравление"
+  ],
+  [
+    "맹독",
+    "Bad poison",
+    "もうどく",
+    "Veneno grave",
+    "Poison grave",
+    "Veneno grave",
+    "Schwere Vergiftung",
+    "Сильное отравление"
+  ],
+  [
+    "혼란",
+    "Confusion",
+    "こんらん",
+    "Confusión",
+    "Confusion",
+    "Confusão",
+    "Verwirrung",
+    "Замешательство"
+  ],
+  [
+    "풀죽음",
+    "Flinch",
+    "ひるみ",
+    "Retroceso",
+    "Apeurement",
+    "Recuo",
+    "Zurückschrecken",
+    "Испуг"
+  ],
+  [
+    "헤롱헤롱",
+    "Infatuation",
+    "メロメロ",
+    "Enamoramiento",
+    "Amour",
+    "Atração",
+    "Anziehung",
+    "Влюблённость"
+  ],
+  [
+    "교체 불가",
+    "Cannot switch",
+    "交代不可",
+    "No puede cambiar",
+    "Changement impossible",
+    "Não pode trocar",
+    "Wechsel nicht möglich",
+    "Замена невозможна"
+  ],
+  [
+    "상태 효과",
+    "Status effect",
+    "状態効果",
+    "Efecto de estado",
+    "Effet de statut",
+    "Efeito de status",
+    "Statuseffekt",
+    "Эффект состояния"
+  ],
+  [
+    "쾌청",
+    "Sunlight",
+    "ひざしがつよい",
+    "Sol",
+    "Soleil",
+    "Sol",
+    "Sonnenschein",
+    "Солнце"
+  ],
+  [
+    "비",
+    "Rain",
+    "あめ",
+    "Lluvia",
+    "Pluie",
+    "Chuva",
+    "Regen",
+    "Дождь"
+  ],
+  [
+    "모래바람",
+    "Sandstorm",
+    "すなあらし",
+    "Tormenta de arena",
+    "Tempête de sable",
+    "Tempestade de areia",
+    "Sandsturm",
+    "Песчаная буря"
+  ],
+  [
+    "싸라기눈",
+    "Hail",
+    "あられ",
+    "Granizo",
+    "Grêle",
+    "Granizo",
+    "Hagel",
+    "Град"
+  ],
+  [
+    "날씨 효과 종료",
+    "Weather ended",
+    "天候終了",
+    "Fin del clima",
+    "Fin de la météo",
+    "Fim do clima",
+    "Wetter beendet",
+    "Погода закончилась"
+  ],
+  [
+    "기절",
+    "Fainted",
+    "ひんし",
+    "Debilitado",
+    "K.O.",
+    "Desmaiou",
+    "Besiegt",
+    "Без сознания"
+  ],
+  [
+    "체력 감소",
+    "HP lost",
+    "HP減少",
+    "Pierde PS",
+    "PV perdus",
+    "Perde PS",
+    "KP verloren",
+    "Потеря ОЗ"
+  ],
+  [
+    "체력 회복",
+    "HP restored",
+    "HP回復",
+    "Recupera PS",
+    "PV restaurés",
+    "Recupera PS",
+    "KP geheilt",
+    "Восстановление ОЗ"
+  ],
+  [
+    "상태 회복",
+    "Status cured",
+    "状態回復",
+    "Estado curado",
+    "Statut soigné",
+    "Status curado",
+    "Status geheilt",
+    "Состояние снято"
+  ],
+  [
+    "급소 명중",
+    "Critical hit",
+    "急所に当たった",
+    "Golpe crítico",
+    "Coup critique",
+    "Acerto crítico",
+    "Volltreffer",
+    "Критический удар"
+  ],
+  [
+    "능력 상승",
+    "Stat rose",
+    "能力上昇",
+    "Sube estadística",
+    "Stat en hausse",
+    "Atributo aumentou",
+    "Wert gestiegen",
+    "Показатель повышен"
+  ],
+  [
+    "능력 하락",
+    "Stat fell",
+    "能力低下",
+    "Baja estadística",
+    "Stat en baisse",
+    "Atributo diminuiu",
+    "Wert gesunken",
+    "Показатель снижен"
+  ],
+  [
+    "실패",
+    "Failed",
+    "失敗",
+    "Falló",
+    "Échec",
+    "Falhou",
+    "Fehlgeschlagen",
+    "Неудача"
+  ],
+  [
+    "효과 종료",
+    "Effect ended",
+    "効果終了",
+    "Fin del efecto",
+    "Fin de l’effet",
+    "Fim do efeito",
+    "Effekt beendet",
+    "Эффект закончился"
+  ],
+  [
+    "효과 발동",
+    "Effect activated",
+    "効果発動",
+    "Efecto activado",
+    "Effet activé",
+    "Efeito ativado",
+    "Effekt aktiviert",
+    "Эффект сработал"
+  ],
+  [
+    "명중률",
+    "Accuracy",
+    "命中率",
+    "Precisión",
+    "Précision",
+    "Precisão",
+    "Genauigkeit",
+    "Точность"
+  ],
+  [
+    "회피율",
+    "Evasion",
+    "回避率",
+    "Evasión",
+    "Esquive",
+    "Evasão",
+    "Fluchtwert",
+    "Уклонение"
+  ],
+  [
+    "모두",
+    "Everyone",
+    "全員",
+    "Todos",
+    "Tout le monde",
+    "Todos",
+    "Alle",
+    "Все"
+  ],
+  [
+    "모두 (자신 제외)",
+    "Everyone except self",
+    "自分以外全員",
+    "Todos salvo el usuario",
+    "Tous sauf le lanceur",
+    "Todos exceto o usuário",
+    "Alle außer Anwender",
+    "Все, кроме себя"
+  ],
+  [
+    "상대 모두",
+    "All opponents",
+    "相手全員",
+    "Todos los rivales",
+    "Tous les adversaires",
+    "Todos os oponentes",
+    "Alle Gegner",
+    "Все противники"
+  ],
+  [
+    "자신",
+    "Self",
+    "自分",
+    "Usuario",
+    "Soi-même",
+    "Usuário",
+    "Anwender",
+    "Себя"
+  ],
+  [
+    "아군 단일",
+    "One ally",
+    "味方1体",
+    "Un aliado",
+    "Un allié",
+    "Um aliado",
+    "Ein Verbündeter",
+    "Один союзник"
+  ],
+  [
+    "자신 또는 아군 단일",
+    "Self or one ally",
+    "自分か味方1体",
+    "Usuario o un aliado",
+    "Soi-même ou un allié",
+    "Usuário ou um aliado",
+    "Anwender oder ein Verbündeter",
+    "Себя или одного союзника"
+  ],
+  [
+    "아군 모두 (대기 포함)",
+    "All allies, including bench",
+    "味方全員（控え含む）",
+    "Todos los aliados, incluidos suplentes",
+    "Tous les alliés, réserve comprise",
+    "Todos os aliados, incluindo reservas",
+    "Alle Verbündeten, auch Reserve",
+    "Все союзники, включая запас"
+  ],
+  [
+    "아군 모두 (진영)",
+    "All allies / allied side",
+    "味方全員・味方の場",
+    "Todos los aliados / campo aliado",
+    "Tous les alliés / camp allié",
+    "Todos os aliados / campo aliado",
+    "Alle Verbündeten / eigene Seite",
+    "Все союзники / своя сторона"
+  ],
+  [
+    "상대 진영",
+    "Opposing side",
+    "相手の場",
+    "Campo rival",
+    "Camp adverse",
+    "Campo oponente",
+    "Gegnerische Seite",
+    "Сторона противника"
+  ],
+  [
+    "상대 단일 (무작위)",
+    "One random opponent",
+    "相手1体（ランダム）",
+    "Un rival al azar",
+    "Un adversaire au hasard",
+    "Um oponente aleatório",
+    "Ein zufälliger Gegner",
+    "Один случайный противник"
+  ],
+  [
+    "반격 대상 (자동)",
+    "Counterattack target (automatic)",
+    "反撃対象（自動）",
+    "Objetivo del contraataque (automático)",
+    "Cible de contre-attaque (automatique)",
+    "Alvo do contra-ataque (automático)",
+    "Konterziel (automatisch)",
+    "Цель контратаки (автоматически)"
+  ],
+  [
+    "상대 또는 아군 단일",
+    "One opponent or ally",
+    "相手か味方1体",
+    "Un rival o aliado",
+    "Un adversaire ou allié",
+    "Um oponente ou aliado",
+    "Ein Gegner oder Verbündeter",
+    "Один противник или союзник"
+  ],
+  [
+    "상대 단일",
+    "One opponent",
+    "相手1体",
+    "Un rival",
+    "Un adversaire",
+    "Um oponente",
+    "Ein Gegner",
+    "Один противник"
+  ],
+  [
+    "해제까지",
+    "Until removed",
+    "解除まで",
+    "Hasta eliminarse",
+    "Jusqu’au retrait",
+    "Até ser removido",
+    "Bis zur Aufhebung",
+    "До отмены"
+  ],
+  [
+    "날씨 · 필드",
+    "Weather · Field",
+    "天候・場",
+    "Clima · Campo",
+    "Météo · Terrain",
+    "Clima · Campo",
+    "Wetter · Feld",
+    "Погода · Поле"
+  ],
+  [
+    "날씨 효과 무효",
+    "Weather effects suppressed",
+    "天候の効果無効",
+    "Efectos del clima anulados",
+    "Effets météo neutralisés",
+    "Efeitos do clima anulados",
+    "Wetterwirkung aufgehoben",
+    "Эффекты погоды подавлены"
+  ],
+  [
+    "일렉트릭필드",
+    "Electric Terrain",
+    "エレキフィールド",
+    "Campo eléctrico",
+    "Champ Électrifié",
+    "Terreno Elétrico",
+    "Elektrofeld",
+    "Электрическое поле"
+  ],
+  [
+    "무지개",
+    "Rainbow",
+    "にじ",
+    "Arcoíris",
+    "Arc-en-ciel",
+    "Arco-íris",
+    "Regenbogen",
+    "Радуга"
+  ],
+  [
+    "습지",
+    "Swamp",
+    "しつげん",
+    "Pantano",
+    "Marécage",
+    "Pântano",
+    "Sumpf",
+    "Болото"
+  ],
+  [
+    "불바다",
+    "Sea of fire",
+    "ひのうみ",
+    "Mar de fuego",
+    "Mer de feu",
+    "Mar de fogo",
+    "Feuermeer",
+    "Море огня"
+  ],
+  [
+    "행동할 수 없습니다",
+    "Cannot act",
+    "行動できない",
+    "No puede actuar",
+    "Ne peut pas agir",
+    "Não pode agir",
+    "Kann nicht handeln",
+    "Не может действовать"
+  ],
+  [
+    "반동",
+    "Recoil",
+    "反動",
+    "Retroceso",
+    "Recul",
+    "Recuo",
+    "Rückstoß",
+    "Отдача"
+  ],
+  [
+    "PokéRogue 연출을 불러오지 못했습니다. 다음 기술에서 다시 시도합니다.",
+    "PokéRogue animation could not load. The next move will retry.",
+    "PokéRogueの演出を読み込めませんでした。次の技で再試行します。",
+    "No se pudo cargar la animación PokéRogue. Se reintentará en el siguiente movimiento.",
+    "Impossible de charger l’animation PokéRogue. Nouvel essai au prochain mouvement.",
+    "Não foi possível carregar a animação PokéRogue. A próxima jogada tentará novamente.",
+    "PokéRogue-Animation konnte nicht geladen werden. Der nächste Zug versucht es erneut.",
+    "Не удалось загрузить анимацию PokéRogue. Следующий приём повторит попытку."
+  ],
+  [
+    "기술 설명 전체 보기",
+    "Show full move description",
+    "技の説明をすべて表示",
+    "Ver descripción completa",
+    "Afficher la description complète",
+    "Ver descrição completa",
+    "Vollständige Attackenbeschreibung",
+    "Полное описание приёма"
+  ],
+  [
+    "날씨/필드",
+    "Weather / field",
+    "天候・フィールド",
+    "Clima / campo",
+    "Météo / terrain",
+    "Clima / campo",
+    "Wetter / Feld",
+    "Погода / поле"
+  ],
+  [
+    "스탯 현황",
+    "Stat stages",
+    "能力変化",
+    "Niveles de estadísticas",
+    "Niveaux de stats",
+    "Estágios de atributos",
+    "Statusstufen",
+    "Ступени характеристик"
+  ],
+  [
+    "현재 적용 중인 날씨·필드 효과가 없습니다.",
+    "No weather or field effects are active.",
+    "現在、天候・フィールド効果はありません。",
+    "No hay efectos de clima o campo activos.",
+    "Aucun effet de météo ou de terrain actif.",
+    "Nenhum efeito de clima ou campo ativo.",
+    "Keine Wetter- oder Feldeffekte aktiv.",
+    "Нет активных эффектов погоды или поля."
+  ],
+  [
+    "미선택",
+    "Not selected",
+    "未選択",
+    "Sin seleccionar",
+    "Non sélectionné",
+    "Não selecionado",
+    "Nicht gewählt",
+    "Не выбрано"
+  ],
+  [
+    "행동 없음",
+    "No action",
+    "行動なし",
+    "Sin acción",
+    "Aucune action",
+    "Sem ação",
+    "Keine Aktion",
+    "Нет действия"
+  ],
+  [
+    "땅에 있는 포켓몬의 전기 기술 강화 · 잠듦 방지.",
+    "Boosts grounded Pokémon’s Electric moves and prevents sleep.",
+    "地上のポケモンの電気技を強化し眠りを防ぐ。",
+    "Potencia ataques eléctricos de Pokémon en tierra e impide dormir.",
+    "Renforce les attaques Électrik des Pokémon au sol et empêche le sommeil.",
+    "Fortalece golpes Elétricos de Pokémon no chão e impede sono.",
+    "Stärkt Elektro-Attacken von Pokémon am Boden und verhindert Schlaf.",
+    "Усиливает электрические атаки стоящих на земле покемонов и предотвращает сон."
+  ],
+  [
+    "불꽃 기술 위력 ×1.5 · 물 기술 위력 ×0.5.",
+    "Fire move power ×1.5; Water move power ×0.5.",
+    "ほのお技の威力×1.5、みず技の威力×0.5。",
+    "Potencia de Fuego ×1.5; de Agua ×0.5.",
+    "Puissance Feu ×1,5 ; Eau ×0,5.",
+    "Poder de Fogo ×1,5; Água ×0,5.",
+    "Stärke von Feuer-Attacken ×1,5; Wasser ×0,5.",
+    "Мощность Огня ×1,5; Воды ×0,5."
+  ],
+  [
+    "물 기술 위력 ×1.5 · 불꽃 기술 위력 ×0.5.",
+    "Water move power ×1.5; Fire move power ×0.5.",
+    "みず技の威力×1.5、ほのお技の威力×0.5。",
+    "Potencia de Agua ×1.5; de Fuego ×0.5.",
+    "Puissance Eau ×1,5 ; Feu ×0,5.",
+    "Poder de Água ×1,5; Fogo ×0,5.",
+    "Stärke von Wasser-Attacken ×1,5; Feuer ×0,5.",
+    "Мощность Воды ×1,5; Огня ×0,5."
+  ],
+  [
+    "바위·땅·강철 외 타입에 턴 종료 피해. 바위 타입 특방 ×1.5.",
+    "End-turn damage except to Rock, Ground and Steel types. Rock Special Defense ×1.5.",
+    "いわ・じめん・はがね以外に毎ターンダメージ。いわの特防×1.5。",
+    "Daño al final del turno salvo a Roca, Tierra y Acero. Defensa Especial de Roca ×1.5.",
+    "Dégâts en fin de tour sauf Roche, Sol et Acier. Défense Spéciale Roche ×1,5.",
+    "Dano por turno, exceto em Pedra, Terra e Aço. Defesa Especial de Pedra ×1,5.",
+    "Rundenschaden außer für Gestein, Boden und Stahl. Spezial-Verteidigung von Gestein ×1,5.",
+    "Урон в конце хода, кроме Камня, Земли и Стали. Спецзащита Камня ×1,5."
+  ],
+  [
+    "얼음 외 타입에 턴 종료 피해. 눈보라의 명중 판정이 생략됩니다.",
+    "End-turn damage except to Ice types. Blizzard bypasses accuracy checks.",
+    "こおり以外に毎ターンダメージ。ふぶきの命中判定を無視。",
+    "Daño por turno salvo a Hielo. Ventisca omite la comprobación de precisión.",
+    "Dégâts par tour sauf Glace. Blizzard ignore le test de précision.",
+    "Dano por turno, exceto em Gelo. Nevasca ignora o teste de precisão.",
+    "Rundenschaden außer für Eis. Blizzard umgeht die Genauigkeitsprüfung.",
+    "Урон в конце хода, кроме Льда. Метель пропускает проверку точности."
+  ],
+  [
+    "같은 우선도의 기술은 스피드가 느린 포켓몬부터 사용합니다.",
+    "Within the same move priority, slower Pokémon act first.",
+    "同じ優先度では素早さの低いポケモンから行動。",
+    "Con igual prioridad, los Pokémon más lentos actúan primero.",
+    "À priorité égale, les Pokémon les plus lents agissent en premier.",
+    "Na mesma prioridade, os Pokémon mais lentos agem primeiro.",
+    "Bei gleicher Attackenpriorität handeln langsamere Pokémon zuerst.",
+    "При одинаковом приоритете медленные покемоны ходят первыми."
+  ],
+  [
+    "명중률 ×5/3. 떠 있는 포켓몬도 땅 기술·설치물의 영향을 받습니다.",
+    "Accuracy ×5/3. Airborne Pokémon become grounded for Ground moves and hazards.",
+    "命中率×5/3。浮いているポケモンも地面技や設置技の影響を受ける。",
+    "Precisión ×5/3. Los Pokémon aéreos quedan en tierra ante ataques y trampas.",
+    "Précision ×5/3. Les Pokémon en l’air subissent les attaques Sol et pièges au sol.",
+    "Precisão ×5/3. Pokémon no ar ficam no chão para golpes de Terra e armadilhas.",
+    "Genauigkeit ×5/3. Schwebende Pokémon werden für Boden-Attacken und Fallen geerdet.",
+    "Точность ×5/3. Летающие покемоны становятся уязвимы к Земле и наземным ловушкам."
+  ],
+  [
+    "모든 포켓몬의 지닌 도구 효과가 무효화됩니다.",
+    "All held-item effects are suppressed.",
+    "すべてのポケモンの持ち物の効果を無効化。",
+    "Se anulan los efectos de todos los objetos equipados.",
+    "Les effets de tous les objets tenus sont neutralisés.",
+    "Os efeitos de todos os itens segurados são anulados.",
+    "Die Wirkung aller getragenen Items wird aufgehoben.",
+    "Эффекты всех удерживаемых предметов подавлены."
+  ],
+  [
+    "모든 포켓몬의 방어와 특수방어를 서로 바꿉니다.",
+    "All Pokémon swap their Defense and Special Defense.",
+    "すべてのポケモンの防御と特防を入れ替える。",
+    "Intercambia la Defensa y Defensa Especial de todos los Pokémon.",
+    "Échange la Défense et la Défense Spéciale de tous les Pokémon.",
+    "Troca a Defesa e a Defesa Especial de todos os Pokémon.",
+    "Verteidigung und Spezial-Verteidigung aller Pokémon werden vertauscht.",
+    "Защита и спецзащита всех покемонов меняются местами."
+  ],
+  [
+    "전기 기술 위력 약 1/3. 사용자가 교체되면 해제됩니다.",
+    "Electric move power about 1/3. Ends when the user switches out.",
+    "でんき技の威力が約1/3。使用者の交代で解除。",
+    "Potencia de Eléctrico a cerca de 1/3. Termina al retirar al usuario.",
+    "Puissance Électrik réduite à environ 1/3. Prend fin au retrait du lanceur.",
+    "Poder Elétrico reduzido a cerca de 1/3. Termina ao trocar o usuário.",
+    "Stärke von Elektro-Attacken etwa 1/3. Endet beim Auswechseln des Anwenders.",
+    "Мощность Электричества около 1/3. Исчезает при замене применившего покемона."
+  ],
+  [
+    "불꽃 기술 위력 약 1/3. 사용자가 교체되면 해제됩니다.",
+    "Fire move power about 1/3. Ends when the user switches out.",
+    "ほのお技の威力が約1/3。使用者の交代で解除。",
+    "Potencia de Fuego a cerca de 1/3. Termina al retirar al usuario.",
+    "Puissance Feu réduite à environ 1/3. Prend fin au retrait du lanceur.",
+    "Poder de Fogo reduzido a cerca de 1/3. Termina ao trocar o usuário.",
+    "Stärke von Feuer-Attacken etwa 1/3. Endet beim Auswechseln des Anwenders.",
+    "Мощность Огня около 1/3. Исчезает при замене применившего покемона."
+  ],
+  [
+    "받는 물리 피해 감소: 싱글 1/2 · 더블 약 2/3. 급소에는 적용되지 않습니다.",
+    "Physical damage taken: 1/2 in singles; about 2/3 in doubles. Critical hits bypass it.",
+    "受ける物理ダメージがシングル1/2、ダブル約2/3。急所には無効。",
+    "Daño físico recibido: 1/2 en individual, cerca de 2/3 en doble. Los críticos lo ignoran.",
+    "Dégâts physiques reçus : 1/2 en solo, environ 2/3 en duo. Ignoré par les critiques.",
+    "Dano físico recebido: 1/2 em simples, cerca de 2/3 em duplas. Críticos ignoram.",
+    "Physischer Schaden: 1/2 im Einzel, etwa 2/3 im Doppel. Volltreffer umgehen dies.",
+    "Физический урон: 1/2 в одиночном, около 2/3 в парном бою. Критические удары игнорируют."
+  ],
+  [
+    "받는 특수 피해 감소: 싱글 1/2 · 더블 약 2/3. 급소에는 적용되지 않습니다.",
+    "Special damage taken: 1/2 in singles; about 2/3 in doubles. Critical hits bypass it.",
+    "受ける特殊ダメージがシングル1/2、ダブル約2/3。急所には無効。",
+    "Daño especial recibido: 1/2 en individual, cerca de 2/3 en doble. Los críticos lo ignoran.",
+    "Dégâts spéciaux reçus : 1/2 en solo, environ 2/3 en duo. Ignoré par les critiques.",
+    "Dano especial recebido: 1/2 em simples, cerca de 2/3 em duplas. Críticos ignoram.",
+    "Spezieller Schaden: 1/2 im Einzel, etwa 2/3 im Doppel. Volltreffer umgehen dies.",
+    "Специальный урон: 1/2 в одиночном, около 2/3 в парном бою. Критические удары игнорируют."
+  ],
+  [
+    "새로운 주요 상태이상과 혼란을 예방합니다. 기존 상태는 치료하지 않습니다.",
+    "Prevents new major status conditions and confusion; does not cure existing ones.",
+    "新たな状態異常や混乱を防ぐ。既存の状態は治さない。",
+    "Evita nuevos estados principales y confusión; no cura los existentes.",
+    "Prévient les nouveaux statuts majeurs et la confusion sans soigner ceux déjà présents.",
+    "Evita novos estados principais e confusão; não cura os existentes.",
+    "Verhindert neue primäre Statusprobleme und Verwirrung; heilt bestehende nicht.",
+    "Предотвращает новые основные состояния и замешательство, но не лечит существующие."
+  ],
+  [
+    "상대가 능력 등급을 떨어뜨리는 효과를 막습니다.",
+    "Prevents opponents from lowering stat stages.",
+    "相手による能力ランク低下を防ぐ。",
+    "Impide que el rival reduzca niveles de estadísticas.",
+    "Empêche l’adversaire de baisser les niveaux de stats.",
+    "Impede que o adversário reduza os estágios de atributos.",
+    "Verhindert Statuswert-Senkungen durch Gegner.",
+    "Не даёт противнику снижать ступени характеристик."
+  ],
+  [
+    "이 진영 포켓몬의 스피드가 2배가 됩니다.",
+    "Doubles the Speed of Pokémon on this side.",
+    "この側のポケモンの素早さが2倍。",
+    "Duplica la Velocidad de los Pokémon de este lado.",
+    "Double la Vitesse des Pokémon de ce côté.",
+    "Dobra a Velocidade dos Pokémon deste lado.",
+    "Verdoppelt die Initiative der Pokémon auf dieser Seite.",
+    "Удваивает скорость покемонов на этой стороне."
+  ],
+  [
+    "이 진영 포켓몬이 급소에 맞지 않게 합니다.",
+    "Protects Pokémon on this side from critical hits.",
+    "この側のポケモンへの急所攻撃を防ぐ。",
+    "Protege a este lado de golpes críticos.",
+    "Protège ce côté des coups critiques.",
+    "Protege este lado de acertos críticos.",
+    "Schützt Pokémon auf dieser Seite vor Volltreffern.",
+    "Защищает покемонов на этой стороне от критических ударов."
+  ],
+  [
+    "교체로 나온 땅에 닿은 포켓몬에게 피해. 1·2·3겹일 때 최대 HP의 1/8·1/6·1/4.",
+    "Damages grounded switch-ins: 1/8, 1/6 or 1/4 max HP at 1, 2 or 3 layers.",
+    "交代で出た地上のポケモンにダメージ。1・2・3段階で最大HPの1/8・1/6・1/4。",
+    "Daña entradas en tierra: 1/8, 1/6 o 1/4 de PS máximos con 1, 2 o 3 capas.",
+    "Blesse les entrants au sol : 1/8, 1/6 ou 1/4 des PV max avec 1, 2 ou 3 couches.",
+    "Dano a quem entra no chão: 1/8, 1/6 ou 1/4 dos PS máximos com 1, 2 ou 3 camadas.",
+    "Schaden bei geerdeten Einwechslungen: 1/8, 1/6 oder 1/4 der maximalen KP bei 1, 2 oder 3 Lagen.",
+    "Урон входящим наземным покемонам: 1/8, 1/6 или 1/4 макс. HP при 1, 2 или 3 слоях."
+  ],
+  [
+    "교체로 나온 포켓몬에게 바위 상성에 따른 피해. 기본 피해는 최대 HP의 1/8.",
+    "Damages switch-ins by Rock effectiveness; base damage is 1/8 max HP.",
+    "交代で出たポケモンにいわ相性に応じたダメージ。基本は最大HPの1/8。",
+    "Daña al entrar según la eficacia de Roca; base de 1/8 de PS máximos.",
+    "Blesse les entrants selon l’efficacité Roche ; base de 1/8 des PV max.",
+    "Dano ao entrar conforme a eficácia de Pedra; base de 1/8 dos PS máximos.",
+    "Schaden bei Einwechslung gemäß Gesteins-Effektivität; Basis 1/8 der maximalen KP.",
+    "Урон при входе зависит от эффективности Камня; база — 1/8 макс. HP."
+  ],
+  [
+    "교체로 나온 땅에 닿은 포켓몬에게 독. 2겹이면 맹독이며, 땅에 닿은 독 타입이 제거합니다.",
+    "Poisons grounded switch-ins; two layers cause toxic poison. Grounded Poison types remove it.",
+    "交代で出た地上のポケモンを毒に。2段階で猛毒。地上のどくタイプが除去。",
+    "Envenena entradas en tierra; dos capas causan veneno grave. Tipos Veneno en tierra lo eliminan.",
+    "Empoisonne les entrants au sol ; deux couches causent un poison grave. Les types Poison au sol les retirent.",
+    "Envenena entradas no chão; duas camadas causam veneno grave. Tipos Veneno no chão removem.",
+    "Vergiftet geerdete Einwechslungen; zwei Lagen vergiften schwer. Geerdete Gift-Pokémon entfernen sie.",
+    "Отравляет входящих наземных покемонов; два слоя дают тяжёлый яд. Наземные ядовитые типы убирают ловушку."
+  ],
+  [
+    "이 진영 기술의 추가 효과 발생 확률이 2배가 됩니다.",
+    "Doubles secondary-effect chances for moves used by this side.",
+    "この側の技の追加効果の発生率が2倍。",
+    "Duplica la probabilidad de efectos secundarios de este lado.",
+    "Double les chances d’effets secondaires des attaques de ce côté.",
+    "Dobra a chance de efeitos secundários dos golpes deste lado.",
+    "Verdoppelt die Zusatzeffekt-Chance der Attacken auf dieser Seite.",
+    "Удваивает шанс дополнительных эффектов приёмов этой стороны."
+  ],
+  [
+    "이 진영 포켓몬의 스피드가 1/4이 됩니다.",
+    "Reduces the Speed of Pokémon on this side to 1/4.",
+    "この側のポケモンの素早さが1/4。",
+    "Reduce la Velocidad de este lado a 1/4.",
+    "Réduit la Vitesse de ce côté à 1/4.",
+    "Reduz a Velocidade deste lado para 1/4.",
+    "Senkt die Initiative auf dieser Seite auf 1/4.",
+    "Снижает скорость покемонов на этой стороне до 1/4."
+  ],
+  [
+    "이 진영의 불꽃 외 타입 포켓몬은 턴 종료 시 최대 HP의 1/8 피해를 받습니다.",
+    "Non-Fire Pokémon on this side lose 1/8 max HP at the end of each turn.",
+    "この側のほのお以外のポケモンは毎ターン最大HPの1/8ダメージ。",
+    "Los Pokémon no Fuego de este lado pierden 1/8 de PS máximos cada turno.",
+    "Les Pokémon non Feu de ce côté perdent 1/8 des PV max à chaque fin de tour.",
+    "Pokémon não Fogo deste lado perdem 1/8 dos PS máximos ao fim do turno.",
+    "Nicht-Feuer-Pokémon auf dieser Seite verlieren pro Rundenende 1/8 ihrer maximalen KP.",
+    "Неогненные покемоны на этой стороне теряют 1/8 макс. HP в конце хода."
+  ],
+  [
+    "PP 부족",
+    "No PP",
+    "PP不足",
+    "Sin PP",
+    "PP épuisés",
+    "Sem PP",
+    "Keine AP",
+    "Нет ОД"
+  ],
+  [
+    "구애 도구로 기술 고정",
+    "Move locked by Choice item",
+    "こだわりアイテムで技固定",
+    "Movimiento fijado por objeto Elegido",
+    "Capacité bloquée par objet Choix",
+    "Golpe fixado por item Escolha",
+    "Attacke durch Wahl-Item festgelegt",
+    "Приём зафиксирован предметом выбора"
+  ],
+  [
+    "타입 상성을 무시합니다.",
+    "Ignores type matchups.",
+    "タイプ相性を無視します。",
+    "Ignora las afinidades de tipo.",
+    "Ignore les affinités de type.",
+    "Ignora as afinidades de tipo.",
+    "Ignoriert Typenwechselwirkungen.",
+    "Игнорирует взаимодействия типов."
+  ],
+  [
+    "무속성",
+    "Typeless",
+    "タイプなし",
+    "Sin tipo",
+    "Sans type",
+    "Sem tipo",
+    "Ohne Typ",
+    "Без типа"
+  ],
+  [
+    "자신의 공격과 방어가 1단계 오르고 스피드가 1단계 내려갑니다. HP는 소모하지 않습니다.",
+    "Raises the user's Attack and Defense by one stage and lowers Speed by one stage. Costs no HP.",
+    "自分の攻撃と防御を1段階上げ、素早さを1段階下げる。HP消費なし。",
+    "Sube un nivel el Ataque y la Defensa y baja uno la Velocidad. No consume PS.",
+    "Augmente l’Attaque et la Défense d’un cran et baisse la Vitesse d’un cran, sans coût en PV.",
+    "Aumenta Ataque e Defesa em um estágio e reduz Velocidade em um estágio. Não gasta PS.",
+    "Erhöht Angriff und Verteidigung um eine Stufe und senkt Initiative um eine Stufe. Keine KP-Kosten.",
+    "Повышает Атаку и Защиту на ступень, снижает Скорость на ступень. ОЗ не расходуются."
+  ],
+  [
+    "자신의 최대 HP의 절반을 소모해 대상을 저주합니다. 대상은 매 턴 종료 시 최대 HP의 1/4을 잃으며 교체하면 풀립니다.",
+    "Costs half the user's maximum HP to curse the target. The target loses 1/4 of its maximum HP at each turn's end until it switches out.",
+    "自分の最大HPの半分を消費して相手をのろう。相手は毎ターン終了時に最大HPの1/4を失い、交代するとのろいが解ける。",
+    "Consume la mitad de los PS máximos del usuario. El objetivo pierde 1/4 de sus PS máximos por turno hasta cambiar.",
+    "Coûte la moitié des PV maximum du lanceur. La cible perd 1/4 de ses PV maximum en fin de tour jusqu’à son changement.",
+    "Gasta metade dos PS máximos do usuário. O alvo perde 1/4 dos PS máximos ao fim de cada turno até trocar.",
+    "Kostet die Hälfte der maximalen KP. Das Ziel verliert am Rundenende 1/4 seiner maximalen KP, bis es ausgewechselt wird.",
+    "Расходует половину максимальных ОЗ. Цель теряет 1/4 максимальных ОЗ в конце каждого хода до замены."
+  ],
+  [
+    "출전 중",
+    "Active",
+    "出場中",
+    "En combate",
+    "Au combat",
+    "Em campo",
+    "Im Kampf",
+    "В бою"
+  ],
+  [
+    "도구 선택",
+    "Choose item",
+    "道具を選ぶ",
+    "Elegir objeto",
+    "Choisir un objet",
+    "Escolher item",
+    "Item wählen",
+    "Выбрать предмет"
+  ],
+  [
+    "적용",
+    "Apply",
+    "適用",
+    "Aplicar",
+    "Appliquer",
+    "Aplicar",
+    "Anwenden",
+    "Применить"
+  ],
+  [
+    "같은 팀의 6마리는 동일한 도구를 중복해서 지닐 수 없습니다.",
+    "The six team members cannot hold duplicate items.",
+    "6匹のチームで同じ道具を重複して持てません。",
+    "Los seis miembros no pueden llevar objetos repetidos.",
+    "Les six membres ne peuvent pas tenir d’objets identiques.",
+    "Os seis membros não podem equipar itens repetidos.",
+    "Die sechs Teammitglieder dürfen keine identischen Items tragen.",
+    "У шести членов команды не может быть одинаковых предметов."
+  ],
+  [
+    "최근 적용순 · 미사용 도구는 이름순",
+    "Recently applied first · Unused items by name",
+    "最近の適用順・未使用は名前順",
+    "Aplicados recientemente primero · Sin usar por nombre",
+    "Derniers appliqués d’abord · Inutilisés par nom",
+    "Aplicados recentemente primeiro · Não usados por nome",
+    "Zuletzt angewendet zuerst · Ungenutzte nach Name",
+    "Сначала недавно применённые · Неиспользованные по имени"
+  ],
+  [
+    "도구를 선택해 설명을 확인한 뒤 적용을 누르세요.",
+    "Select an item to read its description, then press Apply.",
+    "道具を選んで説明を確認し、適用してください。",
+    "Selecciona un objeto, lee su descripción y pulsa Aplicar.",
+    "Choisis un objet, lis sa description puis applique-le.",
+    "Escolha um item, leia a descrição e pressione Aplicar.",
+    "Wähle ein Item, lies die Beschreibung und klicke Anwenden.",
+    "Выберите предмет, прочтите описание и нажмите «Применить»."
+  ],
+  [
+    "장착됨",
+    "Equipped",
+    "装備中",
+    "Equipado",
+    "Équipé",
+    "Equipado",
+    "Ausgerüstet",
+    "Экипирован"
+  ],
+  [
+    "다른 포켓몬이 사용 중",
+    "Used by another Pokémon",
+    "他のポケモンが使用中",
+    "Lo usa otro Pokémon",
+    "Utilisé par un autre Pokémon",
+    "Usado por outro Pokémon",
+    "Von anderem Pokémon getragen",
+    "Использует другой покемон"
+  ],
+  [
+    "기본 배틀 도구",
+    "Default battle item",
+    "バトルの既定の道具",
+    "Objeto de combate predeterminado",
+    "Objet de combat par défaut",
+    "Item de batalha padrão",
+    "Standard-Kampfitem",
+    "Предмет для боя по умолчанию"
+  ],
+  [
+    "컬렉션 도구를 우선 장착합니다. 없으면 최근 배틀 도구를 사용합니다.",
+    "Use the collection item first; otherwise use the last battle item.",
+    "コレクションの道具を優先し、未設定なら前回のバトルの道具を使います。",
+    "Se usa primero el objeto de la colección; si no hay, el del último combate.",
+    "L’objet de la collection est prioritaire, sinon celui du dernier combat est utilisé.",
+    "O item da coleção tem prioridade; caso não haja, usa o da última batalha.",
+    "Das Sammlungsitem hat Vorrang, sonst wird das zuletzt im Kampf verwendete Item genutzt.",
+    "Сначала используется предмет из коллекции, иначе — из последнего боя."
+  ],
+  [
+    "개체값 등급: 1~32 (높을수록 우수)",
+    "IV grade: 1–32 (higher is better)",
+    "個体値の評価：1～32（高いほど優秀）",
+    "Grado de IV: 1–32 (más alto es mejor)",
+    "Note d’IV : 1–32 (plus élevée = meilleure)",
+    "Grau de IV: 1–32 (maior é melhor)",
+    "DV-Bewertung: 1–32 (höher ist besser)",
+    "Оценка IV: 1–32 (выше — лучше)"
+  ],
+  [
+    "상대 출전 상태 확인 불가",
+    "Opponent party status unavailable",
+    "相手の出場状況は不明",
+    "Estado del equipo rival no disponible",
+    "État de l’équipe adverse indisponible",
+    "Estado da equipe adversária indisponível",
+    "Gegnerischer Teamstatus unbekannt",
+    "Статус команды соперника неизвестен"
+  ],
+  [
+    "챌린지 상점",
+    "Challenge shop",
+    "チャレンジショップ",
+    "Tienda del desafío",
+    "Boutique du défi",
+    "Loja do desafio",
+    "Herausforderungs-Shop",
+    "Магазин испытания"
+  ],
+  [
+    "시작 시 100포인트 · 승리 보상으로 50포인트 선택 가능 · 구매한 상품은 다음 구매 시 5포인트 인상",
+    "Start with 100 points · Choose 50 points as a victory reward · Each purchased product costs 5 more next time",
+    "開始時に100ポイント・勝利報酬で50ポイントを選択可能・購入した商品は次回5ポイント値上げ",
+    "Empiezas con 100 puntos · Puedes elegir 50 puntos como recompensa · El producto comprado cuesta 5 más la próxima vez",
+    "Départ avec 100 points · Récompense de victoire au choix de 50 points · Chaque produit acheté coûte 5 points de plus la prochaine fois",
+    "Comece com 100 pontos · Escolha 50 pontos como recompensa de vitória · O produto comprado custa 5 pontos a mais na próxima vez",
+    "Start mit 100 Punkten · 50 Punkte als Siegesbelohnung wählbar · Gekaufte Produkte kosten beim nächsten Kauf 5 Punkte mehr",
+    "На старте 100 очков · За победу можно выбрать 50 очков · Купленный товар в следующий раз стоит на 5 очков дороже"
+  ],
+  [
+    "사용할 포켓몬을 선택하세요",
+    "Choose a Pokémon",
+    "使うポケモンを選んでください",
+    "Elige un Pokémon",
+    "Choisis un Pokémon",
+    "Escolha um Pokémon",
+    "Wähle ein Pokémon",
+    "Выберите покемона"
+  ],
+  [
+    "완전 회복",
+    "Full recovery",
+    "完全回復",
+    "Recuperación completa",
+    "Récupération complète",
+    "Recuperação completa",
+    "Vollständige Heilung",
+    "Полное восстановление"
+  ],
+  [
+    "PP 전체 회복",
+    "Restore all PP",
+    "全PP回復",
+    "Recuperar todos los PP",
+    "Tous les PP",
+    "Restaurar todos os PP",
+    "Alle AP auffüllen",
+    "Все ОД"
+  ],
+  [
+    "PP 선택 기술 회복",
+    "Restore selected move PP",
+    "選んだ技のPP回復",
+    "Recuperar PP de un movimiento",
+    "PP d’une capacité",
+    "PP de um golpe",
+    "AP einer Attacke",
+    "ОД выбранного приёма"
+  ],
+  [
+    "HP 20% 회복",
+    "Restore 20% HP",
+    "HP20%回復",
+    "Recuperar 20% de PS",
+    "Rendre 20 % des PV",
+    "Restaurar 20% dos PS",
+    "20 % KP heilen",
+    "Восстановить 20% ОЗ"
+  ],
+  [
+    "HP 40% 회복",
+    "Restore 40% HP",
+    "HP40%回復",
+    "Recuperar 40% de PS",
+    "Rendre 40 % des PV",
+    "Restaurar 40% dos PS",
+    "40 % KP heilen",
+    "Восстановить 40% ОЗ"
+  ],
+  [
+    "상태이상 회복",
+    "Status cure",
+    "状態異常回復",
+    "Curar estados",
+    "Soin du statut",
+    "Curar estado",
+    "Statusheilung",
+    "Лечение статуса"
+  ],
+  [
+    "기력의 조각",
+    "Revive",
+    "げんきのかけら",
+    "Revivir",
+    "Rappel",
+    "Reviver",
+    "Beleber",
+    "Оживление"
+  ],
+  [
+    "전체 HP 50% 회복",
+    "Team HP +50%",
+    "全員HP50%回復",
+    "Equipo: PS +50%",
+    "Équipe : PV +50 %",
+    "Equipe: PS +50%",
+    "Team: KP +50 %",
+    "Команда: ОЗ +50%"
+  ],
+  [
+    "기력의 덩어리",
+    "Max Revive",
+    "げんきのかたまり",
+    "Revivir máximo",
+    "Rappel Max",
+    "Reviver Máximo",
+    "Top-Beleber",
+    "Полное оживление"
+  ],
+  [
+    "선발 전원의 HP·모든 기술 PP·상태이상을 완전히 회복하며 기절한 포켓몬도 부활합니다.",
+    "Fully restore the whole team's HP, all PP and status, reviving fainted members.",
+    "全員のHP・全技PP・状態異常を全回復。ひんしも復活。",
+    "Restaura PS, todos los PP y estados de todo el equipo, reviviendo debilitados.",
+    "Restaure PV, tous les PP et statut de toute l’équipe, et ranime les K.O.",
+    "Restaura PS, todos os PP e estado de toda a equipe, revivendo desmaiados.",
+    "Heilt KP, alle AP und Status des gesamten Teams und belebt K.O.-Mitglieder wieder.",
+    "Полностью восстанавливает ОЗ, все ОД и статус всей команды и оживляет потерявших сознание."
+  ],
+  [
+    "선택한 한 마리의 기술 하나를 골라 PP를 최대치로 회복합니다. 기절 대상도 사용 가능하며 부활시키지는 않습니다.",
+    "Fully restore PP of one selected move. Usable on fainted Pokémon without reviving.",
+    "選んだ1匹の技1つのPPを全回復。ひんしも対象、復活なし。",
+    "Restaura todos los PP de un movimiento elegido, incluso debilitado, sin revivir.",
+    "Restaure tous les PP d’une capacité choisie, même K.O., sans ranimer.",
+    "Restaura todos os PP de um golpe escolhido, mesmo desmaiado, sem reviver.",
+    "Füllt alle AP einer gewählten Attacke auf, auch bei K.O., ohne Wiederbelebung.",
+    "Полностью восстанавливает ОД выбранного приёма, даже в обмороке, без оживления."
+  ],
+  [
+    "선택한 한 마리의 모든 기술 PP를 회복합니다. 기절한 포켓몬에게도 사용 가능하며 부활시키지는 않습니다.",
+    "Restore all move PP, including for a fainted Pokémon. Does not revive.",
+    "ひんしを含む1匹の全技PPを回復。復活はしません。",
+    "Restaura todos los PP, incluso debilitado. No revive.",
+    "Restaure tous les PP, même K.O., sans ranimer.",
+    "Restaura todos os PP, mesmo desmaiado. Não revive.",
+    "Füllt alle AP auf, auch bei K.O. Keine Wiederbelebung.",
+    "Восстанавливает все ОД, в том числе в обмороке. Не оживляет."
+  ],
+  [
+    "살아 있고 상태이상이 있는 한 마리의 상태이상을 해제합니다. HP·PP는 회복하지 않습니다.",
+    "Cure status on one living, affected Pokémon. No HP or PP recovery.",
+    "ひんしでない1匹の状態異常を治す。HP・PPは回復しません。",
+    "Cura estados de un Pokémon no debilitado. No restaura PS ni PP.",
+    "Soigne le statut d’un Pokémon non K.O., sans PV ni PP.",
+    "Cura o estado de um Pokémon consciente, sem PS ou PP.",
+    "Heilt den Status eines kampffähigen Pokémon, ohne KP oder AP.",
+    "Лечит статус покемона не в обмороке, без ОЗ и ОД."
+  ],
+  [
+    "선발 전원의 HP를 각 최대 HP의 50%만큼 회복하며 기절 시 부활·상태이상 해제합니다. 살아 있는 포켓몬의 상태이상과 모든 PP는 유지합니다.",
+    "Restore 50% maximum HP to the whole team, reviving and curing fainted members. Living members keep status; PP is unchanged.",
+    "全員の最大HPの50%を回復。ひんしは復活し状態回復。生存者の状態と全PPは維持。",
+    "Recupera 50% de PS máximos del equipo; revive y cura a los debilitados. Conserva estados de los demás y todos los PP.",
+    "Rend 50 % des PV max à l’équipe ; ranime et soigne les K.O. Conserve le statut des autres et les PP.",
+    "Restaura 50% dos PS máximos da equipe; revive e cura desmaiados. Mantém estado dos demais e todos os PP.",
+    "Heilt 50 % der maximalen Team-KP; belebt K.O.-Mitglieder wieder und heilt deren Status. Sonst bleiben Status und alle AP erhalten.",
+    "Восстанавливает 50% макс. ОЗ всей команде, оживляет и лечит потерявших сознание. Сохраняет статус остальных и все ОД."
+  ],
+  [
+    "{amount}포인트",
+    "{amount} points",
+    "{amount}ポイント",
+    "{amount} puntos",
+    "{amount} points",
+    "{amount} pontos",
+    "{amount} Punkte",
+    "{amount} очков"
+  ],
+  [
+    "턴",
+    "Turn",
+    "ターン",
+    "Turno",
+    "Tour",
+    "Turno",
+    "Zug",
+    "Ход"
+  ],
+  [
+    "보상",
+    "Reward",
+    "報酬",
+    "Recompensa",
+    "Récompense",
+    "Recompensa",
+    "Belohnung",
+    "Награда"
+  ],
+  [
+    "프리셋",
+    "Preset",
+    "プリセット",
+    "Equipo",
+    "Équipe",
+    "Equipe",
+    "Vorlage",
+    "Шаблон"
+  ],
+  [
+    "빗나감",
+    "Missed",
+    "外れた",
+    "Falló",
+    "Raté",
+    "Errou",
+    "Verfehlt",
+    "Промах"
+  ]
+]

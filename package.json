@@ -1,0 +1,42 @@
+{
+  "name": "poketokenbar-windows",
+  "version": "1.0.0",
+  "description": "Windows desktop app for PokeTokenBar",
+  "main": "dist/main/index.js",
+  "scripts": {
+    "dev": "pnpm build && electron .",
+    "start": "electron .",
+    "typecheck": "tsc --noEmit",
+    "build": "tsc && node scripts/copy-renderer.mjs",
+    "test": "pnpm build && node --test tests/usage.test.mjs tests/usage-recap.test.mjs tests/companion.test.mjs tests/save-import.test.mjs tests/trade.test.mjs tests/battle.test.mjs tests/battle-progress.test.mjs tests/battle-presentation.test.mjs tests/held-items.test.mjs tests/battle-lan.test.mjs tests/runtime.test.mjs tests/pokemon-details.test.mjs tests/presentation.test.mjs",
+    "package:win": "pnpm build && electron-builder --config electron-builder.config.cjs --win nsis --x64 --publish never"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devEngines": {
+    "packageManager": {
+      "name": "pnpm",
+      "version": "12.18.0",
+      "onFail": "download"
+    }
+  },
+  "packageManager": "pnpm@12.18.0",
+  "type": "module",
+  "productName": "PokeTokenBar Windows",
+  "private": true,
+  "engines": {
+    "node": ">=22.12.0"
+  },
+  "devDependencies": {
+    "@types/node": "^24.19.2",
+    "@types/semver": "^7.8.0",
+    "electron": "45.2.3",
+    "electron-builder": "26.18.0",
+    "typescript": "^6.0.3"
+  },
+  "dependencies": {
+    "electron-updater": "6.8.11",
+    "pokemon-showdown": "0.11.11"
+  }
+}
