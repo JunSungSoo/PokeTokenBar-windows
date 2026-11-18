@@ -1,0 +1,22 @@
+
+Battle UI smoke boot
+Electron ready
+[39972:1114/104202.099:ERROR:net\disk_cache\cache_util_win.cc:25] Unable to move the cache: 액세스가 거부되었습니다. (0x5)
+[39972:1114/104202.101:ERROR:net\disk_cache\disk_cache.cc:293] Unable to create cache
+[39972:1114/104202.101:ERROR:gpu\ipc\host\gpu_disk_cache.cc:737] Gpu Cache Creation failed: -2
+Opening hidden battle
+Battle loaded
+Error occurred in handler for 'battle:open': Error: 진행 중인 교환을 먼저 종료해 주세요.
+    at file:///C:/Users/SungSoo/Desktop/dev/PokeTokenBar-windows/dist/main/battle/ipc.js:97:23
+Error occurred in handler for 'trade:host': Error: 진행 중인 배틀을 먼저 종료해 주세요.
+    at file:///C:/Users/SungSoo/Desktop/dev/PokeTokenBar-windows/dist/main/trade/ipc.js:27:19
+    at file:///C:/Users/SungSoo/Desktop/dev/PokeTokenBar-windows/dist/main/trade/ipc.js:20:20
+[39972:1114/104202.309:ERROR:net\disk_cache\cache_util_win.cc:25] Unable to move the cache: 액세스가 거부되었습니다. (0x5)
+[39972:1114/104202.310:ERROR:net\disk_cache\disk_cache.cc:293] Unable to create cache
+[39972:1114/104202.310:ERROR:gpu\ipc\host\gpu_disk_cache.cc:737] Gpu Cache Creation failed: -2
+PASS: held-item previews, same/used Apply guards, cancel, keyboard commit, translated None/restrictions and eight-language popup bounds.
+Checking setup
+PASS: battle move hover details, contained tooltip and eight-language horizontal bounds.
+PASS: CPU reward, shop purchase, reward application and next encounter render through real IPC.
+PASS: real battle IPC, six-member setup, ordering, engine turn, geometry, auxiliary windows, reload and bounded UI.
+PASS: reciprocal trade/battle IPC gates, CPU close cancellation and confirmed surrender persistence.

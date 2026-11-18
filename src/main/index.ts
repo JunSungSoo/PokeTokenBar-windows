@@ -1,8 +1,12 @@
+import {installDiagnostics} from './diagnostics.js';
+import{InstanceHandoff}from'./instance-handoff.js';
+import{migrateLaunchAssociations}from'./launch-associations.js';
 import { resolveLanguage, translate } from '../shared/localization.js';
 import { PetAgentController } from './pet/controller.js';
+import {petSurfaceSize}from'../shared/pet-presentation.js';
 import type { UsageSnapshot, LimitResult } from '../shared/usage.js';
 import { SettingsStore, registerSettingsIPC } from './settings.js';
-import { app, BrowserWindow, Menu, screen, Tray } from 'electron';
+import { app, BrowserWindow, Menu, screen, Tray,dialog } from 'electron';
 import { mkdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { windowsAppID } from '../shared/windows.js';
@@ -13,7 +17,7 @@ import { registerUsageIPC } from './usage/ipc.js';
 const isWindows = process.platform === 'win32';
 if (isWindows) {
   app.setAppUserModelId(windowsAppID);
-  const data = join(app.getPath('appData'), 'PokeTokenBar Windows');
+  const data = process.env.PTB_STATE_DIR || join(app.getPath('appData'), 'PokeTokenBar Windows');
   mkdirSync(data, { recursive: true });
   app.setPath('userData', data);
 }
@@ -27,6 +31,7 @@ let settingsWindow: BrowserWindow | undefined;
 let usageSummary: UsageSnapshot | undefined;
 let limitSummary: LimitResult[] = [];
 let agentController: PetAgentController | undefined;
+let handingOff=false;
 const shortTokens = (amount: number) => {
   if (amount < 1000) return String(amount);
   if (amount < 999950) return (amount / 1000).toFixed(1).replace(/\.0$/, '') + 'K';
@@ -50,7 +55,7 @@ function trayLines(): string[] {
     }
   }
   if (settings.trayLimits) {
-    const results = limitSummary.filter(row => settings.providers.includes(row.provider)).flatMap(row => row.windows);
+    const results = limitSummary.filter(row => settings.providers.includes(row.provider)&&row.tracked!==false).flatMap(row => row.windows);
     if (results.length) {
       const max = Math.max(...results.map(row => row.usedPercent));
       lines.push((settings.limitMode === 'remaining' ? '한도 잔여 ' + Math.max(0, 100 - max).toFixed(0) : '한도 사용 ' + max.toFixed(0)) + '%');
@@ -138,27 +143,29 @@ async function togglePet(): Promise<boolean> {
     return false;
   }
 
-  const width = preferences.get().petSize + 40;
-  const height = preferences.get().petSize + 40;
-  const { workArea } = screen.getDisplayNearestPoint(screen.getCursorScreenPoint());
+  const size=preferences.get().petSize;
+  const {width,height}=isWindows?petSurfaceSize(size):{width:size,height:size};
+  const position=preferences.get().petPosition;
+  const { workArea } = screen.getDisplayNearestPoint(position??screen.getCursorScreenPoint());
   const window = createWindow({
     width, height,
-    x: workArea.x + workArea.width - width - 24,
-    y: workArea.y + workArea.height - height - 24,
+    x: Math.round(Math.max(workArea.x,Math.min(position?.x??workArea.x+workArea.width-size-24,workArea.x+workArea.width-size))-(width-size)/2),
+    y: Math.max(workArea.y,Math.min(position?.y??workArea.y+workArea.height-size-24,workArea.y+workArea.height-size))-(height-size),
     title: t('PokeTokenBar 플로팅 펫'),
     frame: false,
     transparent: true,
+    backgroundColor: '#00000000',
     resizable: false,
     skipTaskbar: true,
     alwaysOnTop: true,
     hasShadow: false,
-    webPreferences: { preload: fileURLToPath(new URL('./pet-preload.cjs', import.meta.url)) },
+    webPreferences: { preload: fileURLToPath(new URL('./pet-preload.cjs', import.meta.url)), backgroundThrottling:false },
   });
   petWindow = window;
   updateTrayMenu();
   window.on('closed', () => {
     petWindow = undefined;
-    if (preferences.get().petEnabled) void preferences.change({ petEnabled: false }).catch(reportError);
+    if (!handingOff&&preferences.get().petEnabled) void preferences.change({ petEnabled: false }).catch(reportError);
     if (!tray.isDestroyed()) updateTrayMenu();
   });
   window.webContents.on('context-menu', () => {
@@ -171,6 +178,7 @@ async function togglePet(): Promise<boolean> {
   try {
     await window.loadFile(rendererPath('pet.html'));
     if (!window.isDestroyed()) {
+      agentController?.sync();
       window.showInactive();
       if (!preferences.get().petEnabled) await preferences.change({ petEnabled: true });
     }
@@ -191,6 +199,9 @@ function updateTrayMenu(): void {
       label: t(petWindow ? '플로팅 펫 숨기기' : '플로팅 펫 표시'),
       click: () => void togglePet().catch(reportError),
     },
+    { label: t('지금 새로고침'),click:()=>{mainWindow?.webContents.send('desktop:refresh');if(!mainWindow)void showMainWindow().then(()=>mainWindow?.webContents.send('desktop:refresh')).catch(reportError);}},
+    { label:t('도감'),click:()=>void showMainWindow().then(()=>mainWindow?.webContents.send('desktop:open-dex')).catch(reportError)},
+    {label:t('뒷모습'),type:'checkbox',checked:preferences.get().back,click:()=>void preferences.change({back:!preferences.get().back}).catch(reportError)},
     { label: t('설정'), click: () => void showSettings().catch(reportError) },
     { type: 'separator' },
     { label: t('종료'), role: 'quit' },
@@ -205,20 +216,22 @@ function reportError(error: unknown): void {
   console.error('PokeTokenBar 창을 열지 못했습니다:', error);
 }
 
-if (!app.requestSingleInstanceLock()) {
-  app.quit();
-} else {
-  app.on('open-url', (event, url) => { event.preventDefault(); agentController?.accept(url); });
-  app.on('second-instance', (_event, argv) => {
-    const urls = argv.filter(argument => /^poketokenbar:/i.test(argument));
-    if (urls.length) { for (const url of urls) agentController?.accept(url); return; }
-    if (isWindows && argv.includes(loginArgument)) return;
-    void app.whenReady().then(showMainWindow).catch(reportError);
-  });
+async function startApplication(){
+  let initialized!:()=>void;const readyForUI=new Promise<void>(r=>initialized=r);
+  const normal=(argv:string[])=>{void readyForUI.then(()=>{const urls=argv.filter(argument=>/^poketokenbar:/i.test(argument));if(urls.length){for(const url of urls)agentController?.accept(url);return;}if(isWindows&&argv.includes(loginArgument))return;return showMainWindow();}).catch(reportError);};
+  const handoff=isWindows&&app.isPackaged?new InstanceHandoff(app.getPath('userData'),normal,(...values)=>console.error(...values)):undefined;
+  if(handoff?!await handoff.acquire():!app.requestSingleInstanceLock()){app.quit();return;}
+  if(!handoff)app.on('second-instance',(_event,argv)=>normal(argv));
+  const diagnostics=installDiagnostics(join(app.getPath('userData'),'logs'));
+  app.on('will-quit',()=>diagnostics.clean());
+  app.on('render-process-gone',(_event,_contents,details)=>diagnostics.write('Renderer exited',details));
+  app.on('child-process-gone',(_event,details)=>diagnostics.write('Child process exited',details));
+  app.on('open-url',(event,url)=>{event.preventDefault();void readyForUI.then(()=>agentController?.accept(url));});
   app.on('activate', () => void showMainWindow().catch(reportError));
   app.on('window-all-closed', () => { /* 트레이를 통해 앱을 다시 열 수 있습니다. */ });
 
-  app.whenReady().then(async () => {
+  await app.whenReady();
+  {
     await preferences.load();
     agentController = new PetAgentController(() => petWindow, preferences);
     const finishUsage = registerUsageIPC(() => mainWindow, () => petWindow, showMainWindow, () => settingsWindow, preferences,
@@ -240,12 +253,15 @@ if (!app.requestSingleInstanceLock()) {
     if (!isWindows) tray.setIgnoreDoubleClickEvents(true);
     tray.on('click', toggleMainWindow);
     updateTrayMenu();
-    if (isWindows && app.isPackaged) app.setAsDefaultProtocolClient('poketokenbar');
+    diagnostics.write('Desktop ready');
+    if (isWindows && app.isPackaged && !process.env.PTB_STATE_DIR){const result=await migrateLaunchAssociations(process.execPath,app.getVersion(),handoff?.previousExecutables()??[]);diagnostics.write('Launch registrations updated',result);}
+    await handoff?.activate();
     if (preferences.get().petEnabled) await togglePet();
     for (const argument of process.argv) if (/^poketokenbar:/i.test(argument)) agentController.accept(argument);
-    if (!isWindows || process.argv.includes('--show')) return showMainWindow();
-  }).catch((error: unknown) => {
-    reportError(error);
-    app.exit(1);
-  });
+    if (!isWindows || process.argv.includes('--show')) await showMainWindow();
+    handoff?.setReady(async()=>{await finishUsage.forHandoff();await preferences.finishWrites();handingOff=true;});
+    initialized();
+    diagnostics.write('Version owner ready',{version:app.getVersion(),pid:process.pid});
+  }
 }
+void startApplication().catch(async(error:unknown)=>{reportError(error);if(isWindows&&app.isPackaged&&!process.env.PTB_STATE_DIR){await app.whenReady();dialog.showErrorBox('PokeTokenBar 버전 전환',error instanceof Error?error.message:String(error));}app.exit(1);});

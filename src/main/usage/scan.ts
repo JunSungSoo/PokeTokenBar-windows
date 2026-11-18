@@ -1,3 +1,4 @@
+import {expandScanRoots} from './scan-roots.js';
 import { readdir, realpath, stat } from 'node:fs/promises';
 import { homedir } from 'node:os';
 import { basename, join } from 'node:path';
@@ -141,6 +142,7 @@ async function scanCodex(
   return resolveCodex([...loaded.values()], included);
 }
 
+export async function matchingScanFiles(provider:Provider,raw:string){const roots=await expandScanRoots(raw);const found=await findFiles(roots,new Set(roots),path=>provider==='codex'||provider==='claude'?path.endsWith('.jsonl'):accepts(provider,path));return {roots,count:found.files.length};}
 export async function collectUsage(
   provider: Provider, extraRoot: string | null, now = new Date(), roots = defaultRoots(provider), remoteCursor = false, observe?: (entries: readonly Entry[]) => void,
 ): Promise<ProviderUsage> {
@@ -149,7 +151,9 @@ export async function collectUsage(
     ? await import('./cursor-dashboard.js').then(module => module.cursorDashboard(ranges.scanStart, +now)).catch(() => undefined)
     : undefined;
   const isTranscript = provider === 'codex' || provider === 'claude';
-  const found = remote ? { files: [], unreadable: 0 } : await findFiles(extraRoot ? [...roots, extraRoot] : roots,
+  const expanded=extraRoot?await expandScanRoots(extraRoot):[];
+  const extras=extraRoot&&!expanded.length&&!/[?*,\r\n]/.test(extraRoot)?[extraRoot]:expanded;
+  const found = remote ? { files: [], unreadable: 0 } : await findFiles(extraRoot ? [...roots, ...extras] : roots,
     new Set(roots.filter(root => root !== extraRoot)),
     path => isTranscript ? path.endsWith('.jsonl') : accepts(provider, path));
   const unreadableFiles = new Set<string>();

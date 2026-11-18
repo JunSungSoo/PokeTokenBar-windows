@@ -1,72 +1,10 @@
 (() => {
-  const login = document.querySelector('#desktop-login');
-  const loginStatus = document.querySelector('#desktop-login-status');
-  const update = document.querySelector('#desktop-update');
-  const updateStatus = document.querySelector('#desktop-update-status');
-  const pet = document.querySelector('#desktop-pet');
-  let next = 'check';
-
-  window.desktop.settings().then(settings => {
-    if (!settings.supported) return;
-    document.querySelector('#desktop-version').textContent = settings.version;
-    login.checked = settings.openAtLogin;
-    document.querySelector('#desktop-settings').hidden = false;
-  }).catch(() => {});
-
-  login.addEventListener('change', async () => {
-    const requested = login.checked;
-    login.disabled = true;
-    try {
-      const settings = await window.desktop.login(requested);
-      login.checked = settings.openAtLogin;
-      loginStatus.textContent = settings.openAtLogin === requested
-        ? '' : 'Windows 시작 앱 설정에서 권한을 확인해 주세요.';
-    } catch {
-      login.checked = !requested;
-      loginStatus.textContent = '자동 실행 설정을 변경하지 못했습니다.';
-    } finally { login.disabled = false; }
-  });
-
-  pet.addEventListener('click', async () => {
-    pet.disabled = true;
-    try { await window.desktop.togglePet(); }
-    catch { loginStatus.textContent = '플로팅 펫을 열지 못했습니다.'; }
-    finally { pet.disabled = false; }
-  });
-
-  update.addEventListener('click', async () => {
-    update.disabled = true;
-    const installing = next === 'install';
-    let startedInstall = false;
-    try {
-      if (installing) {
-        updateStatus.textContent = '앱을 닫고 업데이트를 설치하는 중입니다…';
-        await window.desktop.installUpdate();
-        startedInstall = true;
-        setTimeout(() => {
-          update.disabled = false;
-          updateStatus.textContent = '설치 창이 열렸는지 확인해 주세요. 앱이 닫히지 않으면 다시 시도할 수 있습니다.';
-        }, 10000);
-        return;
-      }
-      const download = next === 'download';
-      updateStatus.textContent = download ? '업데이트를 다운로드하는 중입니다…' : '업데이트를 확인하는 중입니다…';
-      const result = await (download ? window.desktop.downloadUpdate() : window.desktop.checkUpdate());
-      if (result.state === 'downloaded') {
-        next = 'install';
-        update.textContent = '설치하고 다시 시작';
-        updateStatus.textContent = result.version + ' 버전 설치 준비 완료';
-      } else if (result.state === 'available') {
-        next = 'download';
-        update.textContent = '업데이트 다운로드';
-        updateStatus.textContent = result.version + ' 버전을 사용할 수 있습니다.';
-      } else {
-        updateStatus.textContent = '최신 버전입니다.';
-      }
-    } catch {
-      updateStatus.textContent = '업데이트를 완료하지 못했습니다. 다시 시도해 주세요.';
-    } finally {
-      if (!startedInstall) update.disabled = false;
-    }
-  });
+ const login=document.querySelector('#desktop-login'),loginStatus=document.querySelector('#desktop-login-status'),update=document.querySelector('#desktop-update'),updateStatus=document.querySelector('#desktop-update-status'),pet=document.querySelector('#desktop-pet'),skip=document.querySelector('#desktop-update-skip');let latest,next='check';const t=(s,args)=>window.i18n.t(s,args);
+ function present(value){latest=value;next=['available','skipped'].includes(value.state)?'download':'check';update.textContent=t(next==='download'?'업데이트 다운로드':'업데이트 확인');skip.hidden=next!=='download';skip.textContent=t(value.state==='skipped'?'다시 표시':'이 버전 건너뛰기');if(next==='download')updateStatus.textContent=t(value.state==='skipped'?'건너뛴 버전':'업데이트')+' · '+value.version;}
+ window.desktop.onUpdate?.(present);window.desktop.updateState?.().then(present).catch(()=>{});window.addEventListener('language-changed',()=>{if(latest)present(latest);});
+ skip.addEventListener('click',async()=>{skip.disabled=true;try{present(await window.desktop.skipUpdate(latest?.state==='skipped'));}catch(error){updateStatus.textContent=error.message;}finally{skip.disabled=false;}});
+ window.desktop.settings().then(settings=>{document.querySelector('#desktop-version').textContent=settings.version;document.querySelector('#settings-update-version').textContent=settings.version;if(!settings.supported)return;login.checked=settings.openAtLogin;document.querySelector('#desktop-settings').hidden=false;}).catch(()=>{});
+ login.addEventListener('change',async()=>{const requested=login.checked;login.disabled=true;try{const value=await window.desktop.login(requested);login.checked=value.openAtLogin;loginStatus.textContent=value.openAtLogin===requested?'':t('Windows 시작 앱 설정에서 권한을 확인해 주세요.');}catch{login.checked=!requested;loginStatus.textContent=t('자동 실행 설정을 변경하지 못했습니다.');}finally{login.disabled=false;}});
+ pet.addEventListener('click',async()=>{pet.disabled=true;try{await window.desktop.togglePet();}catch{loginStatus.textContent=t('플로팅 펫을 열지 못했습니다.');}finally{pet.disabled=false;}});
+ update.addEventListener('click',async()=>{update.disabled=true;try{const download=next==='download';updateStatus.textContent=t(download?'다운로드 페이지를 여는 중…':'업데이트를 확인하는 중입니다…');const result=await(download?window.desktop.downloadUpdate():window.desktop.checkUpdate());present(result);if(result.opened)updateStatus.textContent=t('Drive 다운로드 페이지를 열었습니다. ZIP을 풀어 새 버전을 실행해 주세요.');else if(result.state==='current')updateStatus.textContent=t('최신 버전입니다.');}catch(error){updateStatus.textContent=t(error.message.replace(/^Error invoking remote method '[^']+': Error: /,''));}finally{update.disabled=false;}});
 })();

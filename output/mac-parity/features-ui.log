@@ -1,0 +1,30 @@
+
+Error occurred in handler for 'windows:update-state': [Error: No handler registered for 'windows:update-state']
+Error occurred in handler for 'windows:update-state': [Error: No handler registered for 'windows:update-state']
+AssertionError [ERR_ASSERTION]: fast gauge must render orange, including CSS cascade
++ actual - expected
+
+  [
++   234,
++   243,
++   246,
+-   54,
+-   140,
+-   220,
+    255
+  ]
+
+    at run (file:///C:/Users/SungSoo/Desktop/dev/PokeTokenBar-windows/scripts/runtime-ui-smoke.mjs:153:10) {
+  generatedMessage: false,
+  code: 'ERR_ASSERTION',
+  actual: [Array],
+  expected: [Array],
+  operator: 'deepStrictEqual',
+  diff: 'simple'
+}
+Renderer errors: []
+{
+  title: '알',
+  art: '<span class="pokemon-art egg-art home-sprite static-fallback"><img alt="" data-static-src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/egg.png" src="assets/items/egg.png" class="sprite-decoded"><canvas width="30" height="30" class="sprite-canvas egg-canvas" aria-hidden="true"></canvas><span aria-hidden="true" hidden="">🥚</span></span>',
+  status: '부화까지 5M 토큰'
+}

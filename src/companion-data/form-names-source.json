@@ -1,0 +1,5 @@
+{
+  "reference": "origin/feature/battle",
+  "url": "https://raw.githubusercontent.com/PokeAPI/pokeapi/master/data/v2/csv/pokemon_form_names.csv",
+  "sha256": "a24fb943ac39876375ad5c53f3305fd4a6ccb7afacc91ab192579bb50c28f1d1"
+}

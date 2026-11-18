@@ -5,7 +5,8 @@
   const form=p.form?'-'+p.form:'',lookup=(rear)=>data.sizes.records[(rear?'back/':'')+p.speciesID+form] ?? data.sizes.records[(rear?'back/':'')+p.speciesID] ?? {width:64,height:64};
   const front=lookup(false),rear=lookup(true),raw=back?rear:front;
   const heightRecord=data.heights.records[p.speciesID+(p.form?'-'+p.form:'')] ?? data.heights.records[p.speciesID];
-  const physical=80*Math.sqrt(Math.max(.1,(heightRecord?.decimetres ?? 10)/10));const height=physical<=96?physical:96+16*(1-Math.exp(-(physical-96)/60));
+  // Keep physical size differences visible, with headroom for the 151px stage and 11px foot inset.
+  const physical=72*Math.pow(Math.max(.1,(heightRecord?.decimetres ?? 10)/10),.65);const height=physical<=112?physical:112+28*(1-Math.exp(-(physical-112)/55));
   const scale=Math.min(height/Math.max(1,front.height,rear.height),177/Math.max(1,front.width,rear.width));return{width:raw.width*scale,height:raw.height*scale};
  }
  function urls(p,back){
@@ -16,7 +17,7 @@
   if(p.speciesID===6&&!p.form)paths.unshift(assetBase+'player/base-sprites/'+(back?'back-':'')+'6'+(p.shiny?'-sh':'')+'.gif');return paths;
  }
  async function load(p,back){
-  const key=[p.speciesID,p.form,p.shiny,back].join(':');if(cache.has(key))return cache.get(key);
+  const key=[p.speciesID,p.form,p.shiny,p.mega,back].join(':');if(cache.has(key))return cache.get(key);
   const promise=(async()=>{
    let decoded;for(const url of urls(p,back))try{
     const response=await fetch(url,{cache:'force-cache',signal:AbortSignal.timeout(10000)});if(!response.ok)throw Error();const bytes=await response.arrayBuffer();

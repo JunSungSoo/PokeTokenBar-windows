@@ -288,4 +288,9 @@ export class LanTrade {
       ? '내 저장은 완료됐지만 상대의 저장은 확인하지 못했습니다. 교환 전 백업을 확인해 주세요.'
       : '교환 연결이 종료되었습니다.') });
   }
+
+  async prepareHandoff():Promise<void>{
+    this.close();const deadline=Date.now()+10000;
+    while(this.preparing||this.committing){if(Date.now()>deadline)throw new Error('교환 저장을 마친 뒤 새 버전으로 전환할 수 있습니다.');await new Promise(r=>setTimeout(r,20));}
+  }
 }

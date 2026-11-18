@@ -2,6 +2,11 @@ import type { Product, BagItem } from './companion.js';
 /** Reference: ItemKind.allCases and CompanionStore.shopEntries, Mac deaf07e. */
 export const itemOrder: BagItem[] = ['rareCandy', 'mint', 'redMaple', 'shinyCharm'];
 export const productOrder: Product[] = [...itemOrder, 'egg', 'eggUncommon', 'eggRare'];
+export function candyPreview(progress:number,stages:readonly {threshold:number;species:unknown|null}[],quantity:number){
+ let xp=progress+quantity*100000000,evolves=false,graduates=false;
+ for(const stage of stages){if(xp<stage.threshold)break;xp-=stage.threshold;if(stage.species===null){graduates=true;break;}evolves=true;}
+ return{evolves,graduates,carryoverXP:evolves&&!graduates?xp:0,discardedXP:graduates?xp:0};
+}
 export function sortedShop(prices: Record<Product, number>, inventory: Partial<Record<BagItem, number>>): Product[] {
   return [...productOrder].sort((a,b) => Number(a === 'shinyCharm' && Boolean(inventory.shinyCharm)) - Number(b === 'shinyCharm' && Boolean(inventory.shinyCharm)) || prices[a] - prices[b]);
 }

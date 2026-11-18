@@ -1,0 +1,25 @@
+  • electron-builder  version=26.18.0 os=10.0.26300
+  • loaded configuration  file=C:\Users\SungSoo\Desktop\dev\PokeTokenBar-windows\electron-builder.config.cjs
+  • detected workspace root for project using packageManager field  pm=pnpm config=pnpm@12.18.0 resolved=C:\Users\SungSoo\Desktop\dev\PokeTokenBar-windows projectDir=C:\Users\SungSoo\Desktop\dev\PokeTokenBar-windows
+  • skipped dependencies rebuild  reason=npmRebuild is set to false
+  • packaging       platform=win32 arch=x64 electron=45.2.3 appOutDir=output\portable-2026-11-15\win-unpacked
+  • downloaded      label=electron progress=100%
+  • downloaded electron zip extracted successfully  output=C:\Users\SungSoo\Desktop\dev\PokeTokenBar-windows\output\portable-2026-11-15\win-unpacked
+  • searching for node modules  pm=pnpm searchDir=C:\Users\SungSoo\Desktop\dev\PokeTokenBar-windows
+  • duplicate dependency references  dependencies=["preact-render-to-string@6.8.2","websocket-driver@0.7.5","tar@6.2.1","fs-minipass@2.1.0","once@1.4.0","rimraf@3.0.2","readable-stream@3.6.2","lru-cache@6.0.0","minipass-collect@1.0.2","minipass-flush@1.0.7","minipass-pipeline@1.2.4","ssri@8.0.1","strip-ansi@6.0.1"]
+  • missing optional dependencies  dependencies=["@esbuild/aix-ppc64@0.25.12","@esbuild/linux-mips64el@0.25.12","@esbuild/netbsd-arm64@0.25.12","@esbuild/netbsd-x64@0.25.12","@esbuild/openbsd-arm64@0.25.12","@esbuild/openbsd-x64@0.25.12","@esbuild/openharmony-arm64@0.25.12","@esbuild/sunos-x64@0.25.12"]
+  • platform-specific optional dependencies not bundled — add them to your project's optionalDependencies if your app requires them (pnpm 10+ does not auto-install transitive platform binaries)  dependencies=["@esbuild/android-arm@0.25.12","@esbuild/android-arm64@0.25.12","@esbuild/android-x64@0.25.12","@esbuild/darwin-arm64@0.25.12","@esbuild/darwin-x64@0.25.12","@esbuild/freebsd-arm64@0.25.12","@esbuild/freebsd-x64@0.25.12","@esbuild/linux-arm@0.25.12","@esbuild/linux-arm64@0.25.12","@esbuild/linux-ia32@0.25.12","@esbuild/linux-loong64@0.25.12","@esbuild/linux-ppc64@0.25.12","@esbuild/linux-riscv64@0.25.12","@esbuild/linux-s390x@0.25.12","@esbuild/linux-x64@0.25.12","@esbuild/win32-arm64@0.25.12","@esbuild/win32-ia32@0.25.12"]
+  • updating asar integrity executable resource  executablePath=output\portable-2026-11-15\win-unpacked\PokeTokenBar.exe
+  ⨯ UNKNOWN: unknown error, open 'C:\Users\SungSoo\Desktop\dev\PokeTokenBar-windows\output\portable-2026-11-15\win-unpacked\PokeTokenBar.exe'  failedTask=build stackTrace=Error: UNKNOWN: unknown error, open 'C:\Users\SungSoo\Desktop\dev\PokeTokenBar-windows\output\portable-2026-11-15\win-unpacked\PokeTokenBar.exe'
+    at open (node:internal/fs/promises:1467:25)
+    at writeFile (node:internal/fs/promises:2210:14)
+    at editWindowsResources (C:\Users\SungSoo\Desktop\dev\PokeTokenBar-windows\node_modules\.pnpm\app-builder-lib@26.18.0_dmg_0281cbfedb89f76e3d861009d76d60d9\node_modules\app-builder-lib\src\util\resEdit.ts:50:3)
+    at WinPackager.signAndEditResources (C:\Users\SungSoo\Desktop\dev\PokeTokenBar-windows\node_modules\.pnpm\app-builder-lib@26.18.0_dmg_0281cbfedb89f76e3d861009d76d60d9\node_modules\app-builder-lib\src\winPackager.ts:229:5)
+    at WinPackager.signApp (C:\Users\SungSoo\Desktop\dev\PokeTokenBar-windows\node_modules\.pnpm\app-builder-lib@26.18.0_dmg_0281cbfedb89f76e3d861009d76d60d9\node_modules\app-builder-lib\src\winPackager.ts:291:9)
+    at WinPackager.doSignAfterPack (C:\Users\SungSoo\Desktop\dev\PokeTokenBar-windows\node_modules\.pnpm\app-builder-lib@26.18.0_dmg_0281cbfedb89f76e3d861009d76d60d9\node_modules\app-builder-lib\src\platformPackager.ts:446:21)
+    at WinPackager.doPack (C:\Users\SungSoo\Desktop\dev\PokeTokenBar-windows\node_modules\.pnpm\app-builder-lib@26.18.0_dmg_0281cbfedb89f76e3d861009d76d60d9\node_modules\app-builder-lib\src\platformPackager.ts:360:7)
+    at WinPackager.pack (C:\Users\SungSoo\Desktop\dev\PokeTokenBar-windows\node_modules\.pnpm\app-builder-lib@26.18.0_dmg_0281cbfedb89f76e3d861009d76d60d9\node_modules\app-builder-lib\src\platformPackager.ts:167:5)
+    at Packager.doBuild (C:\Users\SungSoo\Desktop\dev\PokeTokenBar-windows\node_modules\.pnpm\app-builder-lib@26.18.0_dmg_0281cbfedb89f76e3d861009d76d60d9\node_modules\app-builder-lib\src\packager.ts:539:11)
+    at executeFinally (C:\Users\SungSoo\Desktop\dev\PokeTokenBar-windows\node_modules\.pnpm\builder-util@26.16.0_supports-color@7.2.0\node_modules\builder-util\src\promise.ts:12:14)
+    at Packager.build (C:\Users\SungSoo\Desktop\dev\PokeTokenBar-windows\node_modules\.pnpm\app-builder-lib@26.18.0_dmg_0281cbfedb89f76e3d861009d76d60d9\node_modules\app-builder-lib\src\packager.ts:459:31)
+    at executeFinally (C:\Users\SungSoo\Desktop\dev\PokeTokenBar-windows\node_modules\.pnpm\builder-util@26.16.0_supports-color@7.2.0\node_modules\builder-util\src\promise.ts:12:14)

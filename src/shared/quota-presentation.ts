@@ -1,6 +1,13 @@
 export interface UsageBlock {totalTokens:number;tokensPerMinute:number;startTime:number;endTime:number}
 export interface AttributionEntry {time:number;tokens:{total:number};claudeSessions?:string[]}
 export interface PromptAccount {id:string;prompts:Record<string,number[]>}
+export function quotaPresentation(window:{usedPercent:number;resetsAt?:number;spanSeconds?:number;forecastEligible?:boolean},block:UsageBlock|undefined,remaining:boolean,now:number,warn=80,critical=95){
+ const pace=paceFraction(window.resetsAt,window.spanSeconds,now);
+ return{percent:displayPercent(window.usedPercent,remaining),pace,marker:pace===null?null:displayPercent(pace*100,remaining)/100,
+  tier:paceTier(window.usedPercent,pace,critical),gauge:gaugeTier(window.usedPercent,pace,warn,critical),
+  delta:pace===null?null:roundedPaceDelta(window.usedPercent,pace),
+  forecast:window.forecastEligible?forecast(block,window.usedPercent,window.resetsAt,now):null};
+}
 export function paceFraction(reset:number|undefined,spanSeconds:number|undefined,now:number):number|null{
  if(reset===undefined||spanSeconds===undefined||spanSeconds<=0)return null;
  const value=(spanSeconds-(reset-now)/1000)/spanSeconds;return Number.isFinite(value)&&value>=0&&value<=1?value:null;

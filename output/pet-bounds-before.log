@@ -1,0 +1,9 @@
+
+[21264:1116/005421.242:ERROR:net\disk_cache\cache_util_win.cc:25] Unable to move the cache: 액세스가 거부되었습니다. (0x5)
+[21264:1116/005421.243:ERROR:net\disk_cache\disk_cache.cc:293] Unable to create cache
+[21264:1116/005421.243:ERROR:gpu\ipc\host\gpu_disk_cache.cc:737] Gpu Cache Creation failed: -2
+NO-OP BOUNDS WRITES 5
+[21264:1116/005421.511:ERROR:net\disk_cache\cache_util_win.cc:25] Unable to move the cache: 액세스가 거부되었습니다. (0x5)
+[21264:1116/005421.512:ERROR:net\disk_cache\disk_cache.cc:293] Unable to create cache
+[21264:1116/005421.512:ERROR:gpu\ipc\host\gpu_disk_cache.cc:737] Gpu Cache Creation failed: -2
+PASS: exact-size original egg, no dot handle, persistent prayer hover through IPC/settings updates, rapid prayer count, particle expiry, pixel hearts, drag persistence and Pokémon click.

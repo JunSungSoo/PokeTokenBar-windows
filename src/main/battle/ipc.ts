@@ -1,4 +1,5 @@
 import { app, dialog,ipcMain, type BrowserWindow } from 'electron';
+import {resolveLanguage,translate} from '../../shared/localization.js';
 import type { BattleAction, BattleMode } from '../../shared/battle.js';
 import type { CompanionStore } from '../companion/store.js';
 import { object } from '../usage/jsonl.js';
@@ -40,25 +41,42 @@ function actionsOf(value: unknown): BattleAction[] {
 
 function equippedTeam(offers:OfferedItem[],input:unknown){const team=offers.map(ownedMember),candidates=team.map((p,index)=>({...p,battleDefaultItem:offers[index].item.battleDefaultItem})),defaults=assignHeldItems(team.map(p=>p.id),candidates,{},{},heldItems,formCatalog);return withItems(team.map(p=>({...p,item:defaults[p.id]})),input);}
 
-export function registerBattleIPC(companion: CompanionStore, mainWindow: () => BrowserWindow | undefined,preferences:SettingsStore,reveal?:(window:BrowserWindow)=>void,notify?:(value:CompanionView)=>void,options:{seed?:()=>number[]}={}) {
+export function registerBattleIPC(companion: CompanionStore, mainWindow: () => BrowserWindow | undefined,preferences:SettingsStore,reveal?:(window:BrowserWindow)=>void,notify?:(value:CompanionView)=>void,options:{seed?:()=>number[];tradeActive?:()=>boolean;activityChanged?:()=>void}={}) {
   const store = new ChallengeStore(app.getPath('userData'),options.seed);
   const windows=new BattleWindows(reveal),assets=new BattleAssets();
+  windows.changed=options.activityChanged;
   const lan=new LanBattle(app.getPath('userData'),value=>{
     const main=mainWindow();if(main&&!main.isDestroyed())main.webContents.send('battle:lan-changed',value);windows.lan(value);
+    options.activityChanged?.();
     if(value.phase==='preparing' && !windows.main)void windows.open('lan').catch(()=>{});
   });
-  windows.canClose=async()=>{if(!lan.active())return true;const response=await dialog.showMessageBox(windows.main!,{type:'question',message:'대전을 기권하고 창을 닫으시겠습니까?',buttons:['취소','기권 후 닫기'],defaultId:0,cancelId:0});if(response.response!==1)return false;lan.surrender();return true;};
+  const confirmExit=async()=>{
+    const cpu=windows.kind==='challenge'&&windows.main?await store.resume('singles',true):null;
+    if(!lan.active()&&cpu?.phase!=='battling')return true;
+    const t=(text:string)=>translate(text,resolveLanguage(preferences.get().language,app.getLocale()));
+    const settings={type:'question' as const,message:t('대전을 기권하고 창을 닫으시겠습니까?'),buttons:[t('취소'),t('기권 후 닫기')],defaultId:0,cancelId:0};
+    const response=windows.main?await dialog.showMessageBox(windows.main,settings):await dialog.showMessageBox(settings);
+    if(response.response!==1)return false;
+    if(lan.active())lan.surrender();else if(cpu){const value=await store.surrender('singles');windows.broadcast(value);}
+    return true;
+  };
+  windows.canClose=confirmExit;
   preferences.subscribe(context=>windows.context(context));
-  app.once('before-quit',()=>{lan.shutdown();assets.close();});
+  let quitting=false,checkingQuit=false;
+  app.on('before-quit',event=>{if(quitting||!windows.main&&!lan.active()){lan.shutdown();assets.close();return;}event.preventDefault();if(checkingQuit)return;checkingQuit=true;void confirmExit().then(async ok=>{if(ok){await store.finishWrites();await lan.finishWrites();quitting=true;windows.allowClose=true;lan.shutdown();assets.close();app.quit();}}).catch(error=>console.error('Battle exit failed:',error)).finally(()=>{checkingQuit=false;});});
   const audioPath=join(app.getPath('userData'),'battle-presentation-v1.json');
   let audioQueue:Promise<unknown>=Promise.resolve();
   let audio: {music:number;effects:number;enabled:boolean}|undefined;
+  let entering=false;
   function handle(channel: string, callback: (...values: unknown[]) => unknown): void {
     ipcMain.handle('battle:' + channel, (event, ...values) => {
       const window = mainWindow();
       if ((!window || event.senderFrame !== window.webContents.mainFrame) && !windows.owns(event.senderFrame)) throw new Error('Unexpected battle request');
       if (!['choices','resume','assets','context','audio','auxiliary'].includes(channel) && !(channel==='lan'&&['state','history'].includes(values[0] as string)) &&
           event.senderFrame!==window?.webContents.mainFrame && !windows.isMain(event.senderFrame))throw new Error('Unexpected battle command');
+      const starts=channel==='open'||channel==='start'||channel==='lan'&&['host','connect','register','ready'].includes(String(values[0]));
+      if(starts&&options.tradeActive?.())throw new Error('진행 중인 교환을 먼저 종료해 주세요.');
+      if(starts){if(entering)throw new Error('배틀을 준비하는 중입니다.');entering=true;options.activityChanged?.();return Promise.resolve().then(()=>callback(...values)).finally(()=>{entering=false;options.activityChanged?.();});}
       return callback(...values);
     });
   }
@@ -129,5 +147,5 @@ export function registerBattleIPC(companion: CompanionStore, mainWindow: () => B
     return store.advance(modeOf(mode), reward, checkpoint);
   });
   handle('surrender', mode => store.surrender(modeOf(mode)));
-  return {store,lan,windows,assets,blocksUpdate:()=>lan.active(),finishWrites:async()=>{await store.finishWrites();await lan.finishWrites();await audioQueue;}};
+  return {store,lan,windows,assets,isBusy:()=>entering||!!windows.main&&windows.kind==='challenge'||['connecting','connected','preparing','playing','reconnecting'].includes(lan.state().phase),blocksUpdate:()=>lan.active(),finishWrites:async()=>{await store.finishWrites();await lan.finishWrites();await audioQueue;},prepareHandoff:async()=>{lan.shutdown();await store.finishWrites();await lan.finishWrites();await audioQueue;quitting=true;windows.allowClose=true;assets.close();}};
 }

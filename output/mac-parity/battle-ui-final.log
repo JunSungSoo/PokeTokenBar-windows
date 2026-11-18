@@ -1,0 +1,73 @@
+
+Battle UI smoke boot
+Electron ready
+Opening hidden battle
+Battle loaded
+Error occurred in handler for 'battle:open': Error: 진행 중인 교환을 먼저 종료해 주세요.
+    at file:///C:/Users/SungSoo/Desktop/dev/PokeTokenBar-windows/dist/main/battle/ipc.js:97:23
+Error occurred in handler for 'trade:host': Error: 진행 중인 배틀을 먼저 종료해 주세요.
+    at file:///C:/Users/SungSoo/Desktop/dev/PokeTokenBar-windows/dist/main/trade/ipc.js:27:19
+    at file:///C:/Users/SungSoo/Desktop/dev/PokeTokenBar-windows/dist/main/trade/ipc.js:20:20
+PASS: held-item previews, same/used Apply guards, cancel, keyboard commit, translated None/restrictions and eight-language popup bounds.
+Checking setup
+PASS: battle move hover details, contained tooltip and eight-language horizontal bounds.
+Error occurred in handler for 'battle:assets': Error: Unexpected battle request
+    at file:///C:/Users/SungSoo/Desktop/dev/PokeTokenBar-windows/dist/main/battle/ipc.js:91:23
+Error occurred in handler for 'battle:audio': Error: Unexpected battle request
+    at file:///C:/Users/SungSoo/Desktop/dev/PokeTokenBar-windows/dist/main/battle/ipc.js:91:23
+PASS: CPU reward, shop purchase, reward application and next encounter render through real IPC.
+PASS: real battle IPC, six-member setup, ordering, engine turn, geometry, auxiliary windows, reload and bounded UI.
+Error: Timed out: document.querySelector('#battle-move-0-1') / ⚑
+챌린지
+
+싱글 · 6마리
+
+비상
+
+2 / 27
+
+선택한 순서대로 출전합니다. 첫 포켓몬이 선발입니다.
+
+나의 포켓몬 · 6마리
+○
+거북왕
+HP 299/299
+먹다남은음식
+○
+리자몽
+HP 297/297
+신비의물방울
+○
+이상해꽃
+HP 301/301
+없음
+○
+망나뇽
+HP 323/323
+없음
+○
+갸라도스
+HP 331/331
+없음
+○
+후딘
+HP 251/251
+없음
+상대 포켓몬 · 6마리
+구구
+Lv. 95
+피죤
+Lv. 95
+야부엉
+Lv. 95
+두트리오
+Lv. 95
+크로뱃
+Lv. 95
+무장조
+Lv. 95
+세이브 후 종료
+배틀 시작
+    at until (file:///C:/Users/SungSoo/Desktop/dev/PokeTokenBar-windows/scripts/battle-ui-smoke.mjs:20:177)
+    at async run (file:///C:/Users/SungSoo/Desktop/dev/PokeTokenBar-windows/scripts/battle-ui-smoke.mjs:45:34)
+Battle UI smoke deadline

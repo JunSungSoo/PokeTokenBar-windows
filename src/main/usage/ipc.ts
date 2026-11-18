@@ -1,11 +1,16 @@
-import{defaultClaudeRoots,withAccountBlocks,type ClaudeAccountSource}from'./claude-accounts.js';
+import{prayerHoverLine}from'../../shared/pet-presentation.js';
+import {observeSystemState} from '../system-state.js';
+import {CompanionEvents,localizedNotice,type CompanionNotice} from '../companion/events.js';
+import{defaultClaudeRoots,withAccountBlocks,claudeAccountSources,type ClaudeAccountSource}from'./claude-accounts.js';
+import {SessionKeys} from './session-key.js';
 import {UsageHistoryStore}from'./history.js';
 import { activityState } from '../../shared/companion-presentation.js';
+import {limitWarning,preserveLimits,trackedClaudeAccount} from '../../shared/limit-tracking.js';
 import { registerMapleWindow } from '../companion/maple-window.js';
 import { PokemonDetailsClient } from '../companion/pokemon-details.js';
 import { resolveLanguage, translate } from '../../shared/localization.js';
 import { ProviderStatusChecker } from './provider-status.js';
-import { limitAlerts, type AlertLedger } from './limit-alerts.js';
+import { limitAlertDetails, type AlertLedger } from './limit-alerts.js';
 import { writeSaveAtomically } from '../companion/store.js';
 import type { SettingsStore } from '../settings.js';
 import type { CandyWindow } from '../companion/candy-grants.js';
@@ -13,12 +18,12 @@ import type { CompanionView } from '../../shared/companion.js';
 import { bagItems, shopCatalog, type BagItem, type CompanionAction, type Product } from '../../shared/companion.js';
 import { object } from './jsonl.js';
 import { registerBattleIPC } from '../battle/ipc.js';
-import { app, BrowserWindow, dialog, ipcMain, Notification } from 'electron';
+import { app, BrowserWindow, dialog, ipcMain, Notification,safeStorage } from 'electron';
 import { readFile, rename, rm, writeFile } from 'node:fs/promises';
 import { basename, join } from 'node:path';
 import { randomUUID } from 'node:crypto';
 import { providers, providerLabels, type Provider, type UsageSnapshot } from '../../shared/usage.js';
-import { collectUsage } from './scan.js';
+import { collectUsage,matchingScanFiles } from './scan.js';
 import type { SaveImportPreview } from '../../shared/companion.js';
 import { readMacSave, SaveImportError } from '../companion/mac-save.js';
 import { CompanionStore, type ImportedProgress } from '../companion/store.js';
@@ -40,7 +45,7 @@ async function extraRoot(provider: Provider): Promise<string | null> {
   }
 }
 
-export function registerUsageIPC(mainWindow: () => BrowserWindow | undefined, petWindow: () => BrowserWindow | undefined, showMainWindow: () => Promise<void>, settingsWindow: () => BrowserWindow | undefined, preferences: SettingsStore, onUsage: (snapshot: UsageSnapshot) => void, onLimits: (results: import('../../shared/usage.js').LimitResult[]) => void, onPetClick: () => void): () => Promise<void> {
+export function registerUsageIPC(mainWindow: () => BrowserWindow | undefined, petWindow: () => BrowserWindow | undefined, showMainWindow: () => Promise<void>, settingsWindow: () => BrowserWindow | undefined, preferences: SettingsStore, onUsage: (snapshot: UsageSnapshot) => void, onLimits: (results: import('../../shared/usage.js').LimitResult[]) => void, onPetClick: () => void): (() => Promise<void>) & {forHandoff:()=>Promise<void>} {
   function authorized(event: Electron.IpcMainInvokeEvent): BrowserWindow {
     const window = [mainWindow(), settingsWindow()].find(window => window && !window.isDestroyed() && event.senderFrame === window.webContents.mainFrame);
     if (!window) {
@@ -49,16 +54,40 @@ export function registerUsageIPC(mainWindow: () => BrowserWindow | undefined, pe
     return window;
   }
 
-  const companion = new CompanionStore(join(app.getPath('userData'), 'companion-v1.json'));
+  const companion = new CompanionStore(join(app.getPath('userData'), 'companion-v1.json'),undefined,emitNotices);
+  ipcMain.handle('companion:export-mac',async event=>{const owner=authorized(event);const choice=await dialog.showSaveDialog(owner,{title:translate('세이브 내보내기',resolveLanguage(preferences.get().language,app.getLocale())),defaultPath:'poketokenbar-save.json',filters:[{name:'PokeTokenBar save v2',extensions:['json']}]});if(choice.canceled||!choice.filePath)return null;await writeSaveAtomically(choice.filePath,await companion.exportMac(app.getVersion(),resolveLanguage(preferences.get().language,app.getLocale())));return choice.filePath;});
+  const sessionKeys=new SessionKeys(join(app.getPath('userData'),'claude-session-keys'),{
+    encrypt:value=>{if(!safeStorage.isEncryptionAvailable())throw new Error('운영체제 암호화를 사용할 수 없습니다.');return safeStorage.encryptString(value);},
+    decrypt:value=>safeStorage.decryptString(value),
+  });
+  ipcMain.handle('usage:session-key',async(event,account:unknown,action:unknown,value:unknown)=>{
+    authorized(event);const sources=await claudeAccountSources(preferences.get().claudeRoots);
+    if(typeof account!=='string'||!sources.some(source=>source.id===account))throw new Error('계정을 선택해 주세요.');
+    if(action==='read')return sessionKeys.state(account);
+    if(action==='organizations')return sessionKeys.organizations(account);
+    await limits?.catch(()=>{});
+    if(action==='save'&&typeof value==='string')await sessionKeys.save(account,value);
+    else if(action==='clear')await sessionKeys.clear(account);
+    else if(action==='select'&&typeof value==='string')await sessionKeys.select(account,value);
+    else throw new Error('Invalid session key command');
+    await refreshLimits();return sessionKeys.state(account);
+  });
   const maple = registerMapleWindow(companion,preferences,authorized,notifyCompanion);
-  const trade = registerTradeIPC(companion, mainWindow, notifyCompanion);
-  const battle = registerBattleIPC(companion, mainWindow,preferences,undefined,notifyCompanion);
+  let battle:ReturnType<typeof registerBattleIPC>|undefined;
+  const activity=()=>({trade:trade.blocksUpdate(),battle:battle?.isBusy()??false});
+  const notifyActivity=()=>{const owner=mainWindow();if(owner&&!owner.isDestroyed())owner.webContents.send('usage:activity-gate',activity());};
+  const trade = registerTradeIPC(companion, mainWindow, state=>notifyCompanion(state,false),{canEnter:()=>!battle?.isBusy(),activityChanged:notifyActivity});
+  battle=registerBattleIPC(companion,mainWindow,preferences,undefined,notifyCompanion,{tradeActive:()=>trade.blocksUpdate(),activityChanged:notifyActivity});
   ipcMain.handle('companion:read', event => {
     authorized(event);
     return companion.read();
   });
 
-  function notifyCompanion(state: CompanionView | null): void {
+  const companionEvents=new CompanionEvents(join(app.getPath('userData'),'companion-events-v1.json'));
+  function petNotice(title:string,body:string,priority=1){const pet=petWindow();if(pet&&!pet.isDestroyed())pet.webContents.send('pet:notice',{title,body,priority});}
+  function emitNotices(events:CompanionNotice[]){for(const event of events)try{const {title,body}=localizedNotice(event,resolveLanguage(preferences.get().language,app.getLocale()));petNotice(title,body);if(preferences.get().companionNotifications&&Notification.isSupported())new Notification({title,body}).show();}catch(error){console.error('Companion notification failed:',error);}}
+  function notifyCompanion(state: CompanionView | null,announce=true): void {
+    if(state)void companionEvents.observe(state,announce,false).then(emitNotices).catch(error=>console.error('Companion event failed:',error));
     if (state) maple.broadcast(state);
     for (const window of [mainWindow(), settingsWindow()]) {
       if (window && !window.isDestroyed()) window.webContents.send('companion:updated', state);
@@ -67,10 +96,12 @@ export function registerUsageIPC(mainWindow: () => BrowserWindow | undefined, pe
     if (state && pet && !pet.isDestroyed()) pet.webContents.send('pet:updated', state.pet);
   }
 
+  let latestSnapshot:UsageSnapshot|undefined;
   function authorizePet(event: Electron.IpcMainInvokeEvent): void {
     const pet = petWindow();
     if (!pet || event.senderFrame !== pet.webContents.mainFrame) throw new Error('Unexpected pet request');
   }
+  ipcMain.handle('pet:hover',async event=>{authorizePet(event);const state=await companion.read(),language=resolveLanguage(preferences.get().language,app.getLocale()),today=Object.values(latestSnapshot?.usage??{}).reduce((sum,row)=>sum+row.today.total,0);const usedToday=new Set(Object.entries(latestSnapshot?.usage??{}).filter(([,row])=>row.today.total>0).map(([id])=>id));const percentages=presentedCurrent.filter(row=>row.tracked!==false&&usedToday.has(row.provider)).flatMap(row=>row.windows.filter(window=>!/personal|individual|개인/i.test(window.label)).map(window=>window.usedPercent));let body=t('오늘')+' '+today.toLocaleString(language)+' '+t('토큰');if(percentages.length){const used=Math.max(...percentages),remaining=preferences.get().limitMode==='remaining';body+=' · '+Math.max(0,remaining?100-used:used).toFixed(0)+'% '+t(remaining?'남음':'사용');}if(!state.pet.species&&state.prayers>0)body+='\n'+prayerHoverLine(state.prayers,t);return{body,prayers:state.pet.species?0:state.prayers};});
   ipcMain.handle('pet:read', async event => {
     authorizePet(event);
     return (await companion.read()).pet;
@@ -131,6 +162,8 @@ export function registerUsageIPC(mainWindow: () => BrowserWindow | undefined, pe
     } else if (row?.kind === 'use' && bagItems.includes(row.item as BagItem) &&
         typeof row.quantity === 'number' && Number.isSafeInteger(row.quantity) && typeof row.id === 'string') {
       action = { kind: 'use', item: row.item as BagItem, quantity: row.quantity, id: row.id };
+    } else if(row?.kind==='ability'&&typeof row.id==='string'&&row.id.length<=256&&typeof row.name==='string'&&row.name.length<=100){
+      action={kind:'ability',id:row.id,name:row.name};
     } else if(row?.kind==='battle-default-item'&&typeof row.id==='string'&&row.id.length<=256&&typeof row.item==='string'&&row.item.length<=100){
       action={kind:'battle-default-item',id:row.id,item:row.item};
     } else if (row?.kind === 'representative' && (row.speciesID === null ||
@@ -146,8 +179,11 @@ export function registerUsageIPC(mainWindow: () => BrowserWindow | undefined, pe
   const t = (source: string, args: Record<string, string | number> = {}) => translate(source, resolveLanguage(preferences.get().language, app.getLocale()), args);
   const statusChecker = new ProviderStatusChecker();
   let claudeSources:ClaudeAccountSource[]=[],claudeEntries:readonly Entry[]=[],limitGeneration=0;
-  async function presentedLimits(){const generation=++limitGeneration,raw=currentLimits;const result=await withAccountBlocks(raw,claudeEntries,claudeSources);if(generation===limitGeneration){const owner=mainWindow();if(owner&&!owner.isDestroyed())owner.webContents.send('usage:limits-updated',result);onLimits(result);}return result;}
+  let presentedCurrent:import('../../shared/usage.js').LimitResult[]=[];
+  async function presentedLimits(){const generation=++limitGeneration,raw=currentLimits;const enriched=await withAccountBlocks(raw,claudeEntries,claudeSources),tracked=trackedClaudeAccount(enriched,preferences.get().claudeTrackedAccount);const result=enriched.map(row=>({...row,tracked:row.provider!=='claude'||row===tracked}));if(generation===limitGeneration){presentedCurrent=result;for(const owner of [mainWindow(),settingsWindow()])if(owner&&!owner.isDestroyed())owner.webContents.send('usage:limits-updated',result);onLimits(result);}return result;}
   let currentLimits: import('../../shared/usage.js').LimitResult[] = [];
+  let warningPreferences=JSON.stringify([preferences.get().claudeTrackedAccount,preferences.get().criticalThreshold]);
+  preferences.subscribe(()=>{if(currentLimits.length)void presentedLimits();const next=JSON.stringify([preferences.get().claudeTrackedAccount,preferences.get().criticalThreshold]);if(next!==warningPreferences){warningPreferences=next;void refresh().catch(error=>console.error('Limit tracking refresh failed:',error));}});
   function sendStatuses() {
     const statuses = statusChecker.current();
     for (const window of [mainWindow(), settingsWindow()]) {
@@ -171,7 +207,7 @@ export function registerUsageIPC(mainWindow: () => BrowserWindow | undefined, pe
   });
 
   const historyStore=new UsageHistoryStore(join(app.getPath('userData'),'usage-history-v1.json'));
-  let snapshotDay: string | undefined;
+  let nextSnapshotCheck=0;
   let scan: Promise<UsageSnapshot> | undefined;
   function refresh(): Promise<UsageSnapshot> {
     scan ??= (async () => {
@@ -186,7 +222,7 @@ export function registerUsageIPC(mainWindow: () => BrowserWindow | undefined, pe
             cost: Object.fromEntries(['today', 'week', 'month'].map(key => [key, { amount: 0, reported: false, estimated: false, unknown: false }])),
             lastFiveHours: 0, extraRoot: null, unreadable: 0 }] as const;
         }
-        const usage = await collectUsage(provider, await extraRoot(provider), now, provider==='claude'?[...new Set([...defaultClaudeRoots(),...preferences.get().claudeRoots])].map(root=>join(root,'projects')):undefined,
+        const usage = await collectUsage(provider, await extraRoot(provider), now, provider==='claude'?(await claudeAccountSources(preferences.get().claudeRoots)).flatMap(source=>source.roots.map(root=>join(root,'projects'))):undefined,
           process.env.CURSOR_USAGE_API === '1', entries => { observations.set(provider, entries); });
         return [provider, usage] as const;
       }));
@@ -195,13 +231,11 @@ export function registerUsageIPC(mainWindow: () => BrowserWindow | undefined, pe
         return null;
       });
       notifyCompanion(growth);
-      if (growth) {
-        const day = now.toISOString().slice(0, 10);
-        if (snapshotDay !== day) {
+      if (growth&&(growth.raised>0||growth.active||growth.captures.length)) {
+        if (+now>=nextSnapshotCheck) {
           try {
             const previous = (await companion.snapshots())[0];
-            if (!previous || now.getTime() - previous.createdAt >= 86_400_000) await companion.createSnapshot();
-            snapshotDay = day;
+            if (!previous || now.getTime() - previous.createdAt >= 43_200_000){await companion.createSnapshot();nextSnapshotCheck=+now+43_200_000;}else nextSnapshotCheck=previous.createdAt+43_200_000;
           } catch (error) { console.error('Automatic snapshot could not be saved:', error); }
         }
       }
@@ -216,11 +250,12 @@ export function registerUsageIPC(mainWindow: () => BrowserWindow | undefined, pe
       claudeEntries=observations.get('claude')??[];if(currentLimits.length)await presentedLimits();
       const usage=Object.fromEntries(records) as UsageSnapshot['usage'];
       const today=Object.values(usage).reduce((sum,row)=>sum+row.today.total,0);
-      const warning=currentLimits.filter(row=>tracked.includes(row.provider)).some(row=>row.windows.some(window=>window.usedPercent>=preferences.get().warnThreshold));
+      const warning=limitWarning(presentedCurrent.filter(row=>tracked.includes(row.provider)),preferences.get().criticalThreshold,preferences.get().claudeTrackedAccount,+now);
       const daily:Record<string,number>={};for(const row of Object.values(usage))for(const [day,tokens]of Object.entries(row.daily))daily[day]=(daily[day]??0)+tokens;
       const history=await historyStore.merge(daily,now);
-      const snapshot: UsageSnapshot = { history, labels: providerLabels, usage, companion: growth, activity:activityState(Boolean(growth?.active),today,burn,lastUsageAt,warning,+now) };
+      const snapshot: UsageSnapshot = { activityGate:activity(),history, labels: providerLabels, usage, companion: growth, activity:activityState(Boolean(growth?.active),today,burn,lastUsageAt,warning,+now) };
       const owner=mainWindow();if(owner&&!owner.isDestroyed())owner.webContents.send('usage:updated',snapshot);
+      latestSnapshot=snapshot;
       onUsage(snapshot);
       return snapshot;
     })().finally(() => { scan = undefined; });
@@ -238,7 +273,7 @@ export function registerUsageIPC(mainWindow: () => BrowserWindow | undefined, pe
   function refreshLimits() {
     if (!limits) {
       const windows: CandyWindow[] = [];
-      limits = fetchLimits(windows, preferences.get().claudeRoots, preferences.get().providers,sources=>{claudeSources=sources;}).then(async result => {
+      limits = fetchLimits(windows, preferences.get().claudeRoots, preferences.get().providers,sources=>{claudeSources=sources;},sessionKeys).then(async result => {
         try {
           const tracked = preferences.get().providers;
           const reward = await companion.grantCandies(windows.filter(window =>
@@ -250,7 +285,7 @@ export function registerUsageIPC(mainWindow: () => BrowserWindow | undefined, pe
             }
           }
         } catch (error) { console.error('Candy rewards could not be saved:', error); }
-        currentLimits=result;
+        currentLimits=preserveLimits(currentLimits,result);
         const presented=await presentedLimits();
         if (preferences.get().limitNotifications) {
           try {
@@ -259,11 +294,14 @@ export function registerUsageIPC(mainWindow: () => BrowserWindow | undefined, pe
             try { ledger = JSON.parse(await readFile(path, 'utf8')); }
             catch (error) { if ((error as NodeJS.ErrnoException).code !== 'ENOENT') throw error; }
             const tracked = preferences.get().providers;
-            const messages = limitAlerts(result.filter(row => tracked.includes(row.provider)), ledger,
+            const messages = limitAlertDetails(result.filter(row => tracked.includes(row.provider)), ledger,
               preferences.get().warnThreshold, preferences.get().criticalThreshold);
             await writeSaveAtomically(path, JSON.stringify(ledger));
-            if (Notification.isSupported()) for (const body of messages) {
-              new Notification({ title: t('사용 한도 알림'), body }).show();
+            for (const message of messages) {
+              const name=(providerLabels[message.provider]??message.provider)+(message.account?' '+message.account:'')+' · '+t(message.label);
+              const body=t('{name} · {percent}% 사용',{name,percent:message.percent.toFixed(0)});
+              petNotice(t('사용 한도 알림'),body,3);
+              if(Notification.isSupported())new Notification({ title: t('사용 한도 알림'), body }).show();
             }
           } catch (error) { console.error('Limit notifications could not be saved:', error); }
         }
@@ -273,7 +311,9 @@ export function registerUsageIPC(mainWindow: () => BrowserWindow | undefined, pe
     return limits;
   }
 
+  let suspended=false;
   const backgroundRefresh = () => {
+    if(suspended)return;
     void refreshStatuses().catch(error => console.error('Provider status check failed:', error));
     void refresh().catch(error => console.error('Usage refresh failed:', error));
     void refreshLimits().catch(error => console.error('Limit refresh failed:', error));
@@ -288,6 +328,7 @@ export function registerUsageIPC(mainWindow: () => BrowserWindow | undefined, pe
   }
   scheduleRefresh();
   preferences.subscribe(scheduleRefresh);
+  observeSystemState((kind,enabled)=>{if(kind==='saver'){for(const owner of [mainWindow(),petWindow(),settingsWindow()])owner?.webContents.send('system:power-saver',enabled);return;}if(kind==='display'){suspended=!enabled;if(enabled)backgroundRefresh();}else if(enabled)backgroundRefresh();});
   app.once('before-quit', () => clearInterval(timer));
 
   let pickingImport = false;
@@ -364,7 +405,7 @@ export function registerUsageIPC(mainWindow: () => BrowserWindow | undefined, pe
     applyingImport = write;
     try {
       const result = await write;
-      notifyCompanion(result.companion);
+      notifyCompanion(result.companion,false);
       return result;
     } finally {
       if (applyingImport === write) applyingImport = undefined;
@@ -377,6 +418,7 @@ export function registerUsageIPC(mainWindow: () => BrowserWindow | undefined, pe
   });
 
   const configuring = new Set<Provider>();
+  ipcMain.handle('usage:scan-roots',async(event,provider:unknown,raw:unknown,save:unknown)=>{authorized(event);if(typeof provider!=='string'||!Object.hasOwn(providerLabels,provider)||typeof raw!=='string'||raw.length>32768||typeof save!=='boolean')throw new Error('Invalid scan roots');const result=await matchingScanFiles(provider as Provider,raw);if(save){await scan?.catch(()=>{});await writeSaveAtomically(settingsPath(provider as Provider),JSON.stringify(raw));}return result;});
   ipcMain.handle('usage:configure', async (event, provider: unknown, reset: unknown) => {
     const window = authorized(event);
     if (typeof provider !== 'string' || !Object.hasOwn(providerLabels, provider) || typeof reset !== 'boolean') {
@@ -399,7 +441,7 @@ export function registerUsageIPC(mainWindow: () => BrowserWindow | undefined, pe
       if (selection.canceled || !selection.filePaths[0]) return;
       const temporary = path + '.' + randomUUID();
       try {
-        await writeFile(temporary, JSON.stringify(selection.filePaths[0]), { flag: 'wx' });
+        await writeFile(temporary, JSON.stringify([await extraRoot(id),...selection.filePaths].filter(Boolean).join('\n')), { flag: 'wx' });
         await rename(temporary, path);
       } finally {
         await rm(temporary, { force: true });
@@ -409,15 +451,17 @@ export function registerUsageIPC(mainWindow: () => BrowserWindow | undefined, pe
     }
   });
 
-  return async () => {
+  const finish=async () => {
     if (trade.blocksUpdate()) {
       throw new Error('LAN 교환 연결을 종료한 뒤 업데이트해 주세요.');
     }
-    if(battle.blocksUpdate())throw new Error('LAN 대전을 종료한 뒤 업데이트해 주세요.');
+    if(battle?.blocksUpdate())throw new Error('LAN 대전을 종료한 뒤 업데이트해 주세요.');
     await scan?.catch(() => {});
     await applyingImport?.catch(() => {});
-    await battle.finishWrites();
+    await battle?.finishWrites();
     await historyStore.finishWrites();
+    await companionEvents.finishWrites();
     await companion.finishWrites();
   };
+  return Object.assign(finish,{forHandoff:async()=>{suspended=true;clearInterval(timer);try{await trade.prepareHandoff();await scan?.catch(()=>{});await limits?.catch(()=>{});await applyingImport?.catch(()=>{});await historyStore.finishWrites();await companionEvents.finishWrites();await companion.finishWrites();await battle?.prepareHandoff();}catch(error){suspended=false;scheduleRefresh();throw error;}}});
 }

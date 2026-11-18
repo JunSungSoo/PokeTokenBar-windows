@@ -1,0 +1,47 @@
+{
+  "nativeHatchAfterMetadata": {
+    "speciesID": 1,
+    "ability": "Overgrow",
+    "gender": "female",
+    "knownMoves": [
+      "tackle"
+    ],
+    "prayersBeforeHatch": 3,
+    "prayersOnIndividual": 3,
+    "prayersOnEgg": null
+  },
+  "warningSamples": [
+    {
+      "usedPercent": 85,
+      "forecastBeforeReset": true,
+      "macWarning": true,
+      "windowsWarning": true,
+      "macMood": "tired",
+      "windowsMood": "tired"
+    },
+    {
+      "usedPercent": 50,
+      "forecastBeforeReset": true,
+      "macWarning": true,
+      "windowsWarning": true,
+      "macMood": "tired",
+      "windowsMood": "tired"
+    }
+  ],
+  "warningWithoutForecast": {
+    "usedPercent": 85,
+    "macWarning": false,
+    "windowsWarning": false
+  },
+  "arceusFire": {
+    "appearance": "fire",
+    "detailsTypes": [
+      "fire"
+    ],
+    "judgmentType": "Fire",
+    "macExpectedTypes": [
+      "fire"
+    ],
+    "macExpectedJudgmentType": "Fire"
+  }
+}

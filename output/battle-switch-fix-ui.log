@@ -1,0 +1,38 @@
+
+Battle UI smoke boot
+Electron ready
+[46640:1116/222417.258:ERROR:net\disk_cache\cache_util_win.cc:25] Unable to move the cache: 액세스가 거부되었습니다. (0x5)
+[46640:1116/222417.260:ERROR:net\disk_cache\disk_cache.cc:293] Unable to create cache
+[46640:1116/222417.260:ERROR:gpu\ipc\host\gpu_disk_cache.cc:737] Gpu Cache Creation failed: -2
+Opening hidden battle
+Battle loaded
+Error occurred in handler for 'battle:open': Error: 진행 중인 교환을 먼저 종료해 주세요.
+    at file:///C:/Users/SungSoo/Desktop/dev/PokeTokenBar-windows/dist/main/battle/ipc.js:99:23
+Error occurred in handler for 'trade:host': Error: 진행 중인 배틀을 먼저 종료해 주세요.
+    at file:///C:/Users/SungSoo/Desktop/dev/PokeTokenBar-windows/dist/main/trade/ipc.js:27:19
+    at file:///C:/Users/SungSoo/Desktop/dev/PokeTokenBar-windows/dist/main/trade/ipc.js:20:20
+[46640:1116/222417.537:ERROR:net\disk_cache\cache_util_win.cc:25] Unable to move the cache: 액세스가 거부되었습니다. (0x5)
+[46640:1116/222417.538:ERROR:net\disk_cache\disk_cache.cc:293] Unable to create cache
+[46640:1116/222417.538:ERROR:gpu\ipc\host\gpu_disk_cache.cc:737] Gpu Cache Creation failed: -2
+PASS: held-item previews, same/used Apply guards, cancel, keyboard commit, translated None/restrictions and eight-language popup bounds.
+Checking setup
+PASS: trainer introduction and original own/foe entry sequence.
+Visible battle sprites {"own":[{"id":"practice-9","speciesID":9}],"foe":[{"id":"brock-139","speciesID":139}],"stages":[{"position":"foe-0","sprite":"brock-139:139::false:false"},{"position":"own-0","sprite":"practice-9:9::false:false"}]}
+PASS: battle move hover details, contained tooltip and eight-language horizontal bounds.
+Effect middle actors [{"layer":"background","actors":[{"key":"foe-0","visible":true,"spriteVisible":false,"shiny":false,"gif":10,"x":487,"y":185,"width":78,"height":69,"pixelScale":1},{"key":"own-0","visible":true,"spriteVisible":false,"shiny":false,"gif":10,"x":159,"y":340.00001525878906,"width":113,"height":98,"pixelScale":1}],"graphics":0,"clock":775.7999999988824},{"layer":"foreground","actors":[{"key":"foe-0","visible":true,"spriteVisible":false,"shiny":false,"gif":10,"x":487,"y":185,"width":78,"height":69,"pixelScale":1},{"key":"own-0","visible":true,"spriteVisible":false,"shiny":false,"gif":10,"x":159,"y":340.00001525878906,"width":113,"height":98,"pixelScale":1}],"graphics":0,"clock":775.7999999988824}]
+PASS: live Surf middle frame has two positioned actors and active animation tracks.
+[{"done":true,"effectsVolume":1,"layer":"background","tracks":0,"audioState":"suspended"},{"done":true,"effectsVolume":0,"layer":"foreground","tracks":0,"audioState":"running"}]
+PASS: original Phaser animation layers prepare, advance, finish and inspect.
+PASS: real switch keeps outgoing Pokémon during preparation, renders native entry before reveal, and atomically settles the incoming sprite.
+AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+
+'lost' !== 'reward'
+
+    at run (file:///C:/Users/SungSoo/Desktop/dev/PokeTokenBar-windows/scripts/battle-ui-smoke.mjs:45:674) {
+  generatedMessage: true,
+  code: 'ERR_ASSERTION',
+  actual: 'lost',
+  expected: 'reward',
+  operator: 'strictEqual',
+  diff: 'simple'
+}

@@ -19,6 +19,7 @@ export interface MoveText {
   power: number; accuracy: number | true | null; pp: number; targetScope?: string;
 }
 export interface PokemonDetailView {
+  abilityChoicesByForm?:Record<string,PokemonDetails['abilities']>;
   details: PokemonDetails;
   baseMoves?: PokemonMove[];
   stale: boolean;
@@ -28,6 +29,14 @@ export interface PokemonDetailView {
     abilities: Record<string, { name: string; description: string }>;
     moves: Record<string, MoveText>;
   };
+}
+
+/** Form projection never changes the species cache or the saved individual. */
+export function projectDetailView(payload:PokemonDetailView,form?:string):PokemonDetailView{
+ if(payload.details.speciesID!==493)return payload;
+ const type=form&&Object.hasOwn(payload.labels.types,form)?form:'normal';
+ const moves=Object.fromEntries(Object.entries(payload.labels.moves).map(([name,move])=>[name,name.replaceAll('-','').toLowerCase()==='judgment'?{...move,type:payload.labels.types[type]??type}:move]));
+ return{...payload,details:{...payload.details,types:[type]},labels:{...payload.labels,moves}};
 }
 
 /** Main-series stats, matching Mac PokemonStatCalculator (no EVs). */

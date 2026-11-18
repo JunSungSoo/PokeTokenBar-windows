@@ -50,6 +50,12 @@ export interface LimitWindow {
 }
 
 export interface LimitResult {
+  lastActivityAt?:number;
+  accountUsage?:{todayTokens:number;monthTokens:number;todayCost:UsageCost;monthCost:UsageCost};
+  plan?:string;
+  stale?:boolean;
+  tracked?:boolean;
+  error?:'oauthExpired'|'sessionKeyExpired'|'rateLimited'|'network'|'unavailable';
   accountID?:string;
   block?:import('./quota-presentation.js').UsageBlock;
   checkedAt?:number;
@@ -60,6 +66,7 @@ export interface LimitResult {
 }
 
 export interface UsageSnapshot {
+  activityGate?:{trade:boolean;battle:boolean};
   history?: import('./usage-recap.js').UsageHistory;
   labels: typeof providerLabels;
   companion: CompanionView | null;
@@ -67,7 +74,13 @@ export interface UsageSnapshot {
   usage: Record<Provider, ProviderUsage>;
 }
 
+export interface SessionOrganization {id:string;name:string}
+export interface SessionKeyState {configured:boolean;organizationID?:string;organizations:SessionOrganization[]}
 export interface UsageAPI {
+  scanRoots(provider:Provider,raw:string,save?:boolean):Promise<{roots:string[];count:number}>;
+  onActivity(handler:(state:{trade:boolean;battle:boolean})=>void):void;
+  exportMac():Promise<string|null>;
+  manageSessionKey(accountID:string,action:'read'|'save'|'clear'|'organizations'|'select',value?:string):Promise<SessionKeyState>;
   onSnapshot(handler:(snapshot:UsageSnapshot)=>void):void;
   onLimits(handler:(results:LimitResult[])=>void):void;
   openMaple(): Promise<void>;

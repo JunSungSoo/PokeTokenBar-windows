@@ -1,4 +1,6 @@
+import type{CompanionNotice}from'./events.js';
 import {validBattleDefaultItem}from'./battle-items.js';
+import {generateProfile,enrichIdentity,profileMetadata,abilityOptions} from './profile.js';
 import { mergeCandyLedgers, observeCandyWindows, type CandyLedger, type CandyWindow } from './candy-grants.js';
 import { object, type Row } from '../usage/jsonl.js';
 import { createHash, randomInt, randomUUID } from 'node:crypto';
@@ -12,7 +14,7 @@ import { tradePreview, wireItem, type OfferedItem } from '../trade/item.js';
 import type { TradeChoice } from '../../shared/trade.js';
 import { appearance, lineForms } from './forms.js';
 import { hatchData } from './hatch-data.js';
-import { families, natures, speciesFor } from './catalog.js';
+import { families, natures, speciesFor,displayedSpecies } from './catalog.js';
 import { levelUpMoves, moveOptions, replacingMove, type KnownMove, type MoveChange } from '../../shared/pokemon-loadout.js';
 import type { PokemonDetails, PokemonDetailView } from '../../shared/pokemon-details.js';
 
@@ -35,6 +37,7 @@ export interface Individual {
   battleDefaultItem?:string;
   dittoDisguise?: number;
   dittoRevealed?: boolean;
+  prayers?:number;
 }
 
 interface Save extends CandyLedger {
@@ -51,6 +54,7 @@ interface Save extends CandyLedger {
   eggTier?: EggTier;
   pendingHatchID?: number;
   pendingForm?: string;
+  collectedFinals?:string[];
   eggPrayers?: number;
   representativeSpeciesID?: number;
   representativeForm?: string;
@@ -62,7 +66,7 @@ interface Save extends CandyLedger {
 export const hatchThreshold = 5_000_000;
 const graduation = { common: 750_000_000, uncommon: 1_875_000_000, rare: 3_000_000_000, legendary: 6_000_000_000 };
 export type ImportedProgress = Pick<Save, 'raised' | 'progress' | 'active' | 'graduated' | 'spentTokens' |
-  'inventory' | 'eggTier' | 'pendingHatchID' | 'pendingForm' | 'eggPrayers' | 'representativeSpeciesID' | 'representativeForm' | 'challengeCashClaims'|'challengeShinyClaims'> & CandyLedger;
+  'inventory' | 'eggTier' | 'pendingHatchID' | 'pendingForm' | 'collectedFinals' | 'eggPrayers' | 'representativeSpeciesID' | 'representativeForm' | 'challengeCashClaims'|'challengeShinyClaims'> & CandyLedger;
 
 function routeOf(individual: Individual): Species[] {
   return individual.route ?? families[individual.family];
@@ -87,6 +91,7 @@ function wallet(state: Save): number {
 function disguised(mon: Individual): boolean {
   return mon.dittoDisguise !== undefined && !mon.dittoRevealed;
 }
+function completedFinals(state:Save):Set<string>{return new Set([...(state.collectedFinals??[]),...state.graduated.filter(mon=>mon.releasedAt===undefined).map(mon=>routeOf(mon)[0].number+':'+routeOf(mon).at(-1)!.number)]);}
 
 function remainingStages(state: Save): CompanionView['economy']['candyStages'] {
   const mon = state.active;
@@ -109,7 +114,7 @@ function profile(individual: Individual & { graduatedAt?: number }): CompanionPr
   const ivs = object(saved?.ivs);
   return {
     id: individual.id, hatchedAt: individual.hatchedAt, nature: individual.nature, shiny: individual.shiny && !disguised(individual),
-    species: routeOf(individual).slice(0, individual.stage + 1).map(species => ({ ...species, ...appearance(species.number, individual.form) })), graduatedAt: individual.graduatedAt,
+    species: routeOf(individual).slice(0, individual.stage + 1).map(species => ({ ...displayedSpecies(species,individual.form), ...appearance(species.number, individual.form) })), graduatedAt: individual.graduatedAt,
     totalForms: individual.totalForms ?? routeOf(individual).length, repeatGrowth: individual.repeat,
     battleDefaultItem:individual.battleDefaultItem,championAchievedAt:individual.championAchievedAt,releasedAt: individual.releasedAt, rarity: individual.rarity, form: individual.form, level: individual.level,
     ivs: ivs ? Object.fromEntries(statNames.flatMap(key => typeof ivs[key] === 'number' ? [[key, ivs[key]]] : [])) : undefined,
@@ -117,6 +122,7 @@ function profile(individual: Individual & { graduatedAt?: number }): CompanionPr
     abilityIsHidden: saved?.abilityIsHidden === true,
     ability: typeof saved?.abilityName === 'string' ? saved.abilityName : undefined,
     hasCustomMoves:saved?.hasCustomMoves===true,
+    prayers:individual.prayers,
     moves: Array.isArray(saved?.moves) ? saved.moves.slice(0,4).flatMap(move => {
       const name = object(move)?.name;
       return typeof name === 'string' ? [name] : [];
@@ -134,9 +140,7 @@ function knownMoves(mon: Individual): KnownMove[] {
 function enrichMoves(mon: Individual, details: PokemonDetails, graduated: boolean): void {
   if (!mon.macProfile) {
     const bytes=createHash('sha256').update('profile:'+mon.id).digest();
-    mon.macProfile={instanceID:mon.id,seed:bytes.readBigUInt64BE().toString(),
-      ivs:Object.fromEntries(statNames.map((name,index)=>[name,bytes[8+index]%32])),
-      level:mon.level ?? (graduated?100:5),growthTokens:graduated?graduation[mon.rarity ?? 'common']:0,abilityIsHidden:false,moves:[]};
+    mon.macProfile={...generateProfile(bytes.readBigUInt64BE(),mon.id),level:mon.level??(graduated?100:5),growthTokens:graduated?graduation[mon.rarity??'common']:0};
   }
   const saved=mon.macProfile;
   const level=mon.level ?? (typeof saved.level==='number'?saved.level:graduated?100:5);
@@ -144,6 +148,7 @@ function enrichMoves(mon: Individual, details: PokemonDetails, graduated: boolea
   const moves=knownMoves(mon);
   const form=appearance(details.speciesID,mon.form).form;
   const changedSpecies=saved.loadoutSpeciesID!==undefined && (saved.loadoutSpeciesID!==details.speciesID || saved.loadoutForm!==form);
+  enrichIdentity(saved,details,form,changedSpecies);
   if (saved.hasCustomMoves!==true && (!moves.length || changedSpecies ||
       (saved.automaticMovesLevel!==undefined && saved.automaticMovesLevel!==level))) saved.moves=levelUpMoves(details.moves,level).slice(-4);
   else saved.moves=moves;
@@ -228,6 +233,7 @@ function validIndividual(value: unknown): value is Individual {
     (item.form === undefined || typeof item.form === 'string') &&
     (item.level === undefined || (validNumber(item.level) && item.level <= 100)) &&
     (item.dittoDisguise === undefined || (validNumber(item.dittoDisguise) && item.dittoDisguise >= 1 && item.dittoDisguise <= 649)) &&
+    (item.prayers===undefined||validNumber(item.prayers)) &&
     (item.dittoRevealed === undefined || typeof item.dittoRevealed === 'boolean') &&
     (item.releasedAt === undefined || validNumber(item.releasedAt)) && (item.championAchievedAt===undefined||validNumber(item.championAchievedAt)) && (item.battleDefaultItem===undefined||validBattleDefaultItem(routeOf(item as Individual)[item.stage!].number,item.form,item.battleDefaultItem));
 }
@@ -254,6 +260,7 @@ function validate(value: unknown): Save {
       (state.eggTier !== undefined && state.eggTier !== 'uncommon' && state.eggTier !== 'rare') ||
       (state.pendingHatchID !== undefined && !hatchData.some(([id, parent]) => id === state.pendingHatchID && !parent)) ||
       (state.eggPrayers !== undefined && !validNumber(state.eggPrayers)) ||
+      (state.collectedFinals!==undefined&&(!Array.isArray(state.collectedFinals)||!state.collectedFinals.every(key=>typeof key==='string'&&/^[1-9]\d{0,2}:[1-9]\d{0,2}$/.test(key)&&key.split(':').every(id=>Number(id)<=649)))) ||
       (state.pendingForm !== undefined && typeof state.pendingForm !== 'string') ||
       (state.representativeSpeciesID !== undefined && !validNumber(state.representativeSpeciesID)) ||
       (state.representativeForm !== undefined && typeof state.representativeForm !== 'string') ||
@@ -267,11 +274,34 @@ function validate(value: unknown): Save {
   return state as Save;
 }
 
+const recoveries=new Map<string,Promise<Save>>();
 async function load(path: string): Promise<Save> {
-  try { return validate(JSON.parse(await readFile(path, 'utf8'))); }
+  let bytes:string;
+  try { bytes=await readFile(path,'utf8'); }
   catch (error) {
     if ((error as NodeJS.ErrnoException).code === 'ENOENT') return empty();
     throw error;
+  }
+  let parsed:unknown;try{parsed=JSON.parse(bytes);}catch{}
+  if(typeof object(parsed)?.version==='number'&&Number(object(parsed)?.version)>1)throw new Error('Invalid or unsupported companion save');
+  try{return validate(parsed);}catch{
+    const pending=recoveries.get(path);if(pending)return pending;
+    const recovery=(async()=>{
+    const directory=join(dirname(path),'snapshots');
+    const names=await readdir(directory).catch((error:NodeJS.ErrnoException)=>{if(error.code==='ENOENT')return [];throw error;});
+    const candidates=await Promise.all(names.filter(name=>/^[a-zA-Z0-9.-]+\.json$/.test(name)).map(async name=>({path:join(directory,name),time:(await stat(join(directory,name))).mtimeMs})));
+    let recovered:Save|undefined;
+    for(const candidate of candidates.sort((a,b)=>b.time-a.time))try{
+      if((await stat(candidate.path)).size>8*1024*1024)continue;
+      const envelope=JSON.parse(await readFile(candidate.path,'utf8'));
+      if(envelope.format!=='poketokenbar.windows.backup'||envelope.version!==1)continue;
+      recovered=validate(envelope.files?.['companion-v1.json']);break;
+    }catch{/* An older valid snapshot may still be recoverable. */}
+    await rename(path,path+'.corrupt-'+Date.now()+'-'+randomUUID());
+    if(recovered)await commit(path,JSON.stringify(recovered));
+    return recovered??empty();
+    })();recoveries.set(path,recovery);
+    try{return await recovery;}finally{recoveries.delete(path);}
   }
 }
 
@@ -295,7 +325,7 @@ for (const [id, parent] of hatchData) {
 }
 
 function hatch(state: Save, now: number, rollDitto: () => boolean): Individual {
-  const collected = new Set(state.graduated.filter(item => item.releasedAt === undefined).map(item => routeOf(item)[0].number));
+  const finals=completedFinals(state),collected=new Set([...finals].map(key=>Number(key.split(':')[0])));
   const ceiling = state.eggTier === 'rare' ? 45 : state.eggTier === 'uncommon' ? 120 : 255;
   const candidates = hatchRoots.filter(([, , rate]) => rate <= ceiling);
   const weights = candidates.map(([id, , rate]) => collected.has(id) ? Math.max(1, Math.floor(rate / 2)) : rate);
@@ -305,7 +335,10 @@ function hatch(state: Save, now: number, rollDitto: () => boolean): Individual {
   const ids = [base];
   while (evolutionChildren.has(ids.at(-1)!)) {
     const children = evolutionChildren.get(ids.at(-1)!)!;
-    ids.push(children[randomInt(children.length)]);
+    const completed=new Set([...finals].filter(key=>key.startsWith(base+':')).map(key=>Number(key.split(':')[1])));
+    const hasFresh=(id:number):boolean=>{const next=evolutionChildren.get(id);return next?next.some(hasFresh):!completed.has(id);};
+    const fresh=children.filter(hasFresh),pool=fresh.length?fresh:children;
+    ids.push(pool[randomInt(pool.length)]);
   }
   const rarity = legendary ? 'legendary' : rate <= 45 ? 'rare' : rate <= 120 ? 'uncommon' : 'common';
   const id = randomUUID();
@@ -315,24 +348,24 @@ function hatch(state: Save, now: number, rollDitto: () => boolean): Individual {
   const pendingForm = base === state.pendingHatchID ? state.pendingForm : undefined;
   const form = pendingForm && forms.includes(pendingForm) ? pendingForm
     : weightedForms.length ? weightedForms[randomInt(weightedForms.length)] : undefined;
+  const macProfile=generateProfile(BigInt('0x'+id.replaceAll('-','').slice(0,16)),id);enrichIdentity(macProfile,profileMetadata(base,form),form);
   return {
     id, family: -1, stage: 0, hatchedAt: now, route: ids.map(id => speciesFor(id)),
     dittoDisguise: rarity === 'common' && ids.length >= 2 && rollDitto() ? base : undefined,
     repeat: collected.has(base), rarity, nature: natures[randomInt(natures.length)],
     shiny: randomInt(state.inventory?.shinyCharm ? 48 : 64) === 0, form, level: 5,
-    macProfile: { instanceID: id, seed: BigInt('0x' + id.replaceAll('-', '').slice(0, 16)).toString(),
-      level: 5, growthTokens: 0, abilityIsHidden: false, moves: [],
-      ivs: Object.fromEntries(statNames.map(stat => [stat, randomInt(32)])) },
+    macProfile,prayers:state.eggPrayers,
   };
 }
 
-function advance(state: Save, delta: number, now: number, rollDitto: () => boolean, fromUsage = true): CompanionView['dittoReveal'] {
+function advance(state: Save, delta: number, now: number, rollDitto: () => boolean, fromUsage = true,notices:CompanionNotice[]=[]): CompanionView['dittoReveal'] {
   let reveal: CompanionView['dittoReveal'];
   state.progress = Math.min(Number.MAX_SAFE_INTEGER, state.progress + delta);
   if (fromUsage) state.raised = Math.min(Number.MAX_SAFE_INTEGER, state.raised + delta);
   if (!state.active && state.progress >= threshold(null, state.growthDifficulty ?? 1)) {
     state.progress -= threshold(null, state.growthDifficulty ?? 1);
     state.active = hatch(state, now, rollDitto);
+    notices.push({title:state.active.shiny&&!disguised(state.active)?'✨ 이로치 부화!':'🥚 부화!',body:'{name}',args:{name:routeOf(state.active)[0].name},species:{name:routeOf(state.active)[0].number}});
     delete state.eggTier;
     delete state.eggPrayers;
     delete state.pendingHatchID;
@@ -354,6 +387,7 @@ function advance(state: Save, delta: number, now: number, rollDitto: () => boole
     if (disguised(state.active)) {
       const mon = state.active;
       const previousRarity = mon.rarity ?? 'common';
+      notices.push({title:mon.shiny?'🎭✨ 어라? 이로치 메타몽!':'🎭 어라? 메타몽!',body:'{disguise}인 줄 알았는데 — 사실은 메타몽이었어요!',args:{disguise:routeOf(mon)[0].name},species:{disguise:routeOf(mon)[0].number}});
       reveal = { id: mon.id, disguise: routeOf(mon)[0].name, shiny: mon.shiny };
       state.progress -= required;
       const ditto = speciesFor(132);
@@ -384,8 +418,11 @@ function advance(state: Save, delta: number, now: number, rollDitto: () => boole
     if (state.active.stage + 1 === route.length && route.length < (state.active.totalForms ?? route.length)) break;
     state.progress -= required;
     if (state.active.stage + 1 < route.length) {
+      notices.push({title:'✨ 진화!',body:'{from} → {to}',args:{from:route[state.active.stage].name,to:route[state.active.stage+1].name},species:{from:route[state.active.stage].number,to:route[state.active.stage+1].number}});
       state.active.stage++;
     } else {
+      state.collectedFinals=[...completedFinals(state),routeOf(state.active)[0].number+':'+routeOf(state.active).at(-1)!.number].filter((key,index,all)=>all.indexOf(key)===index);
+      notices.push({title:'🎓 졸업!',body:'{name} 졸업 → 도감에 보존. 새 Token Egg가 도착했어요!',args:{name:route.at(-1)!.name},species:{name:route.at(-1)!.number}});
       state.graduated.push({ ...state.active, graduatedAt: now });
       state.active = null;
       state.progress = 0; // A new egg starts empty, as on macOS.
@@ -400,7 +437,7 @@ export class CompanionStore {
   private tradeReservation?: string;
   private moveDetails=new Map<number,PokemonDetails>();
   private queue: Promise<unknown> = Promise.resolve();
-  constructor(private readonly path: string, private readonly rollDitto = () => randomInt(128) === 0) {}
+  constructor(private readonly path: string, private readonly rollDitto = () => randomInt(128) === 0,private readonly onLifeEvents?:(notices:CompanionNotice[])=>void) {}
 
   private refreshCachedMoves(state: Save): boolean {
     let changed=false;
@@ -417,6 +454,31 @@ export class CompanionStore {
   }
 
   finishWrites(): Promise<unknown> { return this.queue; }
+
+  exportMac(appVersion:string,language:string,now=Date.now()):Promise<string>{
+    return this.queue.then(async()=>{
+      const state=structuredClone(await load(this.path));
+      const iso=(time:number)=>new Date(time).toISOString().replace(/\.\d{3}Z$/,'Z');
+      const serialize=(mon:Individual,active:boolean)=>{
+        if(!mon.macProfile){mon.macProfile=generateProfile(BigInt('0x'+createHash('sha256').update('profile:'+mon.id).digest('hex').slice(0,16)),mon.id);mon.macProfile.level=mon.level??(active?5:100);mon.macProfile.growthTokens=active?0:graduation[mon.rarity??'common'];enrichIdentity(mon.macProfile,profileMetadata(routeOf(mon)[mon.stage].number,mon.form),mon.form);}
+        const envelope=wireItem({item:mon,route:routeOf(mon),active,progress:active?state.progress:0,graduatedAt:(mon as Individual&{graduatedAt?:number}).graduatedAt});
+        const row=object(object(envelope[active?'activeMon':'dexEntry'])?._0)!;
+        row.hatchedAt=iso(mon.hatchedAt);delete row.windowsIdentity;
+        for(const key of ['caughtAt','championAchievedAt'])if(typeof row[key]==='number')row[key]=iso(978307200000+Number(row[key])*1000);
+        if(mon.releasedAt!==undefined)row.releasedAt=iso(mon.releasedAt);
+        return row;
+      };
+      const day=new Date(now),lastDate=day.getFullYear()+'-'+String(day.getMonth()+1).padStart(2,'0')+'-'+String(day.getDate()).padStart(2,'0');
+      return JSON.stringify({format:'poketokenbar.save',schema:2,appVersion,sourceDevice:'Windows',exportedAt:iso(now),state:{
+        installBaselineSet:true,usedSinceInstall:state.raised,spentTokens:state.spentTokens??0,eggUsage:state.active?0:state.progress,
+        active:state.active?serialize(state.active,true):undefined,dex:state.graduated.map(mon=>serialize(mon,false)),
+        inventory:state.inventory??{},collectedFinals:[...completedFinals(state)],language,lastDate,
+        eggTier:state.eggTier,pendingHatchID:state.pendingHatchID,pendingForm:state.pendingForm,eggPrayers:state.eggPrayers===undefined?undefined:{count:state.eggPrayers},
+        representativeSpeciesID:state.representativeSpeciesID,representativeForm:state.representativeForm,
+        challengeCashClaims:state.challengeCashClaims,challengeShinyClaims:state.challengeShinyClaims,candyFeatureSeeded:state.candyFeatureSeeded,candyGrantTier:state.candyGrantTier,candyWindowEpoch:state.candyWindowEpoch,
+      }},null,2);
+    });
+  }
 
   pray(): Promise<CompanionView> {
     const result = this.queue.then(async () => {
@@ -456,6 +518,7 @@ export class CompanionStore {
       if (this.tradeReservation) throw new Error('교환을 확정하는 동안에는 변경할 수 없습니다.');
       const state = await load(this.path);
       const inventory = state.inventory ??= {};
+      const notices:CompanionNotice[]=[];
       let reveal: CompanionView['dittoReveal'];
       if (action.kind === 'buy') {
         const cost = Math.round(shopCatalog[action.product].price * (state.shopDifficulty ?? 1)) * action.quantity;
@@ -495,13 +558,21 @@ export class CompanionStore {
             if (disguised(mon)) {
               consumed = Math.min(consumed, Math.max(0, Math.ceil((threshold(mon, state.growthDifficulty ?? 1) - state.progress) / candyXP)));
             }
-            reveal = advance(state, consumed * candyXP, now, this.rollDitto, false);
+            reveal = advance(state, consumed * candyXP, now, this.rollDitto, false,notices);
           } else {
             const choices = natures.filter(nature => nature !== mon.nature);
             mon.nature = choices[randomInt(choices.length)];
           }
         }
         inventory[action.item] = owned - consumed;
+      } else if(action.kind==='ability'){
+        const mon=state.active?.id===action.id?state.active:state.graduated.find(mon=>mon.id===action.id&&mon.releasedAt===undefined);
+        if(!mon)throw new Error('특성을 변경할 개체를 선택해 주세요.');
+        const speciesID=routeOf(mon)[mon.stage].number,option=abilityOptions(speciesID,mon.form).find(a=>a.name===action.name);
+        if(!option)throw new Error('이 폼에서 선택할 수 있는 특성을 선택해 주세요.');
+        mon.macProfile??=generateProfile(BigInt('0x'+createHash('sha256').update('profile:'+mon.id).digest('hex').slice(0,16)),mon.id);
+        enrichIdentity(mon.macProfile,profileMetadata(speciesID,mon.form),mon.form);
+        Object.assign(mon.macProfile,{abilityName:option.name,abilitySlot:option.slot,abilityIsHidden:option.isHidden,hasCustomAbility:true});
       } else if(action.kind==='battle-default-item'){
         const mon=state.graduated.find(mon=>mon.id===action.id&&mon.releasedAt===undefined);
         if(!mon||!validBattleDefaultItem(routeOf(mon)[mon.stage].number,mon.form,action.item))throw new Error('이 개체에 장착할 수 있는 도구를 선택해 주세요.');
@@ -526,6 +597,7 @@ export class CompanionStore {
       }
       this.refreshCachedMoves(state);
       await commit(this.path, JSON.stringify(validate(state)));
+      this.onLifeEvents?.(notices);
       return { ...view(state), ...(reveal && { dittoReveal: reveal }) };
     });
     this.queue = result.catch(() => {});
@@ -536,10 +608,10 @@ export class CompanionStore {
     const envelope = object(raw);
     if (envelope?.format !== 'poketokenbar.windows.backup' || envelope.version !== 1) throw new Error('Windows 백업 형식을 확인해 주세요.');
     const source = validate(object(envelope.files)?.['companion-v1.json']);
-    const { raised, progress, active, graduated, spentTokens, inventory, eggTier, pendingHatchID, pendingForm,
+    const { raised, progress, active, graduated, spentTokens, inventory, eggTier, pendingHatchID, pendingForm,collectedFinals,
       eggPrayers, representativeSpeciesID, representativeForm, challengeCashClaims,challengeShinyClaims,
       candyFeatureSeeded, candyGrantTier, candyWindowEpoch, candyArmedWindows } = source;
-    return { raised, progress, active, graduated, spentTokens, inventory, eggTier, pendingHatchID, pendingForm,
+    return { raised, progress, active, graduated, spentTokens, inventory, eggTier, pendingHatchID, pendingForm,collectedFinals,
       eggPrayers, representativeSpeciesID, representativeForm, challengeCashClaims,challengeShinyClaims,
       candyFeatureSeeded, candyGrantTier, candyWindowEpoch, candyArmedWindows };
   }
@@ -552,6 +624,13 @@ export class CompanionStore {
       await commit(join(directory, id), JSON.stringify({
         format: 'poketokenbar.windows.backup', version: 1, files: { 'companion-v1.json': state },
       }));
+      const snapshots=await readdir(directory);
+      const dated=(await Promise.all(snapshots.filter(name=>/^[a-zA-Z0-9.-]+\.json$/.test(name)).map(async name=>{try{
+        const path=join(directory,name),info=await stat(path);if(info.size>8*1024*1024)return null;
+        const envelope=JSON.parse(await readFile(path,'utf8'));if(envelope.format!=='poketokenbar.windows.backup'||envelope.version!==1)return null;
+        validate(envelope.files?.['companion-v1.json']);return{name,time:info.mtimeMs};
+      }catch{return null;}}))).filter(row=>row!==null);
+      for(const old of dated.sort((a,b)=>b.time-a.time||b.name.localeCompare(a.name)).slice(10))await rm(join(directory,old.name));
     });
     this.queue = result.catch(() => {});
     return result;
@@ -589,6 +668,7 @@ export class CompanionStore {
     const result = this.queue.then(async () => {
       if (this.tradeReservation) throw new Error('교환 확정 중에는 저장을 가져올 수 없습니다.');
       const replacement = validate({ ...empty(), ...imported, baseline: now });
+      await load(this.path); // Recover a damaged current save before checking/replacing it.
       let original: Buffer | undefined;
       try { original = await readFile(this.path); }
       catch (error) {
@@ -784,9 +864,11 @@ export class CompanionStore {
         }
       }
       const readyToReveal = state.active && disguised(state.active) && state.progress >= threshold(state.active, state.growthDifficulty ?? 1);
-      const reveal = delta || readyToReveal ? advance(state, delta, now, this.rollDitto) : undefined;
+      const notices:CompanionNotice[]=[];
+      const reveal = delta || readyToReveal ? advance(state, delta, now, this.rollDitto,true,notices) : undefined;
       const movesChanged=this.refreshCachedMoves(state);
       if (changed || reveal || movesChanged) await commit(this.path, JSON.stringify(state));
+      this.onLifeEvents?.(notices);
       return { ...view(state), ...(reveal && { dittoReveal: reveal }) };
     });
     this.queue = result.catch(() => {});

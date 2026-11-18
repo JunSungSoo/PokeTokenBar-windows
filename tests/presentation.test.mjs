@@ -1,10 +1,10 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { readFile,mkdtemp,rm } from 'node:fs/promises';
-import { existsSync } from 'node:fs';
 import { createHash } from 'node:crypto';
 import { tmpdir } from 'node:os';
-import {join,resolve} from 'node:path';
+import {join} from 'node:path';
+import {hasMacReference,readMacSource,macReferenceRef} from './mac-reference.mjs';
 import { sortedShop,itemOrder,productOrder,activityState,typeColors } from '../dist/shared/companion-presentation.js';
 import {shopCatalog} from '../dist/shared/companion.js';
 import {CompanionStore} from '../dist/main/companion/store.js';
@@ -53,15 +53,19 @@ test('home previews guaranteed evolution, conceals branches and preserves the re
   assert.equal(caterpie.active.repeatGrowth,true);
   const butterfree=await preview([10,11,12],2);assert.equal(butterfree.evolutionPreview[2].current,true);assert.ok(butterfree.evolutionPreview.every(node=>node.reached));
 });
-const reference=resolve(process.env.POKE_MAC_REFERENCE ?? '../PokeTokenBar');
-test('presentation constants match the checked-out original Mac source', {skip:!existsSync(join(reference,'Sources/PokeTokenBar/Core/CompanionModel.swift'))},async()=>{
-  const model=await readFile(join(reference,'Sources/PokeTokenBar/Core/CompanionModel.swift'),'utf8');
+test('presentation constants match the Mac '+macReferenceRef+' source', {skip:!hasMacReference},async()=>{
+  const model=readMacSource('Sources/PokeTokenBar/Core/CompanionModel.swift');
   const itemEnum=model.slice(model.indexOf('enum ItemKind:'),model.indexOf('var spriteName:'));
   assert.deepEqual([...itemEnum.matchAll(/case (\w+)/g)].map(match=>match[1]),itemOrder);
   assert.equal(productOrder.length,7);
-  const badge=await readFile(join(reference,'Sources/PokeTokenBar/UI/Badge.swift'),'utf8');
+  assert.match(model,/case \.mint, \.redMaple: return Mint.price/);
+  assert.equal(shopCatalog.redMaple.price,shopCatalog.mint.price);
+  assert.equal(shopCatalog.redMaple.price,Number(model.match(/enum Mint[\s\S]*?static let price = ([\d_]+)/)[1].replaceAll('_','')));
+  const badge=readMacSource('Sources/PokeTokenBar/UI/Badge.swift');
   for(const [type,color] of Object.entries(typeColors))assert.ok(new RegExp('case \\.'+type+':\\s*0x'+color.slice(1)).test(badge),type);
-  const store=await readFile(join(reference,'Sources/PokeTokenBar/Core/CompanionStore.swift'),'utf8');
+  const store=readMacSource('Sources/PokeTokenBar/Core/CompanionStore.swift');
   assert.ok(store.includes('currentIsShiny || rarity == .legendary'));
   assert.ok(store.includes('ItemKind.allCases.compactMap'));
+  assert.match(store,/var redMapleTargets:[^\r\n]+!\$0.isReleased && \$0.profile != nil/);
+  assert.match(store,/state.inventory\[ItemKind.redMaple.rawValue\]=itemCount\(\.redMaple\)-1/);
 });

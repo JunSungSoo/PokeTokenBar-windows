@@ -1,0 +1,4 @@
+Legacy ready 9496
+PASS: legacy 1.0.0 closes through normal Windows shutdown, 1.0.1 owns the profile, save and recovery copy survive.
+PASS: same and lower versions cannot replace the owner.
+Instance test profile: C:\Users\SungSoo\AppData\Local\Temp\ptb-instance-handoff-Up2aSe\state

@@ -4,6 +4,31 @@
   let current;
   let companion;
   let reading = false;
+  let accounts=[];
+  let loadedSessionAccount;
+  const tr=text=>window.i18n.t(text);
+  function renderAccounts(){
+    const tracked=get('settings-tracked-account'),session=get('session-account'),selected=session.value||'claude-default';
+    tracked.replaceChildren(...[['automatic','자동 (마지막 사용)'],['highest','사용률 최고'],['defaultAccount','기본 계정'],...accounts.map(row=>[row.accountID,row.account??tr('기본 계정')])].map(([value,title])=>new Option(tr(title),value)));
+    tracked.value=current?.claudeTrackedAccount??'automatic';
+    session.replaceChildren(...(accounts.length?accounts:[{accountID:'claude-default'}]).map(row=>new Option(row.account??tr('기본 계정'),row.accountID)));session.value=selected;if(!session.value)session.selectedIndex=0;
+    if(accounts.length&&loadedSessionAccount!==session.value){loadedSessionAccount=session.value;void sessionAction('read');}
+  }
+  async function sessionAction(action){
+    const controls=[...document.querySelectorAll('#session-save,#session-clear,#session-organizations,#session-account,#session-organization')];controls.forEach(node=>node.disabled=true);
+    try{const value=action==='save'?get('session-key').value:action==='select'?get('session-organization').value:undefined;
+      const state=await window.usage.manageSessionKey(get('session-account').value,action,value);
+      if(action==='save')get('session-key').value='';
+      get('session-status').textContent=tr(state.configured?'저장됨':'사용 가능한 한도 없음');
+      get('session-organization').replaceChildren(...state.organizations.map(org=>new Option(org.name,org.id)));get('session-organization').value=state.organizationID??'';
+    }catch(error){get('session-status').textContent=tr(error.message.replace(/^Error invoking remote method '[^']+': Error: /,''));}
+    finally{controls.forEach(node=>node.disabled=false);}
+  }
+  for(const action of ['save','clear','organizations'])get('session-'+action).addEventListener('click',()=>void sessionAction(action));
+  get('session-account').addEventListener('change',()=>void sessionAction('read'));
+  get('session-organization').addEventListener('change',()=>void sessionAction('select'));
+  get('settings-tracked-account').addEventListener('change',()=>void update({claudeTrackedAccount:get('settings-tracked-account').value}));
+  window.usage.onLimits(results=>{accounts=results.filter(row=>row.provider==='claude');renderAccounts();});
 
   function showError(error) {
     status.textContent = error.message.replace(/^Error invoking remote method '[^']+': Error: /, '');
@@ -11,6 +36,7 @@
 
   function render(settings) {
     current = settings;
+    renderAccounts();
     for (const control of document.querySelectorAll('[data-setting]')) {
       if (control.type === 'text' && document.activeElement === control) continue;
       const value = settings[control.dataset.setting];
@@ -87,11 +113,14 @@
     });
   }
   get('difficulty-save').addEventListener('click', async () => {
+    const button=get('difficulty-save'),growth=Number(get('difficulty-growth').value),shop=Number(get('difficulty-shop').value);button.disabled=true;
     try {
+      await window.preferences.change({});
       representative(await window.usage.changeCompanion({ kind: 'difficulty',
-        growth: Number(get('difficulty-growth').value), shop: Number(get('difficulty-shop').value) }));
-      status.textContent = '저장됨';
+        growth, shop }));
+      status.textContent = tr('저장됨');
     } catch (error) { showError(error); }
+    finally {button.disabled=false;}
   });
 
   get('settings-representative').addEventListener('change', async event => {
@@ -127,14 +156,17 @@
       }
       const provider = get('provider').value;
       const root = snapshot.usage[provider]?.extraRoot;
-      get('root-path').textContent = root ?? '미설정';
+      get('root-path').textContent = root ?? '미설정';if(document.activeElement!==get('scan-roots'))get('scan-roots').value=root??'';
       get('choose-root').disabled = false;
       get('reset-root').disabled = !root;
     } catch (error) { showError(error); }
     finally { reading = false; }
   }
 
-  get('provider').addEventListener('change', refresh);
+  let previewTimer,previewGeneration=0;
+  get('scan-roots').addEventListener('input',()=>{clearTimeout(previewTimer);const generation=++previewGeneration;previewTimer=setTimeout(async()=>{try{const result=await window.usage.scanRoots(get('provider').value,get('scan-roots').value);if(generation===previewGeneration)get('scan-count').textContent=tr('일치 파일')+': '+result.count;}catch(error){showError(error);}},300);});
+  get('scan-save').addEventListener('click',async()=>{try{await window.usage.scanRoots(get('provider').value,get('scan-roots').value,true);await refresh();status.textContent=tr('저장됨');}catch(error){showError(error);}});
+  get('provider').addEventListener('change',()=>{previewGeneration++;get('scan-count').textContent='';void refresh();});
   for (const id of ['choose-root', 'reset-root']) get(id).addEventListener('click', async () => {
     get(id).disabled = true;
     try {
@@ -202,13 +234,17 @@
     } catch (error) { get('backup-status').textContent = error.message; }
     finally { button.disabled = false; }
   });
+  get('settings-export-mac').addEventListener('click',async event=>{event.target.disabled=true;try{const path=await window.usage.exportMac();get('backup-status').textContent=path?window.i18n.t('저장됨')+' '+path:'';}catch(error){showError(error);}finally{event.target.disabled=false;}});
   window.preferences.onChange(render);
   window.usage.onCompanion(state => { if (state) representative(state); });
   window.addEventListener('settings-companion', event => representative(event.detail));
   void window.preferences.read().then(settings => { render(settings); status.textContent = ''; }).catch(showError);
   void window.desktop.settings().then(settings => {
     get('settings-version').textContent = settings.version;
+    get('settings-current-version').textContent = 'v'+settings.version;
     get('desktop-development').hidden = settings.supported;
   }).catch(showError);
   void refresh();
 })();
+
+for(const button of document.querySelectorAll('[data-support]'))button.addEventListener('click',()=>window.desktop.support(button.dataset.support).catch(error=>{document.querySelector('#support-status').textContent=error.message;}));

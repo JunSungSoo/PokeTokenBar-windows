@@ -3,12 +3,12 @@ import { app, ipcMain, shell, type BrowserWindow } from 'electron';
 import type { CompanionStore } from '../companion/store.js';
 import { LanTrade } from './session.js';
 
-export function registerTradeIPC(companion: CompanionStore, mainWindow: () => BrowserWindow | undefined, notifyCompanion: (state: CompanionView) => void): LanTrade {
+export function registerTradeIPC(companion: CompanionStore, mainWindow: () => BrowserWindow | undefined, notifyCompanion: (state: CompanionView) => void,options:{canEnter?:()=>boolean;activityChanged?:()=>void}={}): LanTrade {
   const send = (channel: string, value: unknown) => {
     const window = mainWindow();
     if (window && !window.isDestroyed()) window.webContents.send(channel, value);
   };
-  const trade = new LanTrade(companion, state => send('trade:state-changed', state),
+  const trade = new LanTrade(companion, state => {send('trade:state-changed', state);options.activityChanged?.();},
     notifyCompanion);
   const bound = new WeakSet<BrowserWindow>();
 
@@ -27,10 +27,12 @@ export function registerTradeIPC(companion: CompanionStore, mainWindow: () => Br
   handle('state', () => trade.state());
   handle('choices', () => trade.choices());
   handle('host', nickname => {
+    if(options.canEnter&&!options.canEnter())throw new Error('진행 중인 배틀을 먼저 종료해 주세요.');
     if (typeof nickname !== 'string') throw new Error('잘못된 별명입니다.');
     return trade.host(nickname);
   });
   handle('connect', (code, nickname) => {
+    if(options.canEnter&&!options.canEnter())throw new Error('진행 중인 배틀을 먼저 종료해 주세요.');
     if (typeof code !== 'string' || typeof nickname !== 'string') throw new Error('잘못된 연결 코드입니다.');
     return trade.connect(code, nickname);
   });

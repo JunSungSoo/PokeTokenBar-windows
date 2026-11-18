@@ -1,0 +1,14 @@
+
+Error occurred in handler for 'companion:details': Error: fixture offline
+    at file:///C:/Users/SungSoo/Desktop/dev/PokeTokenBar-windows/scripts/runtime-ui-smoke.mjs:88:63
+Error: Timed out: document.querySelectorAll('.detail-form-grid button').length===28
+    at until (file:///C:/Users/SungSoo/Desktop/dev/PokeTokenBar-windows/scripts/runtime-ui-smoke.mjs:39:9)
+    at async run (file:///C:/Users/SungSoo/Desktop/dev/PokeTokenBar-windows/scripts/runtime-ui-smoke.mjs:301:3)
+Renderer errors: [
+  "Uncaught TypeError: Cannot read properties of undefined (reading 'toUpperCase')"
+]
+{
+  title: '알',
+  art: '<span class="pokemon-art egg-art home-sprite static-fallback"><img alt="" data-static-src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/egg.png" src="assets/items/egg.png" class="sprite-decoded"><canvas width="30" height="30" class="sprite-canvas egg-canvas" aria-hidden="true"></canvas><span aria-hidden="true" hidden="">🥚</span></span>',
+  status: '부화까지 5M 토큰'
+}

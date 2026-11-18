@@ -11,6 +11,30 @@ const time = baseline + 10000;
 const start = new Date(baseline - 1000).toISOString();
 const after = new Date(time).toISOString();
 
+test('Red Maple matches feature/battle: 100M purchase, graduated-only six-IV reroll and exact consumption',async t=>{
+  const dir=await mkdtemp(join(tmpdir(),'ptb-red-maple-'));t.after(()=>rm(dir,{recursive:true,force:true}));
+  const path=join(dir,'save.json'),store=new CompanionStore(path,()=>false);
+  const {speciesFor}=await import('../dist/main/companion/catalog.js');
+  const stats=['hp','attack','defense','specialAttack','specialDefense','speed'];
+  const profile={instanceID:'target',seed:'123456789',ivs:Object.fromEntries(stats.map(stat=>[stat,31])),level:50,gender:'female',abilityName:'overgrow',moves:[{name:'tackle',learnedAtLevel:1}],hasCustomMoves:true};
+  const mon={id:'target',family:-1,stage:0,hatchedAt:baseline,nature:'조심',shiny:true,repeat:false,route:[speciesFor(1)],macProfile:profile};
+  await store.replaceImport({raised:1000000000,progress:12345,active:{...mon,id:'active'},inventory:{redMaple:2,mint:1},graduated:[{...mon,graduatedAt:time},{...mon,id:'released',releasedAt:time,graduatedAt:time},{...mon,id:'no-profile',macProfile:undefined,graduatedAt:time}]},time);
+  const before=JSON.parse(await readFile(path,'utf8'));
+  for(const id of ['active','released','no-profile','missing']){
+    await assert.rejects(()=>store.change({kind:'use',item:'redMaple',quantity:1,id}),/졸업 개체/);
+    assert.deepEqual(JSON.parse(await readFile(path,'utf8')),before);
+  }
+  await store.change({kind:'use',item:'redMaple',quantity:1,id:'target'});
+  const after=JSON.parse(await readFile(path,'utf8')),ivs=after.graduated[0].macProfile.ivs;
+  assert.deepEqual(Object.keys(ivs),stats);
+  for(const value of Object.values(ivs))assert.ok(Number.isInteger(value)&&value>=0&&value<=31);
+  const expected=structuredClone(before);expected.inventory.redMaple=1;expected.graduated[0].macProfile.ivs=ivs;
+  assert.deepEqual(after,expected,'reroll changes only selected IVs and one inventory item');
+  const purchased=await store.change({kind:'buy',product:'redMaple',quantity:2});
+  assert.equal(purchased.economy.wallet,800000000);assert.equal(purchased.economy.inventory.redMaple,3);
+  assert.deepEqual((await new CompanionStore(path).read()).economy,purchased.economy);
+});
+
 function codexRow(id, timestamp, input) {
   return JSON.stringify({ timestamp, type: 'event_msg', payload: {
     type: 'token_count', info: { last_token_usage: { input_tokens: input } },

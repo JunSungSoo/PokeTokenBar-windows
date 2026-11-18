@@ -3,19 +3,18 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'self'; script-src 'self'; connect-src https://raw.githubusercontent.com; img-src https://raw.githubusercontent.com">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'self'; script-src 'self'; connect-src https://raw.githubusercontent.com; img-src 'self' https://raw.githubusercontent.com">
     <title>PokeTokenBar 플로팅 펫</title>
     <link rel="stylesheet" href="pet.css">
   <script src="locale-data.js" defer></script>
   <script src="localization.js" defer></script>
   <script src="sprite-timing.js" defer></script>
-  <script src="sprite-player.js" defer></script>
+  <script src="sprite-player.js" defer></script><script src="egg-fit.js" defer></script><script src="pet-presentation.js" defer></script><script src="species-names.js" defer></script>
     <script src="preferences.js" defer></script>
     <script src="pet.js" defer></script>
   </head>
   <body>
-    <div class="handle" title="드래그해서 이동">⠿</div>
-    <output aria-live="polite"></output>
-    <button class="egg" type="button" aria-label="알에게 기도하기" title="알에게 기도하기"></button>
+    <output aria-live="polite" hidden></output>
+    <button class="egg" type="button" aria-label="알에게 기도하기"></button>
   </body>
 </html>

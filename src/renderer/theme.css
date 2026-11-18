@@ -201,6 +201,41 @@ input:focus-visible, select:focus-visible, button:focus-visible, summary:focus-v
 .settings-actions button { min-width: 88px; min-height: 36px; }
 .settings-group { box-shadow: var(--panel-shadow); }
 .settings-group input[type="checkbox"] { width: 16px; height: 16px; }
+.settings-window section { margin-block: 24px; }
+.settings-window h2 { margin-bottom: 10px; }
+.settings-window .settings-group { padding-inline: 16px; }
+.settings-window .settings-group > label { gap: 20px; padding-block: 12px; min-height: 56px; }
+.settings-window select { min-height: 36px; padding: 8px 36px 8px 12px; }
+.settings-window .settings-hint { margin: 10px 4px; line-height: 1.55; }
+.settings-window details > label:has(> select) {
+  display: grid;
+  grid-template-columns: minmax(84px, .8fr) minmax(0, 1.2fr);
+  align-items: center;
+  gap: 12px 20px;
+  margin-block: 14px;
+}
+.settings-window details > label > select { width: 100%; }
+.settings-window details > label:has(> textarea) { display: grid; gap: 10px; margin-block: 14px; }
+.settings-window details[open] > summary { margin-bottom: 12px; }
+.settings-window details > p { margin-block: 10px; line-height: 1.55; }
+.settings-window details + details { margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--line); }
+.settings-window .folder { flex-wrap: wrap; align-items: center; gap: 12px; margin-block: 14px; }
+.settings-window { height: 100dvh; overflow: hidden; }
+.settings-window main { height: 100%; display: flex; flex-direction: column; overflow: hidden; padding: 0; }
+.settings-window main > header { flex: none; padding: 16px 20px; border-bottom: 1px solid var(--line); }
+.settings-window main > header h1 { margin: 0; }
+.settings-content { flex: 1; min-height: 0; overflow-y: auto; padding: 0 20px; scroll-padding-block: 16px; }
+.settings-window .settings-actions { flex: none; justify-content: space-between; align-items: center; gap: 16px; margin: 0; padding: 12px 20px; background: var(--surface); }
+.settings-footer-version { min-width: 0; color: var(--muted); font-size: 11px; overflow-wrap: anywhere; }
+.settings-actions > button { flex: none; }
+.settings-update > button + button { margin-inline-start: 8px; }
+@media (max-width: 420px) {
+  .settings-window main > header, .settings-window .settings-actions { padding-inline: 16px; }
+  .settings-content { padding-inline: 16px; }
+  .settings-window .settings-group > label:has(> select, > input[type="text"]) { flex-direction: column; align-items: stretch; gap: 10px; }
+  .settings-window .settings-group select, .settings-window .settings-group input[type="text"] { width: 100%; max-width: 100%; }
+  .settings-window details > label:has(> select) { grid-template-columns: minmax(0, 1fr); gap: 10px; }
+}
 .maple-target { border: 1px solid var(--line); background: var(--surface); }
 
 @media (max-width: 390px) {
@@ -268,6 +303,23 @@ input:focus-visible, select:focus-visible, button:focus-visible, summary:focus-v
 #pane-home #limit-rows li { background: transparent; border: 0; padding: 3px 0; }
 .quota-heading { display: flex; justify-content: space-between; gap: 6px; }
 .quota-heading>span { min-width: 0; overflow-wrap: anywhere; }
+.quota-track { position: relative; display: flex; align-items: center; min-height: 12px; }
+.quota-track progress { width: 100%; accent-color: var(--quota-color); }
+#limit-rows .quota-track progress::-webkit-progress-value { background: var(--quota-color); }
+#limit-rows .quota-track progress::-moz-progress-bar { background: var(--quota-color); }
+.quota-pace-marker { position: absolute; top: 0; bottom: 0; width: 2px; transform: translateX(-50%); background: light-dark(#242b32,#fff); pointer-events: none; }
+#limit-rows li[data-gauge="0"] { --quota-color: #49a8cf; }
+#limit-rows li[data-gauge="1"] { --quota-color: #48af9a; }
+#limit-rows li[data-gauge="2"] { --quota-color: #58aa62; }
+#limit-rows li[data-gauge="3"] { --quota-color: #d5ad36; }
+#limit-rows li[data-gauge="4"] { --quota-color: #dc8c36; }
+#limit-rows li[data-gauge="5"] { --quota-color: #db5555; }
+.quota-heading strong { color: var(--quota-color); }
+#limit-rows li[data-gauge="3"] .quota-heading strong { color: var(--text); }
+.quota-forecast { display: block; color: var(--muted); overflow-wrap: anywhere; }
+.quota-forecast[data-warning="true"] { color: light-dark(#a85f13,#efac60); }
+.detail-form-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(72px,1fr));gap:6px;margin:8px 0}.detail-form{padding:6px;display:grid;justify-items:center;min-width:0;white-space:normal}.detail-form .pokemon-art{width:48px;height:48px}.detail-form:disabled{opacity:.3}.detail-form[aria-pressed="true"]{outline:2px solid var(--accent)}.detail-form span{max-width:100%;overflow-wrap:anywhere;font-size:11px}.pokemon-mega-dialog{width:min(620px,calc(100vw - 32px));max-height:calc(100vh - 32px);overflow:auto;border:1px solid var(--line);border-radius:12px;background:var(--surface);color:var(--text);padding:16px;box-sizing:border-box}.pokemon-mega-dialog::backdrop{background:#0008}.mega-information{margin-bottom:10px}.mega-information>img{image-rendering:pixelated}
+#session-key{box-sizing:border-box;width:100%;max-width:100%}#settings-tracked-account,#session-account,#session-organization{max-width:100%;min-width:0}
 #limit-rows small { color: var(--muted); font-size: 10px; display: block; margin-top: 3px; }
 #limit-accounts { margin: 4px 0; }
 .activity-heatmap { display: grid; grid-template-columns: repeat(16,minmax(0,1fr)); grid-template-rows: repeat(7,8px); grid-auto-flow: column; gap: 3px; margin: 7px 0; }
@@ -308,3 +360,14 @@ body.showing-recap .app-brand,body.showing-recap .app-tabs,body.showing-recap .a
 .home-evolution-navigation { display: flex; align-items: center; gap: 3px; min-width: 0; }
 .home-evolution-navigation #evolution-line { flex: 1; min-width: 0; scrollbar-width: none; }
 .home-evolution-navigation>button { flex: none; width: 20px; height: 28px; padding: 0; border: 0; background: transparent; }
+.battle-roster-order { display:flex; justify-content:center; align-items:center; gap:5px; }
+.battle-roster-order button { min-width:22px; padding:2px 5px; }
+.battle-history small { display:block; color:var(--muted); }
+
+#scan-roots { box-sizing:border-box;width:100%;resize:vertical;min-height:70px;font:inherit; }
+#update-banner { margin:8px;padding:8px; }
+#update-banner button { margin-right:6px; }
+#update-banner { flex: none; max-height: 35dvh; overflow-y: auto; }
+#update-banner p { margin: 0 0 8px; overflow-wrap: anywhere; }
+.update-banner-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+#update-banner .update-banner-actions button { margin: 0; }

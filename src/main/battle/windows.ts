@@ -3,6 +3,8 @@ import {fileURLToPath} from 'node:url';
 import type {ChallengeView} from '../../shared/battle.js';
 export class BattleWindows {
   canClose?:()=>Promise<boolean>;
+  changed?:()=>void;
+  allowClose=false;
   kind:'challenge'|'lan'='challenge';
   main?:BrowserWindow;private extra=new Map<string,BrowserWindow>();
   constructor(private reveal=(window:BrowserWindow,focus=true)=>{window.show();if(focus)window.focus();}){}
@@ -15,7 +17,7 @@ export class BattleWindows {
     const work=screen.getPrimaryDisplay().workArea;
     const window=new BrowserWindow({width:Math.min(660,work.width),height:Math.min(840,work.height-20),useContentSize:true,minWidth:Math.min(660,work.width),minHeight:440,show:false,autoHideMenuBar:true,title:'PokeTokenBar · '+(kind==='lan'?'배틀':'챌린지')+' · 싱글',
       webPreferences:{preload:fileURLToPath(new URL('../usage-preload.cjs',import.meta.url)),sandbox:true,contextIsolation:true,nodeIntegration:false,backgroundThrottling:false,autoplayPolicy:'no-user-gesture-required'}});
-    this.main=window;let checking=false,allowed=false;window.on('close',event=>{if(!allowed&&this.kind==='lan'&&this.canClose){event.preventDefault();if(checking)return;checking=true;void this.canClose().then(ok=>{allowed=ok;if(ok&&!window.isDestroyed())window.close();}).finally(()=>{checking=false;});}});this.protect(window);window.on('closed',()=>{this.main=undefined;for(const extra of this.extra.values())extra.destroy();this.extra.clear();});
+    this.main=window;this.changed?.();let checking=false,allowed=false;window.on('close',event=>{if(!allowed&&!this.allowClose&&this.canClose){event.preventDefault();if(checking)return;checking=true;void this.canClose().then(ok=>{allowed=ok;if(ok&&!window.isDestroyed())window.close();}).catch(error=>console.error('Battle close failed:',error)).finally(()=>{checking=false;});}});this.protect(window);window.on('closed',()=>{this.main=undefined;for(const extra of this.extra.values())extra.destroy();this.extra.clear();this.changed?.();});
     try{await window.loadFile(fileURLToPath(new URL('../../renderer/battle.html',import.meta.url)),{query:{kind}});this.reveal(window);}catch(error){window.destroy();throw error;}
   }
   async auxiliary(kind:'field'|'stats',visible=true){

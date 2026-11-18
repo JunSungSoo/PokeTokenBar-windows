@@ -40,6 +40,11 @@ async function connect(host, guest) {
   await until(() => host.state().phase === 'connected' && guest.state().phase === 'connected');
 }
 
+test('version handoff waits for an in-flight trade commit before releasing the save',async t=>{
+ const left=await fixture(t,'handoff-left',1),right=await fixture(t,'handoff-right',25);await connect(left.trade,right.trade);await left.trade.offer('handoff-left');await right.trade.offer('handoff-right');await until(()=>left.trade.state().canAccept&&right.trade.state().canAccept);
+ const commit=left.store.commitTrade.bind(left.store);let release,entered=false;const gate=new Promise(r=>release=r);t.after(()=>release());left.store.commitTrade=async(...args)=>{entered=true;await gate;return commit(...args);};await Promise.all([left.trade.accept(),right.trade.accept()]);await until(()=>entered);let finished=false;const handoff=left.trade.prepareHandoff().then(()=>finished=true);await sleep(30);assert.equal(finished,false);release();await handoff;await left.store.finishWrites();await right.store.finishWrites();assert.equal(left.trade.blocksUpdate(),false);assert.equal((await new CompanionStore(left.path).read()).captures[0].id,'handoff-right');
+});
+
 test('two LAN peers swap only after both approve and preserve their exact pre-trade backups', async t => {
   const left = await fixture(t, 'left', 1);
   const right = await fixture(t, 'right', 25);
@@ -112,7 +117,7 @@ test('rejects oversized frames and refuses approval if the pre-trade backup cann
 });
 
 test('Swift macOS TradeSession and Windows LAN session exchange using the original protocol', {
-  skip: !process.env.POKE_MAC_TRADE_PEER,
+  skip: !process.env.POKE_MAC_TRADE_PEER&&'Requires macOS-built PokeTokenBar module and POKE_MAC_TRADE_PEER',
 }, async t => {
   const left = await fixture(t, 'windows-fixture', 1);
   await left.trade.host('Windows Fixture');
@@ -136,7 +141,7 @@ test('Swift macOS TradeSession and Windows LAN session exchange using the origin
 });
 
 test('Windows joins a Swift host and retains an active partner’s exact Mac profile seed', {
-  skip: !process.env.POKE_MAC_TRADE_PEER,
+  skip: !process.env.POKE_MAC_TRADE_PEER&&'Requires macOS-built PokeTokenBar module and POKE_MAC_TRADE_PEER',
 }, async t => {
   const windows = await fixture(t, 'windows-active', 7, true);
   const macPath = join(windows.dir, 'mac-companion.json');

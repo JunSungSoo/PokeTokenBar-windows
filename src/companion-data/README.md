@@ -10,3 +10,10 @@ moves to the owned individual; tooltip hover does not change progress or battle 
 
 Species metadata is requested from fixed PokéAPI endpoints and cached separately
 from user progress for 30 days, with stale-cache fallback on network failure.
+
+`ability-options.json` is copied unchanged from `origin/feature/battle`, commit
+`ad1bb7c9217028270ec28ebfb8d2dc05059a09da`, `Resources/BattleText/ability-options.json`.
+It supplies the BW2 legal ability slots, including historical repairs such as Levitate for Gengar.
+`form-names.json` uses that branch's form IDs and official PokeAPI CSV names in the
+same eight-language fallback order as Mac. Regenerate with `node scripts/sync-mac-form-names.mjs`;
+`form-names-source.json` records the reference, source URL and input SHA-256.

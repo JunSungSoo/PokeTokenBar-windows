@@ -1,0 +1,14 @@
+{
+  "reference": "origin/feature/battle",
+  "commit": "ad1bb7c9217028270ec28ebfb8d2dc05059a09da",
+  "corruptSave": {
+    "validSnapshots": 1,
+    "startup": "recovered",
+    "restore": "restored",
+    "originalPreserved": true
+  },
+  "accountDiscovery": {
+    "autoFoundTeam": true,
+    "manualFoundTeam": true
+  }
+}

@@ -15,11 +15,14 @@
   <script src="preferences.js" defer></script>
   <script src="settings.js" defer></script>
   <script src="windows.js" defer></script>
+  <script src="update-banner.js" defer></script>
   <script src="save-transfer.js" defer></script>
 </head>
 <body class="settings-window">
 <main>
+  <aside id="update-banner" class="surface" hidden aria-live="polite"></aside>
   <header><h1>설정 <small class="platform-label">Windows</small></h1><span id="settings-saved" role="status">불러오는 중…</span></header>
+  <div class="settings-content">
   <section aria-labelledby="general-settings"><h2 id="general-settings">일반</h2><div class="surface settings-group">
     <label>언어<select data-setting="language"><option value="system">시스템 설정</option><option value="ko">한국어</option><option value="en">English</option><option value="ja">日本語</option><option value="es">Español</option><option value="fr">Français</option><option value="pt">Português</option><option value="de">Deutsch</option><option value="ru">Русский</option></select></label>
     <label>테마<select data-setting="theme"><option value="system">시스템 설정</option><option value="light">라이트</option><option value="dark">다크</option></select></label>
@@ -58,20 +61,20 @@
     <label>이상한사탕 획득 알림<input type="checkbox" data-setting="companionNotifications"></label>
   </div></section>
   <section aria-labelledby="system-settings"><h2 id="system-settings">자동 실행·업데이트</h2>
-    <div class="surface settings-group"><label>업데이트 알림<input type="checkbox" data-setting="updateNotifications"></label></div><div class="surface">
+    <div class="surface settings-group"><label>업데이트 알림<input type="checkbox" data-setting="updateNotifications"></label></div>
+    <div class="surface settings-update"><p><span>설치된 버전</span> <strong id="settings-update-version" data-no-translate>1.0.0</strong></p><button id="desktop-update" type="button">업데이트 확인</button><button id="desktop-update-skip" hidden type="button">이 버전 건너뛰기</button><p id="desktop-update-status" role="status"></p></div><div class="surface">
       <details id="desktop-settings" hidden>
         <summary>Windows 설정</summary>
         <p>설치된 버전 <span id="desktop-version"></span></p>
         <label><input type="checkbox" id="desktop-login"> 로그인할 때 자동 실행</label>
         <p id="desktop-login-status" role="status"></p>
         <button id="desktop-pet" type="button">플로팅 펫 표시/숨기기</button>
-        <button id="desktop-update" type="button">업데이트 확인</button>
-        <p id="desktop-update-status" role="status"></p>
       </details>
   <p id="desktop-development" hidden>자동 실행과 업데이트는 설치된 Windows 앱에서 사용할 수 있습니다.</p>
   </div></section>
   <section aria-labelledby="save-settings"><h2 id="save-settings">저장·가져오기</h2><div class="surface">
     <button id="settings-backup" type="button">Windows 저장 내보내기</button>
+    <button id="settings-export-mac" type="button">Mac 호환 저장 내보내기</button>
     <button id="settings-snapshot" type="button">스냅샷 만들기</button>
     <button id="settings-data-folder" type="button">저장 폴더 열기</button><p id="backup-status" role="status"></p>
       <details>
@@ -106,6 +109,15 @@
         <p class="settings-hint">계정별 .credentials.json 파일이 있는 폴더를 선택하세요.</p>
         <button id="settings-add-account" type="button">계정 폴더 추가</button>
         <ul id="settings-accounts"></ul>
+        <label>추적 계정<select id="settings-tracked-account"></select></label>
+        <h3>claude.ai 세션 키</h3>
+        <label>계정<select id="session-account"></select></label>
+        <input id="session-key" type="password" autocomplete="off" aria-label="claude.ai 세션 키" placeholder="sk-ant-…">
+        <p class="settings-hint">세션 키는 운영체제 암호화로 저장합니다. 브라우저 로그아웃으로 무효화할 수 있습니다.</p>
+        <button id="session-save" type="button">저장</button><button id="session-clear" type="button">제거</button>
+        <button id="session-organizations" type="button">조직 불러오기</button>
+        <label>조직<select id="session-organization"></select></label>
+        <p id="session-status" role="status"></p>
       </details>
       <details>
         <summary>추가 로그 폴더 설정</summary>
@@ -116,12 +128,14 @@
           <button id="choose-root" type="button" disabled>선택</button>
           <button id="reset-root" type="button" disabled>해제</button>
         </div>
-        <p id="root-path"></p>
+        <p id="root-path"></p><label>추가 로그 폴더<textarea id="scan-roots" rows="3" spellcheck="false" placeholder="C:\logs\*&#10;D:\archive"></textarea></label><p id="scan-count" role="status"></p><button id="scan-save" type="button">저장</button>
       </details>
   </div></section>
-  <section aria-labelledby="about-settings"><h2 id="about-settings">정보</h2><div class="surface"><p>PokeTokenBar Windows <span id="settings-version"></span></p></div></section>
+  <section aria-labelledby="about-settings"><h2 id="about-settings">정보</h2><div class="surface"><p>PokeTokenBar Windows <span id="settings-version"></span></p><button data-support="report">문제점 알리기</button><button data-support="log">로그 파일 보기</button><button data-support="github">GitHub</button><button data-support="website">웹사이트</button><button data-support="sponsor">후원</button><p id="support-status" role="status"></p></div></section>
+  </div>
   <footer class="settings-actions">
-    <button id="difficulty-save" class="primary" type="button">저장</button>
+    <span class="settings-footer-version" data-no-translate>PokeTokenBar Windows · <strong id="settings-current-version">v1.0.0</strong></span>
+    <button id="difficulty-save" class="primary" type="button">저장하기</button>
   </footer>
 </main>
 </body>

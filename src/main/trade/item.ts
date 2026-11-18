@@ -42,6 +42,7 @@ export function wireItem(offer: OfferedItem): Row {
   const common = {
     baseID: ids[0], rarity: item.rarity ?? 'common', isShiny: item.shiny,
     nature: natureKey(item.nature), form: item.form, profile: wireMacProfile(item.macProfile, item.id),
+    prayers:item.prayers===undefined?undefined:{count:item.prayers},
   };
   if (offer.active) {
     return { activeMon: { _0: { ...common, pathIDs: ids.slice(0, item.stage + 1),

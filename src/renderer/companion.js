@@ -1,6 +1,10 @@
 (() => {
   const get = id => document.getElementById(id);
   const tabs = [...document.querySelectorAll('.app-tabs button')];
+  let activityGate={trade:false,battle:false};
+  function setActivity(value){activityGate=value;const trade=document.querySelector('#tab-trade'),battle=document.querySelector('#tab-battle');if(trade)trade.disabled=value.battle;if(battle)battle.disabled=value.trade;}
+  window.usage.onActivity?.(setActivity);
+  window.addEventListener('activity-gate',event=>setActivity(event.detail));
   const format = new Intl.NumberFormat('ko-KR');
   const rarityLabels = { common: '일반', uncommon: '고급', rare: '희귀', legendary: '전설' };
   const regions = [
@@ -53,6 +57,7 @@
   }
 
   function openTab(id, focus = false) {
+    if(id==='trade'&&activityGate.battle||id==='battle'&&activityGate.trade)return;
     if (currentTab !== id) window.dispatchEvent(new CustomEvent('app-tab-changed',{detail:{previous:currentTab,current:id}}));
     if (currentTab === 'collection' && id !== currentTab) detail = undefined;
     if (currentTab !== id) window.scrollTo(0, 0);
@@ -151,7 +156,7 @@
     const types = get('home-types');
     types.replaceChildren();
     const metadataKey = window.i18n.language + ':' + current?.number;
-    const metadata = homeMetadataKey === metadataKey ? homeMetadata : undefined;
+    const metadata = homeMetadataKey === metadataKey&&homeMetadata ? window.pokemonMath.projectDetailView(homeMetadata,active?.form) : undefined;
     const typeIDs = metadata?.details.types ?? Object.entries(window.typeNames).filter(([,names]) => Object.values(names).includes(current?.type)).map(([key]) => key);
     for (const type of current ? typeIDs : []) {
       const badge = element('span', metadata?.labels.types[type] ?? window.typeNames[type]?.[window.i18n.language] ?? type, 'type-badge');
@@ -312,6 +317,7 @@
     function adjust(delta) { quantity.value = String(Math.max(1,Math.min(max,Number(quantity.value)+delta))); confirming=false; draw(); }
     function draw() {
       primary.disabled = !max || !quantity.validity.valid || !Number(quantity.value) || (requiredChoice && !requiredChoice.value);
+      primary.hidden = !max && !explain.keepDisabled;
       picker.hidden = max < 2;
       minus.disabled = Number(quantity.value) <= 1; plus.disabled = Number(quantity.value) >= max;
       cancel.hidden = !confirming;
@@ -354,11 +360,12 @@
         : !affordable ? '토큰이 부족해요' : '';
       const explain = (count, confirming) => {
         const total = compactTokens(count * item.price);
-        if (confirming === 'precious') return '이로치 또는 희귀 개체입니다. 도감에는 놓아준 기록이 남고 성장 진행은 사라집니다.';
+        if (confirming === 'precious') return window.i18n.t(active?.shiny?'⚠️ 이로치 포켓몬이에요! 정말 놓아줄까요?':'⚠️ 전설 포켓몬이에요! 정말 놓아줄까요?');
         if (confirming && egg) return '현재 파트너를 놓아주고 성장을 처음부터 시작합니다. ' + total;
         return confirming ? window.i18n.t('{name} 구매할까요?',{name:window.i18n.t(item.name) + (count>1 ? ' ×'+count : '')}) : '가격 '+total;
       };
       explain.precious = egg && (active?.shiny || active?.rarity === 'legendary');
+      explain.keepDisabled = egg && !active;
       explain.unitPrice = item.price;
       controls(article, '구매', max, hint, explain, quantity =>
         change({ kind: 'buy', product: key, quantity, activeID: active?.id }, item.name + ' 구매 완료'));
@@ -405,7 +412,11 @@
           xp -= stage.threshold;
           result = stage.species ? stage.species.name + '로 진화' : '졸업';
         }
-        return '+' + compactTokens(quantity * 100_000_000) + ' XP' + (result ? ' · ' + result : ' · 성장 진행');
+        const preview=window.companionUI.candyPreview(state.progress,economy.candyStages,quantity),notes=[];
+        if(preview.graduates)notes.push(window.i18n.t('이 포켓몬은 졸업할 것으로 예상돼요.'));
+        if(preview.discardedXP>0)notes.push(window.i18n.t('졸업 시 남는 {xp} XP는 사라져요.',{xp:compactTokens(preview.discardedXP)}));
+        else if(preview.carryoverXP>0)notes.push(window.i18n.t('예상 진화 후 이월 경험치: {xp} XP.',{xp:compactTokens(preview.carryoverXP)}));
+        return '+' + compactTokens(quantity * 100_000_000) + ' XP' + (result ? ' · ' + result : ' · 성장 진행')+(notes.length?' · '+notes.join(' '):'');
       };
       controls(article, '사용', max, hint, explain, quantity =>
         change({ kind: 'use', item: key, quantity, id: targets?.value ?? active?.id }, item.name + ' 사용 완료'), targets);
@@ -416,11 +427,12 @@
   const regionOf = number => regions.find(([, first, last]) => number >= first && number <= last)?.[0];
   const allRows = () => state.active ? [...state.captures, state.active] : state.captures;
   const speciesName = species => window.speciesNames?.[species.number]?.[window.i18n.language] ?? species.name;
-  const formLabel=(form,number)=>number===201 ? ({exclamation:'!',question:'?'}[form] ?? form.toUpperCase()) : !form || form==='normal' ? window.i18n.t('기본 폼') : form.replaceAll('-', ' ').replace(/\b[a-z]/g,char=>char.toUpperCase());
+  const formLabel=(form,number)=>number===201 ? ({exclamation:'!',question:'?'}[form] ?? form.toUpperCase()) : number===493 ? window.typeNames?.[form]?.[window.i18n.language]??form : window.formNames?.[number]?.[form]?.[window.i18n.language]??window.formNames?.[number]?.[form]?.en??(!form||form==='normal'?window.i18n.t('기본 폼'):form.replaceAll('-', ' ').replace(/\b[a-z]/g,char=>char.toUpperCase()));
   const pokemonNumber = number => '#' + String(number).padStart(3, '0');
   const date = timestamp => timestamp ? new Date(timestamp).toLocaleDateString(window.i18n.language) : '';
   const appearanceOf = (row, number) => {
-    const { form, spriteID, animated } = row.species.find(entry => entry.number === number);
+    const { spriteID, animated } = row.species.find(entry => entry.number === number);
+    const form=row.species.find(entry=>entry.number===number).form??window.formCatalog?.[number]?.[0];
     return { shiny: row.shiny, form, spriteID, animated };
   };
 
@@ -479,10 +491,11 @@
     const key = window.i18n.language + ':' + number;
     const payload = detailData.get(key);
     content.replaceChildren(back);
-    if(forms.length>1){
-      const formsPicker=element('select');formsPicker.setAttribute('aria-label','폼 선택');
-      formsPicker.replaceChildren(...forms.map(form=>new Option(formLabel(form,number),form)));formsPicker.value=selectedForm;
-      formsPicker.addEventListener('change',()=>{detail.form=formsPicker.value;detail.shiny=undefined;detail.rowID=allIndividuals.find(row=>(appearanceOf(row,number).form ?? '')===formsPicker.value)?.id;renderDetail();});content.append(formsPicker);
+    const allForms=window.formCatalog?.[number]??[];
+    if(allForms.length>1){
+      content.append(element('p',window.i18n.t('수집한 폼 {count}/{total}',{count:forms.length,total:allForms.length})));
+      const grid=element('div',undefined,'detail-form-grid');grid.setAttribute('aria-label',window.i18n.t('폼 선택'));
+      for(const form of allForms){const owned=forms.includes(form),pick=button('',()=>{detail.form=form;detail.shiny=undefined;detail.rowID=allIndividuals.find(row=>(appearanceOf(row,number).form??'')===form)?.id;renderDetail();},'detail-form');pick.disabled=!owned;pick.dataset.form=form;pick.setAttribute('aria-pressed',String(form===selectedForm));pick.append(sprite({...species,number,form,...(window.battleCatalog.forms?.[number]?.[form]??{})},{form,shiny:selectedShiny},true),element('span',formLabel(form,number)));if(!owned)pick.title=window.i18n.t('미수집');grid.append(pick);}content.append(grid);
     }
     if(formRows.some(row=>row.shiny) && formRows.some(row=>!row.shiny)){
       const appearances=element('div',undefined,'appearance-picker');
@@ -491,7 +504,8 @@
     content.append(identity);if(rows.length>1)content.append(options);content.append(line,pin);
     if (payload) {
       title.querySelector('h2').textContent = payload.labels.species[number] ?? speciesName(species);
-      title.querySelector('p:last-child').textContent = [payload.details.types.map(type => payload.labels.types[type] ?? type).join(' / '), window.i18n.t(rarityLabels[current.rarity ?? 'common']), current.level ? 'Lv. ' + current.level : '', window.i18n.t(current.nature)].filter(Boolean).join(' · ');
+      const projected=window.pokemonMath.projectDetailView(payload,current.form);
+      title.querySelector('p:last-child').textContent = [projected.details.types.map(type => payload.labels.types[type] ?? type).join(' / '), window.i18n.t(rarityLabels[current.rarity ?? 'common']), current.level ? 'Lv. ' + current.level : '', window.i18n.t(current.nature)].filter(Boolean).join(' · ');
       content.append(window.renderPokemonDetails(payload, current, async action=>{
         const scroll=content.scrollTop;
         const updated=await window.usage.setPokemonMove(action);
@@ -501,6 +515,9 @@
         }
       },async item=>{
         const scroll=content.scrollTop,updated=await window.usage.changeCompanion({kind:'battle-default-item',id:current.id,item});window.renderCompanionTabs(updated);
+        if(detail?.number===number&&detail.rowID===current.id)content.scrollTop=scroll;
+      },async name=>{
+        const scroll=content.scrollTop,updated=await window.usage.changeCompanion({kind:'ability',id:current.id,name});window.renderCompanionTabs(updated);
         if(detail?.number===number&&detail.rowID===current.id)content.scrollTop=scroll;
       }));
     } else {
@@ -520,18 +537,20 @@
     }
   }
 
+  const searchKey=value=>String(value??'').normalize('NFD').replace(/\p{M}/gu,'').toLocaleLowerCase();
+  const matchesName=(species,query)=>[species.name,...Object.values(window.speciesNames?.[species.number]??{}),pokemonNumber(species.number)].some(value=>searchKey(value).includes(query));
   function renderCollection() {
     get('collection-list').hidden = Boolean(detail);
     get('dex-detail').hidden = !detail;
     if (detail) return renderDetail();
     const all = allRows();
-    const query = get('dex-search').value.trim().toLowerCase().replace(/^#/, '');
+    const query = searchKey(get('dex-search').value.trim()).replace(/^#/, '');
     const rarity = get('dex-rarity').value;
     const region = get('dex-region').value;
     const shiny = get('dex-shiny').checked;
     const sort = get('dex-sort').value;
     const match = species => (!region || regionOf(species.number) === region) &&
-      (!query || speciesName(species).toLowerCase().includes(query) || species.name.toLowerCase().includes(query) || pokemonNumber(species.number).includes(query));
+      (!query || matchesName(species,query));
     const matches = all.filter(row => (!rarity || (row.rarity ?? 'common') === rarity) && (!shiny || row.shiny));
     const allSpecies = state.collection;
     const cards = allSpecies.flatMap(species => {
@@ -602,6 +621,7 @@
       entry.append(element('span', pokemonNumber(species.number)+(state.economy.representative?.speciesID===species.number?' ★':''), 'eyebrow'), sprite(species,iconAppearance),
         element('strong', speciesName(species)+(forms?' '+formCount+'/'+forms.length:'')));
       if (all.some(capture=>capture.shiny && capture.species.some(stage=>stage.number===species.number))) entry.append(element('span','✨','dex-shiny-marker'));
+      if(all.some(capture=>capture.championAchievedAt!==undefined&&capture.species.at(-1)?.number===species.number))entry.append(element('span',window.i18n.t('챌린지 챔피언'),'champion-badge'));
       if (state.current?.number===species.number) entry.append(element('span','육성 중','dex-raising'));
       cell.append(entry);
       return cell;
@@ -658,6 +678,9 @@
   get('dex-shiny-toggle').addEventListener('click',()=>{get('dex-shiny').checked=!get('dex-shiny').checked;get('dex-shiny').dispatchEvent(new Event('input'));});
   get('dex-mode').addEventListener('click', () => collectionMode(false));
   get('log-mode').addEventListener('click', () => collectionMode(true));
+  let wheelDistance=0,wheelTimer,wheelBlocked=false;
+  get('collection-list').addEventListener('wheel',event=>{if(log||detail||get('dex-pages').hidden)return;event.preventDefault();clearTimeout(wheelTimer);wheelTimer=setTimeout(()=>{wheelDistance=0;wheelBlocked=false;},180);if(wheelBlocked)return;wheelDistance+=event.deltaMode?event.deltaY*24:event.deltaY;if(Math.abs(wheelDistance)<24)return;const control=get(wheelDistance>0?'dex-next':'dex-prev');if(!control.disabled){wheelBlocked=true;control.click();}wheelDistance=0;},{passive:false});
+  window.desktop.onOpenDex?.(()=>openTab('collection'));
   get('dex-prev').addEventListener('click', () => { page--; renderCollection(); });
   get('dex-next').addEventListener('click', () => { page++; renderCollection(); });
   for (const id of ['dex-search', 'dex-rarity', 'dex-region', 'dex-sort', 'dex-shiny']) {

@@ -1,6 +1,8 @@
 import type { Provider } from './usage.js';
 
 export interface AppSettings {
+  skippedUpdateVersion?:string;
+  petPosition?:{x:number;y:number};
   language: 'system' | 'ko' | 'en' | 'ja' | 'es' | 'fr' | 'pt' | 'de' | 'ru';
   animationQuality: 'powerSaver' | 'balanced' | 'smooth';
   statusChecks: boolean;
@@ -26,8 +28,11 @@ export interface AppSettings {
   trayLimits: boolean;
   tradeNickname: string;
   claudeRoots: string[];
+  claudeTrackedAccount?:string;
 }
 export interface SettingsAPI {
+  readPower?():Promise<boolean>;
+  onPowerSaver?(handler:(value:boolean)=>void):void;
   read(): Promise<AppSettings>;
   change(patch: Partial<AppSettings>): Promise<AppSettings>;
   onChange(handler: (settings: AppSettings) => void): void;

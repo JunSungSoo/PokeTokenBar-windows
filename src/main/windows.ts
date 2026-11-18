@@ -1,7 +1,9 @@
+import{join}from'node:path';import{release}from'node:os';
+import {DriveReleaseSource} from './drive-updates.js';
+import {newerVersion,windowsDriveURL} from '../shared/drive-release.js';
 import { resolveLanguage, translate } from '../shared/localization.js';
 import type { SettingsStore } from './settings.js';
-import { app, ipcMain, Notification, type BrowserWindow } from 'electron';
-import updaterModule from 'electron-updater';
+import { app, ipcMain, Notification,shell, type BrowserWindow } from 'electron';
 import { windowsAppID, type UpdateStatus, type WindowsSettings } from '../shared/windows.js';
 
 export const loginArgument = '--login-start';
@@ -14,18 +16,11 @@ export function registerWindowsIPC(
   settingsWindow: () => BrowserWindow | undefined,
   showSettings: () => Promise<void>,
   preferences: SettingsStore,
+  updateOptions: {source?:DriveReleaseSource;openDownload?:(url:string)=>Promise<void>;automatic?:boolean} = {},
 ): void {
   const supported = process.platform === 'win32' && app.isPackaged;
-  const updater = supported ? updaterModule.autoUpdater : undefined;
-  if (updater) {
-    updater.autoDownload = false;
-    updater.autoInstallOnAppQuit = false;
-    updater.allowDowngrade = false;
-    updater.allowPrerelease = false;
-    updater.disableWebInstaller = true;
-    // The updater emits errors as well as rejecting promises.
-    updater.on('error', error => console.error('Windows update failed:', error.message));
-  }
+  const source=updateOptions.source??new DriveReleaseSource();
+  const openDownload=updateOptions.openDownload??(url=>shell.openExternal(url));
 
   function authorize(event: Electron.IpcMainInvokeEvent): void {
     const windows = [mainWindow(), settingsWindow()];
@@ -40,7 +35,7 @@ export function registerWindowsIPC(
       const current = app.getLoginItemSettings(loginOptions());
       openAtLogin = current.openAtLogin && current.executableWillLaunchAtLogin;
     }
-    return { supported, version: app.getVersion(), openAtLogin };
+    return { supported, updatesSupported:true, driveUpdateURL:windowsDriveURL, version: app.getVersion(), openAtLogin };
   }
 
   ipcMain.handle('windows:open-settings', event => {
@@ -62,71 +57,34 @@ export function registerWindowsIPC(
     return togglePet();
   });
 
-  let available: string | undefined;
-  let downloaded: string | undefined;
-  let busy = false;
-  async function perform<T>(work: () => Promise<T>): Promise<T> {
-    if (busy) throw new Error('다른 업데이트 작업이 진행 중입니다.');
-    busy = true;
-    try { return await work(); }
-    finally { busy = false; }
-  }
+  ipcMain.handle('windows:support',async(event,action:unknown)=>{authorize(event);if(action==='log'){shell.showItemInFolder(join(app.getPath('userData'),'logs','PokeTokenBar.log'));return;}const links:Record<string,string>={github:'https://github.com/chattymin/PokeTokenBar',website:'https://chattymin.github.io/PokeTokenBar/',sponsor:'https://github.com/sponsors/chattymin',report:'mailto:parkdongmin123@gmail.com?subject='+encodeURIComponent('PokeTokenBar Windows problem report')+'&body='+encodeURIComponent('Version: '+app.getVersion()+'\nOS: '+process.platform+' '+release()+'\n\nDescribe the problem:\n\nAttach PokeTokenBar.log if helpful.')};if(typeof action!=='string'||!links[action])throw new Error('Invalid support action');await shell.openExternal(links[action]);});
 
-  let checking: Promise<UpdateStatus> | undefined;
-  function checkUpdate(): Promise<UpdateStatus> {
-    if (!updater) return Promise.reject(new Error('설치된 Windows 앱에서 업데이트를 확인할 수 있습니다.'));
-    if (checking) return checking;
-    checking = perform<UpdateStatus>(async () => {
-      if (downloaded) return { state: 'downloaded', version: downloaded };
-      const result = await updater.checkForUpdates();
-      if (!result) throw new Error('업데이트를 확인할 수 없습니다.');
-      if (!result.isUpdateAvailable) return { state: 'current', version: app.getVersion() };
-      available = result.updateInfo.version;
-      return { state: 'available' as const, version: available };
-    }).finally(() => { checking = undefined; });
-    return checking;
+  let available:string|undefined;
+  let lastUpdate:UpdateStatus={state:'current',version:app.getVersion(),delivery:'browser'};
+  const publish=(value:UpdateStatus)=>{lastUpdate={...value,delivery:'browser'};for(const window of [mainWindow(),settingsWindow()])if(window&&!window.isDestroyed())window.webContents.send('windows:update-state',lastUpdate);return lastUpdate;};
+  ipcMain.handle('windows:update-state',event=>{authorize(event);return lastUpdate;});
+  ipcMain.handle('windows:update-skip',async(event,restore:unknown)=>{authorize(event);if(typeof restore!=='boolean')throw new Error('Invalid update action');await preferences.change({skippedUpdateVersion:restore?'':available??''});return publish({state:available?(restore?'available':'skipped'):'current',version:available??app.getVersion()});});
+  let notifiedVersion:string|undefined,checking:Promise<UpdateStatus>|undefined;
+  function announce(status:UpdateStatus){
+    if(status.state!=='available'||!preferences.get().updateNotifications||status.version===notifiedVersion||!Notification.isSupported())return;
+    const language=resolveLanguage(preferences.get().language,app.getLocale());const notice=new Notification({title:translate('PokeTokenBar 업데이트',language),body:translate('{version} 버전을 사용할 수 있습니다.',language,{version:status.version})});notice.on('click',()=>{void showSettings().catch(console.error);});notice.show();notifiedVersion=status.version;
   }
-  ipcMain.handle('windows:update-check', event => { authorize(event); return checkUpdate(); });
-
-  let notifiedVersion: string | undefined;
-  const automaticCheck = async () => {
-    if (!updater || !preferences.get().updateNotifications || busy) return;
-    try {
-      const status = await checkUpdate();
-      if (status.state === 'available' && status.version !== notifiedVersion && Notification.isSupported()) {
-        const notice = new Notification({ title: translate('PokeTokenBar 업데이트', resolveLanguage(preferences.get().language, app.getLocale())), body: translate('{version} 버전을 사용할 수 있습니다.', resolveLanguage(preferences.get().language, app.getLocale()), { version: status.version ?? '' }) });
-        notice.on('click', () => { void showSettings(); });
-        notice.show();
-        notifiedVersion = status.version;
-      }
-    } catch (error) { console.error('Automatic update check failed:', error); }
-  };
-  if (updater) {
-    void automaticCheck();
-    const timer = setInterval(() => { void automaticCheck(); }, 6 * 60 * 60 * 1000);
-    timer.unref();
-    app.once('before-quit', () => clearInterval(timer));
+  function checkUpdate(minInterval=0):Promise<UpdateStatus>{
+    if(checking)return checking;
+    checking=source.check(windowsDriveURL,minInterval).then(release=>{
+      available=newerVersion(release.version,app.getVersion())?release.version:undefined;
+      const status=publish({state:available?(preferences.get().skippedUpdateVersion===available?'skipped':'available'):'current',version:available??app.getVersion()});announce(status);return status;
+    }).finally(()=>{checking=undefined;});return checking;
   }
-
-  ipcMain.handle('windows:update-download', async (event): Promise<UpdateStatus> => {
-    authorize(event);
-    if (!updater) throw new Error('업데이트를 받을 수 없습니다.');
-    return perform(async () => {
-      if (downloaded) return { state: 'downloaded', version: downloaded };
-      if (!available) throw new Error('먼저 업데이트를 확인해 주세요.');
-      await updater.downloadUpdate();
-      downloaded = available;
-      return { state: 'downloaded', version: downloaded };
-    });
-  });
+  ipcMain.handle('windows:update-check',event=>{authorize(event);return checkUpdate();});
+  const automaticCheck=()=>{if(preferences.get().updateNotifications)void checkUpdate(1800000).catch(error=>console.error('Drive update check failed:',error));};
+  if(updateOptions.automatic??app.isPackaged){
+    automaticCheck();const timer=setInterval(automaticCheck,1800000);timer.unref();
+    const watch=(_event:Electron.Event,window:BrowserWindow)=>window.on('show',()=>{if(window===mainWindow()||window===settingsWindow())automaticCheck();});app.on('browser-window-created',watch);
+    let enabled=preferences.get().updateNotifications;preferences.subscribe(value=>{if(value.updateNotifications&&!enabled)automaticCheck();enabled=value.updateNotifications;});
+    app.once('before-quit',()=>{clearInterval(timer);app.removeListener('browser-window-created',watch);});
+  }
+  ipcMain.handle('windows:update-download',async event=>{authorize(event);if(!available||!newerVersion(available,app.getVersion()))throw new Error('먼저 업데이트를 확인해 주세요.');await openDownload(windowsDriveURL);return{...lastUpdate,opened:true};});
   ipcMain.handle('windows:quit',async event=>{authorize(event);await finishWrites();app.quit();});
-  ipcMain.handle('windows:update-install', async event => {
-    authorize(event);
-    if (!updater) throw new Error('설치할 업데이트가 없습니다.');
-    await perform(async () => {
-      if (!downloaded) throw new Error('먼저 업데이트를 다운로드해 주세요.');
-      await finishWrites();
-      updater.quitAndInstall(false, true);
-    });
-  });
+  ipcMain.handle('windows:update-install',event=>{authorize(event);throw new Error('Drive ZIP을 다운로드한 뒤 압축을 풀어 새 버전을 실행해 주세요.');});
 }

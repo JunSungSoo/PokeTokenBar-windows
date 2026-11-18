@@ -6,6 +6,10 @@ import type { WindowsAPI } from '../shared/windows.js';
 import type { UsageAPI } from '../shared/usage.js';
 
 contextBridge.exposeInMainWorld('usage', {
+  scanRoots:(provider,raw,save=false)=>ipcRenderer.invoke('usage:scan-roots',provider,raw,save),
+  onActivity:handler=>ipcRenderer.on('usage:activity-gate',(_event,state)=>handler(state)),
+  exportMac:()=>ipcRenderer.invoke('companion:export-mac'),
+  manageSessionKey:(account,action,value)=>ipcRenderer.invoke('usage:session-key',account,action,value),
   onSnapshot:handler=>ipcRenderer.on('usage:updated',(_event,snapshot)=>handler(snapshot)),
   onLimits:handler=>ipcRenderer.on('usage:limits-updated',(_event,results)=>handler(results)),
   openMaple: () => ipcRenderer.invoke('companion:maple-open'),
@@ -28,6 +32,12 @@ contextBridge.exposeInMainWorld('usage', {
 } satisfies UsageAPI);
 
 contextBridge.exposeInMainWorld('desktop', {
+  support:action=>ipcRenderer.invoke('windows:support',action),
+  updateState:()=>ipcRenderer.invoke('windows:update-state'),
+  skipUpdate:(restore=false)=>ipcRenderer.invoke('windows:update-skip',restore),
+  onUpdate:handler=>ipcRenderer.on('windows:update-state',(_event,value)=>handler(value)),
+  onRefresh:handler=>ipcRenderer.on('desktop:refresh',()=>handler()),
+  onOpenDex:handler=>ipcRenderer.on('desktop:open-dex',()=>handler()),
   quit: () => ipcRenderer.invoke('windows:quit'),
   openSettings: () => ipcRenderer.invoke('windows:open-settings'),
   settings: () => ipcRenderer.invoke('windows:settings'),
@@ -75,6 +85,8 @@ contextBridge.exposeInMainWorld('battle', {
 contextBridge.exposeInMainWorld('shopCatalog', () => ipcRenderer.invoke('companion:catalog'));
 
 contextBridge.exposeInMainWorld('preferences', {
+  readPower:()=>ipcRenderer.invoke('settings:power-saver'),
+  onPowerSaver:handler=>ipcRenderer.on('system:power-saver',(_event,value)=>handler(value)),
   read: () => ipcRenderer.invoke('settings:read'),
   change: patch => ipcRenderer.invoke('settings:change', patch),
   onChange: handler => ipcRenderer.on('settings:changed', (_event, settings) => handler(settings)),

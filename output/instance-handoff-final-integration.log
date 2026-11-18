@@ -1,0 +1,5 @@
+Previous version ready 46832
+PASS: 1.0.0 → 1.0.1 ownership, previous exit and save preservation (legacy Windows normal shutdown).
+PASS: same and lower versions cannot replace the owner; pet preference survives.
+PASS: cooperative higher-version handoff with simultaneous contenders preserves a single owner, the save and pet preference.
+Instance test profile: C:\Users\SungSoo\AppData\Local\Temp\ptb-instance-handoff-P2vEmb\세이브 state

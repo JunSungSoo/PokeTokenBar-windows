@@ -65,6 +65,7 @@ function individual(row: Row, route: number[], stage: number, identity: string, 
     shiny: optionalBoolean(row.isShiny), repeat: optionalBoolean(row.hasGrowthBoost),
     route: route.map(id => speciesFor(id, names.get(id))), rarity: rarity as Rarity,
     form: formOf(row.form ?? row.unownForm),
+    prayers:object(row.prayers)?.count==null?undefined:integer(object(row.prayers)!.count,0,maxTokens),
     battleDefaultItem:typeof row.battleDefaultItem==='string'&&row.battleDefaultItem?row.battleDefaultItem:undefined,
     macProfile: readMacProfile(profile),
     level: profile?.level == null ? undefined : integer(profile.level, 1, 100),
@@ -162,7 +163,7 @@ export function decodeMacSave(data: Uint8Array): {
   const candyWindowEpoch = Object.fromEntries(Object.entries(epochs).map(([key, epoch]) => [key, string(epoch)]));
   return { progress: { raised, progress, active, graduated, spentTokens, inventory, eggTier, pendingHatchID,
     pendingForm: formOf(state.pendingForm), eggPrayers, representativeSpeciesID, representativeForm: formOf(state.representativeForm),
-    challengeCashClaims, candyFeatureSeeded: optionalBoolean(state.candyFeatureSeeded), candyGrantTier, candyWindowEpoch }, appVersion, sourceDevice, exportedAt };
+    challengeCashClaims,challengeShinyClaims:object(state.challengeShinyClaims) as Record<string,string>|undefined,collectedFinals:Array.isArray(state.collectedFinals)?state.collectedFinals.map(value=>string(value)):undefined, candyFeatureSeeded: optionalBoolean(state.candyFeatureSeeded), candyGrantTier, candyWindowEpoch }, appVersion, sourceDevice, exportedAt };
 }
 
 export async function readMacSave(path: string): Promise<ReturnType<typeof decodeMacSave>> {

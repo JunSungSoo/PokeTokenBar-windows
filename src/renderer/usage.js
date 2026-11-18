@@ -40,7 +40,8 @@ function renderProvider(usage){
  }
  for(const chip of document.querySelectorAll('#usage-providers button'))chip.setAttribute('aria-pressed',String(chip.dataset.provider===selectedProvider));renderLimits();renderServiceStatus();
 }
-function render({usage,labels,activity}){
+function render({usage,labels,activity,activityGate}){
+ if(activityGate)window.dispatchEvent(new CustomEvent('activity-gate',{detail:activityGate}));
  updateRefreshAge();
  if(activity)window.dispatchEvent(new CustomEvent('usage-activity',{detail:activity}));window.usageRecap.update(lastSnapshot);
  const rows=availableRows(usage),all=rows.map(([,row])=>row),total=period=>all.reduce((sum,row)=>sum+row[period].total,0),cost=period=>sumCost(all.map(row=>row.cost[period])),today=total('today');
@@ -54,10 +55,34 @@ async function refresh(){refreshButton.disabled=true;if(!lastSnapshot){status.hi
 function renderLimits(){
  const section=document.querySelector('.official-limits'),message=document.querySelector('#limit-status'),list=document.querySelector('#limit-rows'),tabs=document.querySelector('#limit-accounts');
  const results=limitResults?.filter(row=>row.provider===selectedProvider)??[];section.hidden=!['claude','codex','antigravity','cursor','opencode','grok'].includes(selectedProvider);if(section.hidden||limitButton.disabled)return;
- if(!results.some((row,i)=>(row.account??String(i))===selectedAccount))selectedAccount=results.find(row=>row.status==='available')?.account??(results.length?String(Math.max(0,results.findIndex(row=>row.status==='available'))):undefined);
- tabs.hidden=results.length<2;tabs.replaceChildren(...results.map((row,i)=>{const key=row.account??String(i),button=element('button',row.account??t('기본 계정'));button.type='button';button.setAttribute('aria-pressed',String(key===selectedAccount));button.addEventListener('click',()=>{selectedAccount=key;renderLimits();});return button;}));
- const result=results.find((row,i)=>(row.account??String(i))===selectedAccount);list.replaceChildren();
- if(result?.status==='available'){message.textContent='';for(const bucket of result.windows){const row=element('li'),heading=element('div',undefined,'quota-heading'),value=limitMode==='remaining'?Math.max(0,100-bucket.usedPercent):bucket.usedPercent;heading.append(element('span',bucket.label.split(' · ').map(part=>t(part)).join(' · ')),element('strong',format.format(value)+'%'));const meter=document.createElement('progress');meter.max=100;meter.value=Math.min(100,Math.max(0,value));meter.setAttribute('aria-label',bucket.label);row.append(heading,meter);if(bucket.resetsAt!==undefined){const minutes=Math.max(0,Math.ceil((bucket.resetsAt-Date.now())/60000)),reset=element('small',t('초기화')+' · '+(minutes>=60?t('{hours}시간 {minutes}분',{hours:Math.floor(minutes/60),minutes:minutes%60}):t('{count}분',{count:minutes})));reset.title=new Date(bucket.resetsAt).toLocaleString(window.i18n.language);row.append(reset);}list.append(row);}}
+ const accountKey=(row,i)=>row.accountID??row.account??String(i);
+ if(!results.some((row,i)=>accountKey(row,i)===selectedAccount)){const index=results.findIndex(row=>row.status==='available');selectedAccount=results.length?accountKey(results[Math.max(0,index)],Math.max(0,index)):undefined;}
+ tabs.hidden=results.length<2;tabs.replaceChildren(...results.map((row,i)=>{const key=accountKey(row,i),button=element('button',row.account??t('기본 계정'));button.type='button';button.setAttribute('aria-pressed',String(key===selectedAccount));button.addEventListener('click',()=>{selectedAccount=key;renderLimits();});return button;}));
+ const result=results.find((row,i)=>accountKey(row,i)===selectedAccount);list.replaceChildren();
+ if(result?.status==='available'){
+  const now=Date.now(),Q=window.quotaPresentation;
+  const stale=result.stale||result.checkedAt!==undefined&&now-result.checkedAt>900000;
+  const errors={oauthExpired:'Claude Code 로그인 정보가 만료됐습니다.',sessionKeyExpired:'세션 키가 만료됐습니다. 브라우저에서 다시 복사해 붙여넣으세요.',rateLimited:'요청이 너무 많습니다. 잠시 후 다시 시도하세요.',network:'조회 실패'};
+  message.textContent=[result.plan,result.account,stale?t('갱신 지연'):'',result.error?t(errors[result.error]??'조회 실패'):''].filter(Boolean).join(' · ');
+  if(result.error){const recover=element('button',t('로그인 정보 다시 읽기'));recover.type='button';recover.addEventListener('click',()=>window.desktop.openSettings());message.append(' ',recover);}
+  if(results.length>1&&result.accountUsage){const row=element('li'),u=result.accountUsage;row.append(element('span',t('오늘')+' '+compactTokens(u.todayTokens)+' '),costLabel(u.todayCost),element('span',' · '+t('이번 달')+' '+compactTokens(u.monthTokens)+' '),costLabel(u.monthCost));list.append(row);}
+  for(const bucket of result.windows){
+   const view=Q.quotaPresentation(bucket,result.block,limitMode==='remaining',now,window.appPreferences?.warnThreshold,window.appPreferences?.criticalThreshold);
+   const row=element('li'),heading=element('div',undefined,'quota-heading');row.dataset.gauge=String(view.gauge);
+   heading.append(element('span',bucket.label.split(' · ').map(part=>t(part)).join(' · ')),element('strong',format.format(view.percent)+'%'));
+   const track=element('div',undefined,'quota-track'),meter=document.createElement('progress');meter.max=100;meter.value=Math.min(100,Math.max(0,view.percent));meter.setAttribute('aria-label',bucket.label);track.append(meter);
+   if(view.marker!==null){
+    const marker=element('span',undefined,'quota-pace-marker');marker.style.left=(view.marker*100)+'%';marker.setAttribute('aria-hidden','true');track.append(marker);
+    let help=t('페이스 — 창 시간만큼 균등하게 썼다면 지금 {percent}입니다.',{percent:format.format(Q.displayPercent(view.pace*100,limitMode==='remaining'))+'%'});
+    if(view.tier!==null){const names=['여유 많음','여유','페이스대로','조금 빠름','빠름','매우 빠름'];const delta=view.delta>0?t('페이스보다 {points}%p 더 씀',{points:view.delta}):view.delta<0?t('페이스보다 {n}%p 덜 씀',{n:-view.delta}):'';help=t(names[view.tier])+(delta?' · '+delta:'')+'\n'+help;}
+    row.title=help;meter.setAttribute('aria-description',help);
+   }
+   row.append(heading,track);
+   if(bucket.resetsAt!==undefined){const minutes=Math.max(0,Math.ceil((bucket.resetsAt-now)/60000)),reset=element('small',t('초기화')+' · '+(minutes>=60?t('{hours}시간 {minutes}분',{hours:Math.floor(minutes/60),minutes:minutes%60}):t('{count}분',{count:minutes})));reset.title=new Date(bucket.resetsAt).toLocaleString(window.i18n.language);row.append(reset);}
+   if(view.forecast&&result.tracked!==false){const time=new Date(view.forecast.at).toLocaleTimeString(window.i18n.language,{hour:'2-digit',minute:'2-digit'}),prediction=element('small',view.forecast.beforeReset?t('현재 속도면 {time} 한도 도달',{time}):t('현재 속도로는 리셋 전 한도 도달 없음'),'quota-forecast');prediction.dataset.warning=String(view.forecast.beforeReset);row.append(prediction);}
+   list.append(row);
+  }
+ }
  else{message.textContent=t(result?.status==='failed'?'조회 실패':limitResults?'사용 가능한 한도 없음':'공식 한도 불러오기');if(result?.status==='failed'){const button=element('button',t('로그인 정보 다시 읽기'));button.type='button';button.addEventListener('click',()=>window.desktop.openSettings());list.append(element('li'));list.lastChild.append(button);}}
 }
 limitButton.addEventListener('click',async()=>{limitButton.disabled=true;document.querySelector('#limit-status').textContent=t('사용 한도를 조회하는 중입니다…');try{limitResults=await window.usage.limits();limitButton.disabled=false;renderLimits();}catch{document.querySelector('#limit-status').textContent=t('사용 한도를 불러오지 못했습니다.');}finally{limitButton.disabled=false;}});
@@ -74,3 +99,5 @@ window.addEventListener('language-changed',()=>{if(lastSnapshot)render(lastSnaps
 function updateRefreshAge(){const label=document.querySelector('#refresh-age');if(label&&lastRefreshedAt){const seconds=Math.max(0,Math.floor((Date.now()-lastRefreshedAt)/1000));label.textContent=t('갱신')+' '+(seconds<60?seconds+'s':Math.floor(seconds/60)+'m');}}
 setInterval(updateRefreshAge,1000);window.addEventListener('language-changed',updateRefreshAge);
 setInterval(renderLimits,60000);
+
+window.desktop.onRefresh?.(()=>void refresh());

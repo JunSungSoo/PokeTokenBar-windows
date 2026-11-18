@@ -2,16 +2,26 @@ export const windowsAppID = 'com.poketokenbar.windows';
 
 export interface WindowsSettings {
   supported: boolean;
+  updatesSupported?:boolean;
   version: string;
+  driveUpdateURL?:string;
   openAtLogin: boolean;
 }
 
 export interface UpdateStatus {
-  state: 'current' | 'available' | 'downloaded';
+  state: 'current' | 'available' | 'downloaded' | 'skipped';
   version: string;
+  delivery?:'browser'|'installer';
+  opened?:boolean;
 }
 
 export interface WindowsAPI {
+  support(action:'report'|'log'|'github'|'website'|'sponsor'):Promise<void>;
+  onUpdate(handler:(state:UpdateStatus)=>void):void;
+  updateState():Promise<UpdateStatus>;
+  skipUpdate(restore?:boolean):Promise<UpdateStatus>;
+  onRefresh(handler:()=>void):void;
+  onOpenDex(handler:()=>void):void;
   openSettings(): Promise<void>;
   quit(): Promise<void>;
   settings(): Promise<WindowsSettings>;

@@ -13,8 +13,8 @@
     const x=Math.max(0,Math.min(Math.floor(minX-(width-(maxX-minX+1))/2),canvas.width-width));
     const y=Math.max(0,Math.min(Math.floor(minY-(height-(maxY-minY+1))/2),canvas.height-height));
     const output=document.createElement('canvas');output.width=width;output.height=height;output.className='sprite-canvas egg-canvas';output.setAttribute('aria-hidden','true');
-    output.getContext('2d').drawImage(canvas,x,y,width,height,0,0,width,height);image.after(output);image.classList.add('sprite-decoded');
+    output.getContext('2d').drawImage(canvas,x,y,width,height,0,0,width,height);image.after(output);image.classList.add('sprite-decoded');image.dispatchEvent(new Event('sprite-cropped'));
   }
-  function scan(){for(const image of document.querySelectorAll('.egg-art img'))if(!images.has(image)){images.add(image);image.addEventListener('load',()=>crop(image));if(image.complete)crop(image);}}
+  function scan(){for(const image of document.querySelectorAll('.egg-art img,.pet-sprite.pokemon-art img:not([src$=".gif"])'))if(!images.has(image)){images.add(image);image.addEventListener('load',()=>crop(image));if(image.complete)crop(image);}}
   new MutationObserver(scan).observe(document.documentElement,{childList:true,subtree:true});scan();
 })();

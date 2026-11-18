@@ -24,12 +24,16 @@ ${extract(presentation,'func battleAccuracy(')}
 ${extract(presentation,'func battleMoveTarget(scope:')}
 }
 struct BattleMegaText {static let catalog=Empty();struct Empty{let types:[String:[String:String]]=[:]}}
+// This harness compares the species-independent tooltip API (speciesID/form omitted).
+// Fail explicitly if a future fixture requests a species-specific form.
+struct PokemonForm {}
 struct BattleTextCatalog {
 ${extract(catalog,'struct Move:')}
 let moves:[String:Move];let types:[String:[String:String]]
 static let moveTargets=try! JSONDecoder().decode([String:String].self,from:Data(contentsOf:URL(fileURLWithPath:CommandLine.arguments[3])))
 ${extract(catalog,'static func key(')}
-${['moveName','description','typeName','moveTooltip'].map(name=>extract(catalog,'func '+name+'(')).join('\n')}
+func pokemonTypes(_ id:Int,form:PokemonForm?)->[String]{preconditionFailure("Species-specific tooltips require a form-aware oracle")}
+${['moveName','moveType','description','typeName','moveTooltip'].map(name=>extract(catalog,'func '+name+'(')).join('\n')}
 }
 struct Catalog:Decodable {let moves:[String:BattleTextCatalog.Move];let types:[String:[String:String]]}
 struct Input:Decodable {let name:String;let language:AppLanguage}

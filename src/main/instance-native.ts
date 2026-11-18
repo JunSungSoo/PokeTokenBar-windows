@@ -1,0 +1,6 @@
+import{spawn}from'node:child_process';import{fileURLToPath}from'node:url';
+export interface NativeOwner {pid:number;exe:string;started:string}
+export function instanceNative<T>(request:Record<string,unknown>,packaged=false):Promise<T>{
+ const source=fileURLToPath(new URL('./instance-bridge.ps1',import.meta.url)),script=packaged?source.replace(/\.asar([\\/])/i,'.asar.unpacked$1'):source;
+ return new Promise((resolve,reject)=>{const child=spawn('powershell.exe',['-NoLogo','-NoProfile','-NonInteractive','-ExecutionPolicy','Bypass','-File',script],{windowsHide:true,stdio:['pipe','pipe','pipe']});let output='',error='';const timer=setTimeout(()=>{child.kill();reject(Error('Windows 앱 전환 응답 시간이 초과됐습니다.'));},45000);child.stdout.on('data',chunk=>{output+=chunk;if(output.length>1048576){child.kill();reject(Error('Windows 앱 전환 응답이 너무 큽니다.'));}});child.stderr.on('data',chunk=>{error+=chunk.toString().slice(0,4096);});child.on('error',reject);child.on('close',code=>{clearTimeout(timer);if(code!==0){reject(Error(error.trim()||'Windows 앱 전환을 완료하지 못했습니다.'));return;}try{resolve(output.trim()?JSON.parse(output):null);}catch{reject(Error('Windows 앱 전환 응답을 읽을 수 없습니다.'));}});child.stdin.on('error',()=>{});child.stdin.end(JSON.stringify(request));});
+}

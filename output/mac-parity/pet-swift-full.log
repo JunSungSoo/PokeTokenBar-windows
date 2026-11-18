@@ -1,0 +1,759 @@
+/workspace/output/mac-parity/details/oracle
+/workspace/output/mac-parity/profile/oracle
+/workspace/output/mac-parity/loadout/oracle
+/workspace/output/mac-parity/tooltip/oracle
+/workspace/output/mac-parity/runtime/oracle
+[0/1] Planning build
+Building for production...
+[0/2] Write swift-version-24593BA9C3E375BF.txt
+[1/3] Write sources
+[3/4] Compiling Oracle Oracle.swift
+Build of product 'oracle' complete! (25.58s)
+/workspace/output/mac-parity/battle/oracle
+TAP version 13
+# Subtest: LAN uses public six-member previews, first-three singles, committed actions and saved bilateral results
+ok 1 - LAN uses public six-member previews, first-three singles, committed actions and saved bilateral results
+  ---
+  duration_ms: 195.333414
+  type: 'test'
+  ...
+# Subtest: LAN reconnect retains the host engine and discards unfinished decisions
+ok 2 - LAN reconnect retains the host engine and discards unfinished decisions
+  ---
+  duration_ms: 108.843041
+  type: 'test'
+  ...
+# Subtest: canonical battle commitments include the match, nonce, action and mega choice
+ok 3 - canonical battle commitments include the match, nonce, action and mega choice
+  ---
+  duration_ms: 0.363235
+  type: 'test'
+  ...
+# Subtest: Windows LAN discovery lists nearby singles peers and stops when leaving the lobby
+ok 4 - Windows LAN discovery lists nearby singles peers and stops when leaving the lobby
+  ---
+  duration_ms: 2019.659889
+  type: 'test'
+  ...
+# Subtest: commitment hashes match the original Swift BattleAction, BattleDecision and digest implementation
+ok 5 - commitment hashes match the original Swift BattleAction, BattleDecision and digest implementation
+  ---
+  duration_ms: 64.070624
+  type: 'test'
+  ...
+# Subtest: the original Mac BattleCoordinator completes a committed singles turn as guest over manual TCP
+ok 6 - the original Mac BattleCoordinator completes a committed singles turn as guest over manual TCP # SKIP Requires macOS-built PokeTokenBar module and POKE_MAC_BATTLE_PEER
+  ---
+  duration_ms: 0.222532
+  type: 'test'
+  ...
+# Subtest: the original Mac BattleCoordinator completes a committed singles turn as host over manual TCP
+ok 7 - the original Mac BattleCoordinator completes a committed singles turn as host over manual TCP # SKIP Requires macOS-built PokeTokenBar module and POKE_MAC_BATTLE_PEER
+  ---
+  duration_ms: 0.168677
+  type: 'test'
+  ...
+# Subtest: Mac activation rules distinguish residual toxic, attraction, sleep, guard blocks and weather damage
+ok 8 - Mac activation rules distinguish residual toxic, attraction, sleep, guard blocks and weather damage
+  ---
+  duration_ms: 1.694074
+  type: 'test'
+  ...
+# Subtest: successful field activation replaces its preceding move animation and marks global weather
+ok 9 - successful field activation replaces its preceding move animation and marks global weather
+  ---
+  duration_ms: 0.444473
+  type: 'test'
+  ...
+# Subtest: the engine, animation player and trainer assets match Mac (LF-normalized text, exact binary bytes)
+ok 10 - the engine, animation player and trainer assets match Mac (LF-normalized text, exact binary bytes)
+  ---
+  duration_ms: 12626.272987
+  type: 'test'
+  ...
+# Compared 3357 files against the selected Mac branch
+# Subtest: CPU preparation, reward, rising shop prices and carried HP/PP survive replay without duplicate rewards
+ok 11 - CPU preparation, reward, rising shop prices and carried HP/PP survive replay without duplicate rewards
+  ---
+  duration_ms: 297.560553
+  type: 'test'
+  ...
+# Subtest: Mac shop order, effect amounts, revival, PP and cash thresholds match the reference rules
+ok 12 - Mac shop order, effect amounts, revival, PP and cash thresholds match the reference rules
+  ---
+  duration_ms: 0.331644
+  type: 'test'
+  ...
+# Subtest: cash rewards are atomic and idempotent after restarting the companion store
+ok 13 - cash rewards are atomic and idempotent after restarting the companion store
+  ---
+  duration_ms: 15.284027
+  type: 'test'
+  ...
+# Subtest: a champion award interrupted after companion commit pins the recipient and cannot duplicate shiny rewards
+ok 14 - a champion award interrupted after companion commit pins the recipient and cannot duplicate shiny rewards
+  ---
+  duration_ms: 42.750806
+  type: 'test'
+  ...
+# Subtest: champion records keep the first award date and allow shiny awards beyond battle-eligible species
+ok 15 - champion records keep the first award date and allow shiny awards beyond battle-eligible species
+  ---
+  duration_ms: 19.188583
+  type: 'test'
+  ...
+# Subtest: the reference engine initializes every singles and doubles opponent
+ok 16 - the reference engine initializes every singles and doubles opponent
+  ---
+  duration_ms: 226.726777
+  type: 'test'
+  ...
+# Subtest: singles and doubles checkpoints replay independently, reject stale and illegal turns, and continue
+ok 17 - singles and doubles checkpoints replay independently, reject stale and illegal turns, and continue
+  ---
+  duration_ms: 140.17635
+  type: 'test'
+  ...
+# Subtest: singles victory restores its recovery screen and carries HP and PP to the next opponent once
+ok 18 - singles victory restores its recovery screen and carries HP and PP to the next opponent once
+  ---
+  duration_ms: 116.094911
+  type: 'test'
+  ...
+# Subtest: doubles victory restores its recovery screen and carries HP and PP to the next opponent once
+ok 19 - doubles victory restores its recovery screen and carries HP and PP to the next opponent once
+  ---
+  duration_ms: 107.396413
+  type: 'test'
+  ...
+# Subtest: a broken battle checkpoint cannot be silently overwritten and leaves companion data intact
+ok 20 - a broken battle checkpoint cannot be silently overwritten and leaves companion data intact
+  ---
+  duration_ms: 4.247508
+  type: 'test'
+  ...
+# Subtest: owned challenge members retain saved level and valid profile and exclude active companions
+ok 21 - owned challenge members retain saved level and valid profile and exclude active companions
+  ---
+  duration_ms: 0.589464
+  type: 'test'
+  ...
+# Subtest: Red Maple matches feature/battle: 100M purchase, graduated-only six-IV reroll and exact consumption
+ok 22 - Red Maple matches feature/battle: 100M purchase, graduated-only six-IV reroll and exact consumption
+  ---
+  duration_ms: 35.403472
+  type: 'test'
+  ...
+# Subtest: deduplicates growth across scan retries and restores the same individual and Pokédex
+ok 23 - deduplicates growth across scan retries and restores the same individual and Pokédex
+  ---
+  duration_ms: 108.417316
+  type: 'test'
+  ...
+# Subtest: a streaming revision pays only its new tokens and old folders do not pay retroactively
+ok 24 - a streaming revision pays only its new tokens and old folders do not pay retroactively
+  ---
+  duration_ms: 16.46038
+  type: 'test'
+  ...
+# Subtest: limit candy grants survive restart, ignore reset jitter and rearm on the correct edge
+ok 25 - limit candy grants survive restart, ignore reset jitter and rearm on the correct edge
+  ---
+  duration_ms: 20.681045
+  type: 'test'
+  ...
+# Subtest: Ditto conceals shiny, reveals at first evolution and carries excess XP without spending extra candies
+ok 26 - Ditto conceals shiny, reveals at first evolution and carries excess XP without spending extra candies
+  ---
+  duration_ms: 17.644072
+  type: 'test'
+  ...
+# Subtest: difficulty changes preserve earned growth fraction and apply prices without spending wallet tokens
+ok 27 - difficulty changes preserve earned growth fraction and apply prices without spending wallet tokens
+  ---
+  duration_ms: 17.023404
+  type: 'test'
+  ...
+# Subtest: Windows snapshots preview and restore through the import transaction and retain the previous save backup
+ok 28 - Windows snapshots preview and restore through the import transaction and retain the previous save backup
+  ---
+  duration_ms: 27.797084
+  type: 'test'
+  ...
+# Subtest: late Claude accounts arm below the limit before candy can be granted
+ok 29 - late Claude accounts arm below the limit before candy can be granted
+  ---
+  duration_ms: 12.717954
+  type: 'test'
+  ...
+# Subtest: collection defaults survive restart, Windows backup and trade without spending tokens or modifying profiles
+ok 30 - collection defaults survive restart, Windows backup and trade without spending tokens or modifying profiles
+  ---
+  duration_ms: 26.867299
+  type: 'test'
+  ...
+# Subtest: incompatible, unknown, active and released assignments leave the existing save intact
+ok 31 - incompatible, unknown, active and released assignments leave the existing save intact
+  ---
+  duration_ms: 17.409153
+  type: 'test'
+  ...
+# Subtest: Mac v2 preview/import restores defaults and rejects damaged tool data before replacing a save
+ok 32 - Mac v2 preview/import restores defaults and rejects damaged tool data before replacing a save
+  ---
+  duration_ms: 26.596633
+  type: 'test'
+  ...
+# Subtest: assignment priority follows Mac: overrides, compatible collection default, last equipped; duplicate fallbacks preserve preferences
+ok 33 - assignment priority follows Mac: overrides, compatible collection default, last equipped; duplicate fallbacks preserve preferences
+  ---
+  duration_ms: 1.487138
+  type: 'test'
+  ...
+# Subtest: damaged save restores newest valid snapshot, preserves corrupt bytes and permits subsequent import
+ok 34 - damaged save restores newest valid snapshot, preserves corrupt bytes and permits subsequent import
+  ---
+  duration_ms: 43.431952
+  type: 'test'
+  ...
+# Subtest: unrecoverable save is preserved and snapshot retention keeps ten
+ok 35 - unrecoverable save is preserved and snapshot retention keeps ten
+  ---
+  duration_ms: 96.260038
+  type: 'test'
+  ...
+# Subtest: Claude discovers both account folder patterns, default identity and deduplicates manual aliases
+ok 36 - Claude discovers both account folder patterns, default identity and deduplicates manual aliases
+  ---
+  duration_ms: 16.57347
+  type: 'test'
+  ...
+# Subtest: life-cycle notices distinguish evolution, graduation, hatch and Ditto without duplicates after restart/import
+ok 37 - life-cycle notices distinguish evolution, graduation, hatch and Ditto without duplicates after restart/import
+  ---
+  duration_ms: 70.069956
+  type: 'test'
+  ...
+# Subtest: multiple custom roots expand wildcards, deduplicate aliases and preview exactly the files scanned
+ok 38 - multiple custom roots expand wildcards, deduplicate aliases and preview exactly the files scanned
+  ---
+  duration_ms: 18.436798
+  type: 'test'
+  ...
+# Subtest: one large usage update emits every committed hatch/evolution/graduation event exactly once
+ok 39 - one large usage update emits every committed hatch/evolution/graduation event exactly once
+  ---
+  duration_ms: 11.138666
+  type: 'test'
+  ...
+# Subtest: concurrent recovery reads preserve one original and return the same valid snapshot
+ok 40 - concurrent recovery reads preserve one original and return the same valid snapshot
+  ---
+  duration_ms: 12.035211
+  type: 'test'
+  ...
+# Subtest: persistent diagnostics detect an unclean previous run, rotate logs and remove the clean marker
+ok 41 - persistent diagnostics detect an unclean previous run, rotate logs and remove the clean marker
+  ---
+  duration_ms: 125.351795
+  type: 'test'
+  ...
+# Subtest: seeded profile enrichment fills gender and slots, keeps chosen values and repairs BW2 abilities
+ok 42 - seeded profile enrichment fills gender and slots, keeps chosen values and repairs BW2 abilities
+  ---
+  duration_ms: 70.268902
+  type: 'test'
+  ...
+# Subtest: new hatch retains prayers and identity without network; ability changes persist without changing IVs
+ok 43 - new hatch retains prayers and identity without network; ability changes persist without changing IVs
+  ---
+  duration_ms: 38.403589
+  type: 'test'
+  ...
+# Subtest: tracking follows activity/highest/pinned fallback and warnings use critical or depletion
+ok 44 - tracking follows activity/highest/pinned fallback and warnings use critical or depletion
+  ---
+  duration_ms: 0.60794
+  type: 'test'
+  ...
+# Subtest: Arceus form projection updates type and Judgment without mutating metadata
+ok 45 - Arceus form projection updates type and Judgment without mutating metadata
+  ---
+  duration_ms: 1.68891
+  type: 'test'
+  ...
+# Subtest: session keys isolate accounts, skip unusable orgs, pick active org and fall back after 403
+ok 46 - session keys isolate accounts, skip unusable orgs, pick active org and fall back after 403
+  ---
+  duration_ms: 30.052002
+  type: 'test'
+  ...
+# Subtest: Mac v2 export preserves profiles, prayers, history, claims and items through import
+ok 47 - Mac v2 export preserves profiles, prayers, history, claims and items through import
+  ---
+  duration_ms: 30.990313
+  type: 'test'
+  ...
+# Subtest: candy preview reports graduation loss and evolution carryover
+ok 48 - candy preview reports graduation loss and evolution carryover
+  ---
+  duration_ms: 10.211663
+  type: 'test'
+  ...
+# Subtest: late organization discovery cannot restore a cleared or replaced session credential
+ok 49 - late organization discovery cannot restore a cleared or replaced session credential
+  ---
+  duration_ms: 10.513339
+  type: 'test'
+  ...
+# Subtest: generated identity matches original Swift for identical seeds and metadata
+ok 50 - generated identity matches original Swift for identical seeds and metadata
+  ---
+  duration_ms: 60.433584
+  type: 'test'
+  ...
+# Subtest: evolution planning chooses the only uncollected Eevee final and retains released history
+ok 51 - evolution planning chooses the only uncollected Eevee final and retains released history
+  ---
+  duration_ms: 10.324093
+  type: 'test'
+  ...
+# Subtest: account activity, daily/monthly tokens and costs follow prompt ownership on shared sessions
+ok 52 - account activity, daily/monthly tokens and costs follow prompt ownership on shared sessions
+  ---
+  duration_ms: 33.706713
+  type: 'test'
+  ...
+# Subtest: session authentication and throttling errors remain distinguishable
+ok 53 - session authentication and throttling errors remain distinguishable
+  ---
+  duration_ms: 4.639518
+  type: 'test'
+  ...
+# Subtest: organization refresh preserves an explicitly selected organization
+ok 54 - organization refresh preserves an explicitly selected organization
+  ---
+  duration_ms: 8.260991
+  type: 'test'
+  ...
+# Subtest: organization-list 403 is session expiry, while an individual forbidden organization can be rediscovered
+ok 55 - organization-list 403 is session expiry, while an individual forbidden organization can be rediscovered
+  ---
+  duration_ms: 2.816549
+  type: 'test'
+  ...
+# Subtest: limit warning receipts distinguish equal display names and repeated window labels
+ok 56 - limit warning receipts distinguish equal display names and repeated window labels
+  ---
+  duration_ms: 11.306472
+  type: 'test'
+  ...
+# Subtest: floating panel keeps the sprite anchored when bubbles appear and disappear
+ok 57 - floating panel keeps the sprite anchored when bubbles appear and disappear
+  ---
+  duration_ms: 1.355371
+  type: 'test'
+  ...
+# Subtest: prayer hover persists at each native quip milestone
+ok 58 - prayer hover persists at each native quip milestone
+  ---
+  duration_ms: 1.077382
+  type: 'test'
+  ...
+# Subtest: petting needs three real direction changes inside 1.2 seconds
+ok 59 - petting needs three real direction changes inside 1.2 seconds
+  ---
+  duration_ms: 0.593458
+  type: 'test'
+  ...
+# Subtest: heart follows median central opaque top and preserves image aspect ratio
+ok 60 - heart follows median central opaque top and preserves image aspect ratio
+  ---
+  duration_ms: 0.521853
+  type: 'test'
+  ...
+# Subtest: prayer quips and every pixel row match Mac feature/battle
+ok 61 - prayer quips and every pixel row match Mac feature/battle
+  ---
+  duration_ms: 276.03326
+  type: 'test'
+  ...
+# Subtest: Mac BW2 move filtering, stat order and ability slots are preserved
+ok 62 - Mac BW2 move filtering, stat order and ability slots are preserved
+  ---
+  duration_ms: 2.266982
+  type: 'test'
+  ...
+# Subtest: reference Fairy supplement merges without mutating BW2 cache or save data
+ok 63 - reference Fairy supplement merges without mutating BW2 cache or save data
+  ---
+  duration_ms: 0.760116
+  type: 'test'
+  ...
+# Subtest: metadata names and descriptions use the original eight-language catalog
+ok 64 - metadata names and descriptions use the original eight-language catalog
+  ---
+  duration_ms: 45.986441
+  type: 'test'
+  ...
+# Subtest: computed stats apply nature, IVs, flooring and Shedinja HP like Mac
+ok 65 - computed stats apply nature, IVs, flooring and Shedinja HP like Mac
+  ---
+  duration_ms: 0.639312
+  type: 'test'
+  ...
+# Subtest: requests deduplicate, reload from disk, preserve stale offline data and retry failed first loads
+ok 66 - requests deduplicate, reload from disk, preserve stale offline data and retry failed first loads
+  ---
+  duration_ms: 41.773442
+  type: 'test'
+  ...
+# Subtest: corrupt caches recover, invalid network data never replaces a good cache
+ok 67 - corrupt caches recover, invalid network data never replaces a good cache
+  ---
+  duration_ms: 8.024552
+  type: 'test'
+  ...
+# Subtest: capture evolution order, IVs and saved loadout survive reopening without metadata changing the save
+ok 68 - capture evolution order, IVs and saved loadout survive reopening without metadata changing the save
+  ---
+  duration_ms: 20.089639
+  type: 'test'
+  ...
+# Subtest: same fixture matches the original Mac normalizedMoves implementation
+ok 69 - same fixture matches the original Mac normalizedMoves implementation
+  ---
+  duration_ms: 62.206707
+  type: 'test'
+  ...
+# Subtest: default moves and replacement options match Mac level, order, append and duplicate rules
+ok 70 - default moves and replacement options match Mac level, order, append and duplicate rules
+  ---
+  duration_ms: 4.523272
+  type: 'test'
+  ...
+# Subtest: owned move changes persist without altering IVs, seed, wallet, nature or other individuals
+ok 71 - owned move changes persist without altering IVs, seed, wallet, nature or other individuals
+  ---
+  duration_ms: 32.91951
+  type: 'test'
+  ...
+# Subtest: empty owned slots can be filled to four, while future level-up-only moves stay unavailable
+ok 72 - empty owned slots can be filled to four, while future level-up-only moves stay unavailable
+  ---
+  duration_ms: 30.54518
+  type: 'test'
+  ...
+# Subtest: move defaults and replacements match the original Mac functions
+ok 73 - move defaults and replacements match the original Mac functions
+  ---
+  duration_ms: 40.546685
+  type: 'test'
+  ...
+# Subtest: level growth refreshes automatic moves but never overwrites a custom moveset
+ok 74 - level growth refreshes automatic moves but never overwrites a custom moveset
+  ---
+  duration_ms: 20.522573
+  type: 'test'
+  ...
+# Subtest: tooltips carry Mac targeting, classification, power, PP and percentage/always-hit accuracy
+ok 75 - tooltips carry Mac targeting, classification, power, PP and percentage/always-hit accuracy
+  ---
+  duration_ms: 55.32251
+  type: 'test'
+  ...
+# Subtest: all bundled move tooltips match original Mac strings in all eight languages
+ok 76 - all bundled move tooltips match original Mac strings in all eight languages
+  ---
+  duration_ms: 390.270999
+  type: 'test'
+  ...
+# Subtest: shop interleaves eggs by price, preserves tied item order and sends owned passives to the end
+ok 77 - shop interleaves eggs by price, preserves tied item order and sends owned passives to the end
+  ---
+  duration_ms: 1.896758
+  type: 'test'
+  ...
+# Subtest: source PNGs are bundled unchanged and the catalog uses original item names
+ok 78 - source PNGs are bundled unchanged and the catalog uses original item names
+  ---
+  duration_ms: 23.792387
+  type: 'test'
+  ...
+# Subtest: home mood has the same precedence, 3-hour threshold and burn-rate boundaries as Mac
+ok 79 - home mood has the same precedence, 3-hour threshold and burn-rate boundaries as Mac
+  ---
+  duration_ms: 0.184037
+  type: 'test'
+  ...
+# Subtest: home previews guaranteed evolution, conceals branches and preserves the realized path
+ok 80 - home previews guaranteed evolution, conceals branches and preserves the realized path
+  ---
+  duration_ms: 24.958352
+  type: 'test'
+  ...
+# Subtest: presentation constants match the Mac origin/feature/battle source
+ok 81 - presentation constants match the Mac origin/feature/battle source
+  ---
+  duration_ms: 424.924527
+  type: 'test'
+  ...
+# Subtest: pace window, rounding, gauge and remaining marker match Mac boundary samples
+ok 82 - pace window, rounding, gauge and remaining marker match Mac boundary samples
+  ---
+  duration_ms: 1.222544
+  type: 'test'
+  ...
+# Subtest: depletion uses official percent and only stable burns; reset equality is safe
+ok 83 - depletion uses official percent and only stable burns; reset equality is safe
+  ---
+  duration_ms: 0.935776
+  type: 'test'
+  ...
+# Subtest: account ownership follows prompt switches, forks, ties and clock skew
+ok 84 - account ownership follows prompt switches, forks, ties and clock skew
+  ---
+  duration_ms: 0.356963
+  type: 'test'
+  ...
+# Subtest: real prompt histories pair each account with its own official window and forecast
+ok 85 - real prompt histories pair each account with its own official window and forecast
+  ---
+  duration_ms: 19.265079
+  type: 'test'
+  ...
+# Subtest: all official window kinds map to Mac pace spans; unknown billing spans stay hidden
+ok 86 - all official window kinds map to Mac pace spans; unknown billing spans stay hidden
+  ---
+  duration_ms: 1.061141
+  type: 'test'
+  ...
+# Subtest: same samples agree with arithmetic expressions read from Mac origin/feature/battle
+ok 87 - same samples agree with arithmetic expressions read from Mac origin/feature/battle
+  ---
+  duration_ms: 220.43341
+  type: 'test'
+  ...
+# Subtest: all 649 Mac-supported species are registered in dex, hatch data and battle catalog
+ok 88 - all 649 Mac-supported species are registered in dex, hatch data and battle catalog
+  ---
+  duration_ms: 217.216329
+  type: 'test'
+  ...
+# Subtest: historical ability options are identical to feature/battle and form names cover every referenced localized variant
+ok 89 - historical ability options are identical to feature/battle and form names cover every referenced localized variant
+  ---
+  duration_ms: 215.161711
+  type: 'test'
+  ...
+# Subtest: eight languages use complete Mac catalogs and retain template arguments
+ok 90 - eight languages use complete Mac catalogs and retain template arguments
+  ---
+  duration_ms: 2.408085
+  type: 'test'
+  ...
+# Subtest: agent parsing protects messages, preserves emoji and literal plus like Foundation
+ok 91 - agent parsing protects messages, preserves emoji and literal plus like Foundation
+  ---
+  duration_ms: 12.948102
+  type: 'test'
+  ...
+# Subtest: agent precedence, exact timeout boundaries, eviction and dismissal match Mac rules
+ok 92 - agent precedence, exact timeout boundaries, eviction and dismissal match Mac rules
+  ---
+  duration_ms: 2.022006
+  type: 'test'
+  ...
+# Subtest: animation presets decimate without slowing the loop and merge the final short bucket
+ok 93 - animation presets decimate without slowing the loop and merge the final short bucket
+  ---
+  duration_ms: 0.549627
+  type: 'test'
+  ...
+# Subtest: status parser ignores unrelated global outages and maps all component states
+ok 94 - status parser ignores unrelated global outages and maps all component states
+  ---
+  duration_ms: 0.321004
+  type: 'test'
+  ...
+# Subtest: status requests deduplicate, preserve on failure, and clear when disabled
+ok 95 - status requests deduplicate, preserve on failure, and clear when disabled
+  ---
+  duration_ms: 26.520771
+  type: 'test'
+  ...
+# Subtest: disabled or untracked providers cannot be restored by late HTTP results
+ok 96 - disabled or untracked providers cannot be restored by late HTTP results
+  ---
+  duration_ms: 0.660743
+  type: 'test'
+  ...
+# Subtest: same inputs match compiled original Mac agent, status and GIF code
+ok 97 - same inputs match compiled original Mac agent, status and GIF code
+  ---
+  duration_ms: 55.08301
+  type: 'test'
+  ...
+# Subtest: previews a real macOS v2 export, backs up Windows bytes and restores growth and collection after restart
+ok 98 - previews a real macOS v2 export, backs up Windows bytes and restores growth and collection after restart
+  ---
+  duration_ms: 104.251354
+  type: 'test'
+  ...
+# Subtest: truncated, wrong-version, invalid-state, and oversized files leave the Windows save byte-for-byte intact
+ok 99 - truncated, wrong-version, invalid-state, and oversized files leave the Windows save byte-for-byte intact
+  ---
+  duration_ms: 45.121894
+  type: 'test'
+  ...
+# Subtest: a stale preview or failed backup prevents overwriting the Windows save
+ok 100 - a stale preview or failed backup prevents overwriting the Windows save
+  ---
+  duration_ms: 27.543145
+  type: 'test'
+  ...
+# Subtest: an egg export restores its incubation tokens and retains the previously caught species
+ok 101 - an egg export restores its incubation tokens and retains the previously caught species
+  ---
+  duration_ms: 28.319899
+  type: 'test'
+  ...
+# Subtest: restores the Mac wallet and bag, and saves purchases, candy and representative selection atomically
+ok 102 - restores the Mac wallet and bag, and saves purchases, candy and representative selection atomically
+  ---
+  duration_ms: 52.6315
+  type: 'test'
+  ...
+# Subtest: import merges Mac and Windows candy receipts without paying the same window twice
+ok 103 - import merges Mac and Windows candy receipts without paying the same window twice
+  ---
+  duration_ms: 29.230077
+  type: 'test'
+  ...
+# Subtest: two LAN peers swap only after both approve and preserve their exact pre-trade backups
+ok 104 - two LAN peers swap only after both approve and preserve their exact pre-trade backups
+  ---
+  duration_ms: 98.008523
+  type: 'test'
+  ...
+# Subtest: active partners retain progress, and disconnect before both approvals leaves saves untouched
+ok 105 - active partners retain progress, and disconnect before both approvals leaves saves untouched
+  ---
+  duration_ms: 166.515545
+  type: 'test'
+  ...
+# Subtest: rejects oversized frames and refuses approval if the pre-trade backup cannot be written
+ok 106 - rejects oversized frames and refuses approval if the pre-trade backup cannot be written
+  ---
+  duration_ms: 70.884597
+  type: 'test'
+  ...
+# Subtest: Swift macOS TradeSession and Windows LAN session exchange using the original protocol
+ok 107 - Swift macOS TradeSession and Windows LAN session exchange using the original protocol # SKIP Requires macOS-built PokeTokenBar module and POKE_MAC_TRADE_PEER
+  ---
+  duration_ms: 0.181733
+  type: 'test'
+  ...
+# Subtest: Windows joins a Swift host and retains an active partner’s exact Mac profile seed
+ok 108 - Windows joins a Swift host and retains an active partner’s exact Mac profile seed # SKIP Requires macOS-built PokeTokenBar module and POKE_MAC_TRADE_PEER
+  ---
+  duration_ms: 0.121225
+  type: 'test'
+  ...
+# Subtest: withdrawal clears both approvals and allows selecting a new offer without touching saves
+ok 109 - withdrawal clears both approvals and allows selecting a new offer without touching saves
+  ---
+  duration_ms: 114.669022
+  type: 'test'
+  ...
+# Subtest: receiving an active partner over a paid egg requires explicit replacement and clears the old guarantee
+ok 110 - receiving an active partner over a paid egg requires explicit replacement and clears the old guarantee
+  ---
+  duration_ms: 81.722982
+  type: 'test'
+  ...
+# (node:640) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: derived history survives restart, month rollover and log rotation without reducing recorded totals
+ok 111 - derived history survives restart, month rollover and log rotation without reducing recorded totals
+  ---
+  duration_ms: 19.342421
+  type: 'test'
+  ...
+# Subtest: unknown history stays distinct from zero and future; comparisons use elapsed calendar days
+ok 112 - unknown history stays distinct from zero and future; comparisons use elapsed calendar days
+  ---
+  duration_ms: 2.551615
+  type: 'test'
+  ...
+# Subtest: DST days use local calendar steps, including the Sunday week boundary
+ok 113 - DST days use local calendar steps, including the Sunday week boundary
+  ---
+  duration_ms: 38.800327
+  type: 'test'
+  ...
+# Subtest: today model breakdowns come from the same deduplicated entries as provider totals
+ok 114 - today model breakdowns come from the same deduplicated entries as provider totals
+  ---
+  duration_ms: 120.764084
+  type: 'test'
+  ...
+# Subtest: recap results match the original Mac ledger and period calculations on identical samples
+ok 115 - recap results match the original Mac ledger and period calculations on identical samples
+  ---
+  duration_ms: 0.352774
+  type: 'test'
+  ...
+# (node:648) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: reads Codex and Claude JSONL with local dates, duplicates and broken lines
+ok 116 - reads Codex and Claude JSONL with local dates, duplicates and broken lines
+  ---
+  duration_ms: 59.173768
+  type: 'test'
+  ...
+# Subtest: all 16 providers aggregate shared fixtures and match the macOS reference when supplied
+ok 117 - all 16 providers aggregate shared fixtures and match the macOS reference when supplied
+  ---
+  duration_ms: 233.387107
+  type: 'test'
+  ...
+# Subtest: quota samples handle multiple buckets, scoped limits, and expired periods
+ok 118 - quota samples handle multiple buckets, scoped limits, and expired periods
+  ---
+  duration_ms: 125.810928
+  type: 'test'
+  ...
+# Subtest: Cursor dashboard follows pagination and never accepts an incomplete result
+ok 119 - Cursor dashboard follows pagination and never accepts an incomplete result
+  ---
+  duration_ms: 73.82165
+  type: 'test'
+  ...
+# Subtest: compact token and shop prices follow the Mac K, M and B thresholds
+ok 120 - compact token and shop prices follow the Mac K, M and B thresholds
+  ---
+  duration_ms: 9.463776
+  type: 'test'
+  ...
+# Subtest: Windows limit warnings survive a saved ledger and ignore tiny reset changes
+ok 121 - Windows limit warnings survive a saved ledger and ignore tiny reset changes
+  ---
+  duration_ms: 21.424971
+  type: 'test'
+  ...
+# Subtest: disabled providers make no quota requests and Windows Claude account folders retain distinct reward identities
+ok 122 - disabled providers make no quota requests and Windows Claude account folders retain distinct reward identities
+  ---
+  duration_ms: 9.172359
+  type: 'test'
+  ...
+1..122
+# tests 122
+# suites 0
+# pass 118
+# fail 0
+# cancelled 0
+# skipped 4
+# todo 0
+# duration_ms 12734.780657

@@ -10,6 +10,7 @@ import { createInterface } from 'node:readline';
 import type { LimitResult, LimitWindow, Provider } from '../../shared/usage.js';
 import { object, parseRow, timestamp, type Row } from './jsonl.js';
 import { localRoots } from './local-providers.js';
+import {SessionKeys,LimitsError} from './session-key.js';
 
 const supported = ['codex', 'claude', 'antigravity', 'opencode', 'grok', 'cursor'] as const;
 type LimitedProvider = typeof supported[number];
@@ -48,7 +49,7 @@ export function parseLimits(provider: LimitedProvider, value: unknown, now = Dat
         const period = mins === 300 ? '5시간' : mins === 10080 ? '주간' : mins ? mins + '분' : '한도';
         reward('codex.' + (string(row.limitId ?? row.limitName) ?? 'codex') + '.' + key,
           window?.usedPercent, (mins ?? 0) > 1440);
-        add(name + ' · ' + period, window?.usedPercent, reset === undefined ? undefined : reset * 1000,false,mins?mins*60:undefined);
+        add(name + ' · ' + period, window?.usedPercent, reset === undefined ? undefined : reset * 1000,false,mins!==undefined&&mins>0?mins*60:undefined);
       }
       const spend = object(row.individualLimit);
       const remaining = number(spend?.remainingPercent);
@@ -75,7 +76,7 @@ export function parseLimits(provider: LimitedProvider, value: unknown, now = Dat
         reward(row.kind === 'session' ? 'claude.fiveHour' : 'claude.sevenDay', row.percent, row.kind === 'weekly_all', reset);
       }
       if ((data.five_hour || data.seven_day) && (row?.kind === 'session' || row?.kind === 'weekly_all')) continue;
-      add(label, row?.percent, reset,false,row?.kind==='session'?18000:row?.kind==='weekly_all'||row?.kind==='weekly_model'?604800:undefined,row?.kind==='session');
+      add(label, row?.percent, reset,false,row?.kind==='session'?18000:row?.kind==='weekly_all'||row?.kind==='weekly_scoped'||row?.kind==='weekly_model'?604800:undefined,row?.kind==='session');
     }
   } else if (provider === 'opencode') {
     const usage = object(data.usage);
@@ -161,12 +162,15 @@ async function credential(provider: Exclude<LimitedProvider, 'codex'>, claudeRoo
   if (provider === 'claude') {
     const roots = claudeRoot ? [claudeRoot] : [...(process.env.CLAUDE_CONFIG_DIR ?? '').split(',').map(path => path.trim()).filter(Boolean),
       join(home, '.claude'), join(home, '.config', 'claude')];
+    let expired=false;
     for (const root of roots) {
       const oauth = object((await config(join(root, '.credentials.json')))?.claudeAiOauth);
       const expiry = number(oauth?.expiresAt);
       const key = string(oauth?.accessToken);
       if (key && (!expiry || expiry > Date.now())) return key;
+      if(key&&expiry&&expiry<=Date.now())expired=true;
     }
+    if(expired)throw new LimitsError('oauthExpired');
   } else if (provider === 'grok') {
     const data = await config(join(process.env.GROK_HOME || join(home, '.grok'), 'auth.json'));
     return Object.values(data ?? {}).map(object).filter(row => string(row?.key))
@@ -292,20 +296,26 @@ async function request(provider: Exclude<LimitedProvider, 'codex'>, claudeRoot?:
   }
   if (!response.ok) {
     await response.body?.cancel();
-    throw new Error('Quota request failed');
+    throw new LimitsError(response.status===401||response.status===403?'oauthExpired':response.status===429?'rateLimited':'network',response.status);
   }
   return response.json();
 }
 
-export async function fetchLimits(candy?: CandyWindow[], claudeRoots: string[] = [], enabled: readonly Provider[] = supported,onAccounts?:(sources:ClaudeAccountSource[])=>void): Promise<LimitResult[]> {
+export async function fetchLimits(candy?: CandyWindow[], claudeRoots: string[] = [], enabled: readonly Provider[] = supported,onAccounts?:(sources:ClaudeAccountSource[])=>void,sessionKeys?:SessionKeys): Promise<LimitResult[]> {
   const sources=enabled.includes('claude')?await claudeAccountSources(claudeRoots):[];onAccounts?.(sources);
   const defaults = supported.filter(provider => enabled.includes(provider)).map(provider => ({ provider, root: undefined as string | undefined,accountID:provider==='claude'?'claude-default':undefined }));
   const requests = [...defaults, ...sources.filter(row=>!row.isDefault).map(row=>({provider:'claude' as const,root:row.roots[0],accountID:row.id}))];
   return Promise.all(requests.map(async ({ provider, root,accountID }, index) => {
-    const account = root ? basename(root) + ' · ' + (index - defaults.length + 1) : undefined;
+    const source=sources.find(row=>row.id===accountID),account=source?.identity?.split('\n')[0]??(root ? basename(root) + ' · ' + (index - defaults.length + 1) : undefined);
     try {
       const rewards: CandyWindow[] = [];
-      const windows = parseLimits(provider, await (provider === 'codex' ? codexLimits() : request(provider, root)), Date.now(), rewards);
+      let raw:unknown,sessionError:unknown;
+      if(provider==='claude'&&sessionKeys&&accountID)try{raw=await sessionKeys.usage(accountID);}catch(error){sessionError=error;}
+      if(raw===undefined)try{raw=await(provider==='codex'?codexLimits():request(provider,root));}catch(error){throw sessionError??error;}
+      if(raw===undefined&&sessionError)throw sessionError;
+      const windows = parseLimits(provider, raw, Date.now(), rewards);
+      const login=source?object((await config(join(source.roots[0],'.credentials.json')))?.claudeAiOauth):undefined;
+      const plan=provider==='claude'?string(object(raw)?.subscription_type??object(raw)?.plan??login?.subscriptionType):undefined;
       if (root) {
         const key = createHash('sha256').update(root).digest('hex').slice(0, 16);
         for (const reward of rewards) {
@@ -314,9 +324,9 @@ export async function fetchLimits(candy?: CandyWindow[], claudeRoots: string[] =
         }
       }
       candy?.push(...rewards);
-      return { provider, account,accountID,checkedAt:Date.now(), windows, status: windows.length ? 'available' : 'unavailable' };
-    } catch {
-      return { provider, account,accountID,checkedAt:Date.now(), windows: [], status: 'failed' };
+      return { provider, account,plan,accountID,checkedAt:Date.now(), windows, status: windows.length ? 'available' : 'unavailable' };
+    } catch(error) {
+      return { provider, account,accountID,checkedAt:Date.now(), windows: [], status: 'failed',error:error instanceof LimitsError?error.kind:'network' };
     }
   }));
 }

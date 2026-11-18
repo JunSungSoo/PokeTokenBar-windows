@@ -28,6 +28,7 @@ export interface CompanionProfile {
   gender?: 'male' | 'female' | 'genderless';
   moves?: string[];
   hasCustomMoves?: boolean;
+  prayers?:number;
 }
 
 export interface CompanionView {
@@ -82,6 +83,7 @@ export const bagItems: BagItem[] = ['rareCandy', 'mint', 'redMaple', 'shinyCharm
 export const candyXP = 100_000_000;
 
 export type CompanionAction =
+  | {kind:'ability';id:string;name:string}
   | { kind:'battle-default-item';id:string;item:string }
   | { kind: 'difficulty'; growth: number; shop: number }
   | { kind: 'buy'; product: Product; quantity: number; activeID?: string }

@@ -42,7 +42,9 @@ try {
   await app.whenReady();
   // Public-domain 2-frame GIF generated from embedded bytes; offline sprite decoding.
   const gif = Buffer.from('R0lGODlhAQABAIAAAAAAAP///yH5BAAFAAAALAAAAAABAAEAAAICRAEAIfkEAAUAAAAsAAAAAAEAAQAAAgJMAQA7', 'base64');
+  let retryUntil=0;
   await session.defaultSession.protocol.handle('https', async request => {
+    if(request.url.endsWith('/retry.gif')&&Date.now()<retryUntil)return new Response(null,{status:503});
     if(process.env.POKE_UI_REAL_SPRITES==='1' && request.url.startsWith('https://raw.githubusercontent.com/') && !request.url.endsWith('/test.gif'))return fetch(request.url);
     return new Response(gif,{headers:{'content-type':'image/gif','access-control-allow-origin':'*'}});
   });
@@ -59,6 +61,14 @@ try {
   ipcMain.handle('usage:refresh', () => snapshot);
   ipcMain.handle('usage:statuses', () => statuses);
   ipcMain.handle('usage:limits', () => quotaResults);
+  let updateFixture={state:'current',version:'1.0.0'};
+  const publishUpdate=value=>{updateFixture=value;for(const owner of [main,settings])owner?.webContents.send('windows:update-state',value);return value;};
+  ipcMain.handle('windows:update-state',()=>updateFixture);
+  let updateDownloads=0;
+  ipcMain.handle('windows:update-download',()=>{updateDownloads++;return{...updateFixture,delivery:'browser',opened:true};});
+  ipcMain.handle('windows:update-skip',async(_event,restore)=>{await preferences.change({skippedUpdateVersion:restore?'':updateFixture.version});return publishUpdate({...updateFixture,state:restore?'available':'skipped'});});
+  ipcMain.handle('usage:scan-roots',async(_event,provider,raw)=>{const {matchingScanFiles}=await import('../dist/main/usage/scan.js');return matchingScanFiles(provider,raw);});
+  ipcMain.handle('usage:session-key',()=>({configured:false,organizations:[]}));
   ipcMain.handle('companion:read', () => state);
   ipcMain.handle('companion:catalog', () => shopCatalog);
   const notifyState=value=>{state=value;snapshot.companion=value;main?.webContents.send('companion:updated',value);};
@@ -91,11 +101,14 @@ try {
     return presentPokemonDetails(details, preferences.get().language === 'system' ? 'en' : preferences.get().language);
   });
   ipcMain.handle('windows:settings', () => ({ supported: false, version: '1.0.0' }));
+  ipcMain.handle('pet:hover',()=>({title:'Pikachu',body:'Today 100 tokens · 25%'}));
   ipcMain.handle('pet:read', () => ({ species: { number: 25, name: 'Pikachu' }, shiny: false }));
   ipcMain.handle('pet:activate', () => { controller.dismiss(); return 1; });
   ipcMain.handle('trade:state', () => ({ phase: 'idle', codes: [], message: '' }));
   ipcMain.handle('trade:choices', () => []);
   ipcMain.handle('battle:choices', () => []);
+  ipcMain.handle('battle:lan',()=>({phase:'idle',codes:[],registered:[],opponentRoster:[],localReady:false,remoteReady:false}));
+  const supportActions=[];ipcMain.handle('windows:support',(_event,action)=>{supportActions.push(action);});
   ipcMain.handle('battle:resume', () => null);
   ipcMain.handle('battle:read', () => null);
   registerSettingsIPC(preferences, () => [main, settings, pet], () => preferences.finishWrites());
@@ -129,17 +142,80 @@ try {
   await until("document.querySelector('#limit-rows progress')?.value === 58");
   assert.equal(await check("document.querySelector('#limit-rows').textContent.includes('58%')"),true);
   await preferences.change({limitMode:'used'});
+  // Quota presentation must reach the actual sandboxed UI, including identity-based tabs.
+  await preferences.change({language:'ko'});
+  const quotaNow=Date.now();
+  quotaResults=[
+    {provider:'claude',accountID:'first',account:'동일한 이름',status:'available',block:{totalTokens:600000,tokensPerMinute:10000,startTime:quotaNow-3600000,endTime:quotaNow+13500000},windows:[{label:'5시간',usedPercent:50,resetsAt:quotaNow+13500000,spanSeconds:18000,forecastEligible:true},{label:'주간',usedPercent:40,resetsAt:quotaNow+302400000,spanSeconds:604800}]},
+    {provider:'claude',accountID:'second',account:'동일한 이름',status:'available',block:{totalTokens:20000,tokensPerMinute:20000,startTime:quotaNow-60000,endTime:quotaNow+60000},windows:[{label:'5시간',usedPercent:20,resetsAt:quotaNow+60000,spanSeconds:18000,forecastEligible:true}]},
+  ];
+  main.webContents.send('usage:limits-updated',quotaResults);
+  await until("document.querySelectorAll('.quota-pace-marker').length===2");
+  assert.equal(await check("document.querySelector('.quota-forecast').dataset.warning"),'true');
+  assert.equal(await check("document.querySelector('#limit-rows li').dataset.gauge"),'4');
+  assert.equal(await check("document.querySelector('#limit-rows li').title.includes('빠름')"),true);
+  const usedMarker=await check("parseFloat(document.querySelector('.quota-pace-marker').style.left)");
+  assert.ok(Math.abs(usedMarker-25)<.1);
+  await check("document.querySelector('.official-limits').scrollIntoView({block:'end',behavior:'instant'})");
+  await check("new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)))");
+  await snap('quota-used');
+  // Check rendered fill pixels: a pre-existing ID selector once overrode the tier color.
+  const meterPixel=await check("(()=>{const r=document.querySelector('#limit-rows progress').getBoundingClientRect();return{x:Math.floor(r.left+10),y:Math.floor(r.top+r.height/2),width:1,height:1};})()");
+  await new Promise(resolve=>setTimeout(resolve,300));
+  const meterBounds=await check("(()=>{const r=document.querySelector('#limit-rows progress').getBoundingClientRect();return{x:Math.round(r.left+10),y:Math.round(r.top+1),width:3,height:4};})()");
+  const capturedMeter=await main.webContents.capturePage(meterBounds),bitmap=capturedMeter.toBitmap();
+  const target=[54,140,220,255];let fillPixel=bitmap.subarray(0,4);for(let offset=0;offset<bitmap.length;offset+=4)if(target.every((v,i)=>bitmap[offset+i]===v)){fillPixel=bitmap.subarray(offset,offset+4);break;}
+  assert.deepEqual([...fillPixel.subarray(0,4)],[54,140,220,255],'fast gauge must render orange, including CSS cascade');
+  await preferences.change({limitMode:'remaining'});
+  await until("parseFloat(document.querySelector('.quota-pace-marker').style.left)>70");
+  const remainingMarker=await check("parseFloat(document.querySelector('.quota-pace-marker').style.left)");
+  assert.ok(Math.abs(remainingMarker+usedMarker-100)<.1);
+  await snap('quota-remaining');
+  await check("document.querySelectorAll('#limit-accounts button')[1].click()");
+  await until("document.querySelector('#limit-rows progress').value===80");
+  assert.equal(await check("document.querySelectorAll('.quota-pace-marker').length"),1);
+  assert.equal(await check("document.querySelector('.quota-forecast').dataset.warning"),'false');
+  await snap('quota-second-account');
+  for(const language of ['ko','en','ja','es','fr','pt','de','ru']){
+    await preferences.change({language});
+    await until('document.documentElement.lang==='+JSON.stringify(language));
+    assert.equal(await check("/[{}]/.test(document.querySelector('.quota-forecast').textContent + document.querySelector('#limit-rows li').title)"),false);
+    for(const width of [360,490]){
+      main.setContentSize(width,665);
+      assert.equal(await check("[...document.querySelectorAll('#limit-rows li,#limit-accounts button')].filter(e=>e.getClientRects().length).every(e=>e.getBoundingClientRect().right<=innerWidth+1)"),true,language+' quota '+width);
+    }
+  }
+  await preferences.change({language:'ko',theme:'dark'});
+  await snap('quota-dark');
+  await preferences.change({theme:'light'});
+  // Low burn, absent spans, and expired windows suppress unsupported predictions/markers.
+  quotaResults[1].block.tokensPerMinute=9999;
+  quotaResults[1].windows[0].resetsAt=Date.now()-1000;
+  main.webContents.send('usage:limits-updated',quotaResults);
+  await until("document.querySelector('.quota-forecast')===null && document.querySelector('.quota-pace-marker')===null");
+  quotaResults=[{provider:'claude',status:'available',windows:[{label:'5시간',usedPercent:42,resetsAt:Date.now()+7200000}]}];
+  main.webContents.send('usage:limits-updated',quotaResults);
+  await preferences.change({limitMode:'used'});
+  await until("document.querySelector('#limit-rows progress').value===42");
+  await check("document.querySelector('#pane-home').scrollTop=0");
   // Existing DOM updates and translated templates survive switching back to Korean.
   await preferences.change({ language: 'en', petEnabled: true, petAgentActivity: true, animationQuality: 'smooth' });
   await until("document.documentElement.lang === 'en'");
   assert.equal(await check("window.i18n.t('최대 13.3M')"), 'Peak 13.3M');
   assert.equal(await check("window.i18n.t('도감에서 Pikachu 보기')"), 'View Pikachu in Pokédex');
   await until("document.querySelector('[data-setting=animationQuality]').value === 'smooth'", settings);
+  publishUpdate({state:'available',version:'9.9.9',delivery:'browser'});await until("!document.querySelector('#update-banner').hidden");
+  await check("document.querySelector('#update-banner .primary').click()");await until("document.querySelector('#update-banner').textContent.includes('Drive')");assert.equal(updateDownloads,1);
+  await check("document.querySelector('#desktop-update').click()",settings);await until("document.querySelector('#desktop-update-status').textContent.includes('Drive')",settings);assert.equal(updateDownloads,2);
+  await check("document.querySelector('#update-banner button').click()");await until("document.querySelector('#update-banner').hidden");assert.equal(preferences.get().skippedUpdateVersion,'9.9.9');
+  await until("!document.querySelector('#desktop-update-skip').hidden",settings);await check("document.querySelector('#desktop-update-skip').click()",settings);await until("!document.querySelector('#update-banner').hidden");
+  publishUpdate({state:'current',version:'1.0.0'});
   // Test the actual control's IPC route, rather than only writing the store.
   await check("(() => { const s = document.querySelector('[data-setting=animationQuality]'); s.value='balanced'; s.dispatchEvent(new Event('change')); })()", settings);
   await until("window.appPreferences.animationQuality === 'balanced'");
   controller.accept('poketokenbar://agent?state=working&label=Codex');
   await until("document.querySelector('.egg').classList.contains('working')", pet);
+  pet.webContents.send('system:power-saver',true);await until("!document.querySelector('.egg').classList.contains('working')",pet);pet.webContents.send('system:power-saver',false);await until("document.querySelector('.egg').classList.contains('working')",pet);
   controller.accept('poketokenbar://agent?state=waiting&label=Claude&message=hello%20%3Cscript%3E');
   await until("document.querySelector('output').textContent.includes('hello <script>')", pet);
   assert.equal(await check("document.querySelector('output script') === null", pet), true);
@@ -164,6 +240,14 @@ try {
   assert.throws(() => restored.change({ language: 'xx' }));
   assert.throws(() => restored.change({ animationQuality: 'ultra' }));
   assert.equal(restored.get().statusChecks, false); assert.equal(restored.get().petAgentActivity, false);
+  pet.webContents.send('pet:notice',{title:'Limit warning',body:'Fixture limit',priority:3});await until("document.querySelector('output').textContent.includes('Fixture limit')",pet);await check("document.querySelector('output').click()",pet);await until("document.querySelector('output').hidden",pet);
+  await check("document.querySelector('.egg').dispatchEvent(new PointerEvent('pointerenter'));for(const x of [10,50,10,50,10])document.querySelector('.egg').dispatchEvent(new PointerEvent('pointermove',{clientX:x}));",pet);await until("document.querySelector('output').dataset.kind==='heart'&&document.querySelector('output canvas').width===34",pet);await check("document.querySelector('.egg').dispatchEvent(new PointerEvent('pointerleave'));document.querySelector('output').click()",pet);
+  await check("document.querySelector('.egg').dispatchEvent(new PointerEvent('pointerenter'))",pet);await until("document.querySelector('output').textContent.includes('Today 100')",pet);await check("document.querySelector('.egg').dispatchEvent(new PointerEvent('pointerleave'))",pet);
+  retryUntil=Date.now()+500;
+  await check("(()=>{const box=document.createElement('span');box.className='pokemon-art';box.id='retry-fixture';const img=document.createElement('img');img.dataset.staticSrc='https://raw.githubusercontent.com/fallback.png';img.src='https://raw.githubusercontent.com/retry.gif';box.append(img);document.body.append(box);})()");
+  await until("document.querySelector('#retry-fixture img').src.endsWith('/fallback.png')");await until("document.querySelector('#retry-fixture img').src.endsWith('/retry.gif') && document.querySelector('#retry-fixture img').classList.contains('sprite-decoded')");await check("document.querySelector('#retry-fixture').remove()");
+  await check("document.querySelector('[data-support=log]').click()",settings);assert.deepEqual(supportActions,['log']);
+  await check("document.querySelector('#tab-battle').click()");await until("document.querySelector('#battle-panel .battle-preset-controls')!==null");await check("document.querySelector('#battle-panel .battle-preset-controls button:last-child').click()");assert.equal(await check("Boolean(document.querySelector('.battle-presets-popup[open]'))"),true);await check("document.querySelector('.battle-presets-popup .battle-confirm-actions button').click();document.querySelector('#tab-collection').click()");
   // Render capture chains and species metadata without touching the real companion save.
   await preferences.change({ language: 'ko' });
   const route = [{ number:1, name:'이상해씨', type:'풀' }, { number:2, name:'이상해풀', type:'풀' }, { number:3, name:'이상해꽃', type:'풀' }];
@@ -184,6 +268,10 @@ try {
   assert.equal(await check("document.querySelectorAll('#dex-detail .complete-moves .detail-move-row').length"),3);
   assert.equal(await check("document.querySelectorAll('#dex-detail .known-moves .move-picker').length"),3);
   assert.equal(await check("document.querySelector('#dex-detail .detail-identity h2').textContent"),'이상해꽃');
+  assert.equal(await check("Boolean(document.querySelector('#pokemon-ability'))"),true);
+  await check("document.querySelector('#pokemon-mega-info').click()");
+  assert.equal(await check("document.querySelector('.pokemon-mega-dialog[open] .detail-stat-row')!==null"),true);
+  await check("document.querySelector('.pokemon-mega-dialog').close()");
   assert.equal(await check("document.querySelector('#dex-detail .base-stats') === null"),true);
   assert.equal(await check("document.querySelector('#dex-detail .individual-stats').textContent.includes('120')"),true);
   // Visible layouts must contain their controls at supported widths and long locales.
@@ -237,6 +325,18 @@ try {
   delayDetail();
   await until("document.querySelector('#collection-list').hidden === false");
   assert.equal(await check("document.querySelector('#dex-detail').hidden"),true);
+  const unown={number:201,name:'안농',type:'에스퍼'},forms=['b','c'].map(form=>({...captured,id:'unown-'+form,species:[{...unown,form}],form}));
+  await check('window.renderCompanionTabs('+JSON.stringify({...collection,collection:[unown],captures:forms})+')');
+  await check("document.querySelector('.capture-stage').click()");
+  await until("document.querySelectorAll('.detail-form-grid button').length===28");
+  assert.equal(await check("document.querySelectorAll('.detail-form-grid button:disabled').length"),26);
+  await check("document.querySelector('.detail-form-grid [data-form=c]').click()");
+  assert.equal(await check("document.querySelector('.detail-form-grid [data-form=c]').getAttribute('aria-pressed')"),'true');
+  await check('window.renderCompanionTabs('+JSON.stringify(collection)+')');
+  const pageSpecies=Array.from({length:20},(_,i)=>speciesFor(i+1)),pageCaptures=pageSpecies.map(p=>({...captured,id:'page-'+p.number,shiny:false,species:[p],championAchievedAt:p.number===1?Date.now():undefined}));
+  await check('window.renderCompanionTabs('+JSON.stringify({...collection,collection:pageSpecies,captures:pageCaptures})+')');await check("document.querySelector('#dex-mode').click()");assert.equal(await check("document.querySelectorAll('.dex-card .champion-badge').length"),1);
+  await check("document.querySelector('#collection-list').dispatchEvent(new WheelEvent('wheel',{deltaY:40,cancelable:true}))");assert.equal(await check("document.querySelector('#dex-page').textContent"),'2 / 2');
+  await check("document.querySelector('#dex-search').value='Bulbizarre';document.querySelector('#dex-search').dispatchEvent(new Event('input'))");assert.equal(await check("document.querySelectorAll('.dex-card').length>0"),true);await check("document.querySelector('#dex-search').value='';document.querySelector('#dex-search').dispatchEvent(new Event('input'))");
   // Apply the same containment requirement to every non-battle main tab.
   for (const width of [360,490]) {
     main.setContentSize(width,740);
@@ -301,7 +401,7 @@ try {
   assert.equal(await check("[...document.querySelectorAll('[data-product]')].at(-1).dataset.product"),'shinyCharm');
   assert.equal(await check("document.querySelector('[data-product=shinyCharm] button') === null"),true);
   await check("document.querySelector('#tab-bag').click()");
-  assert.deepEqual(await check("[...document.querySelectorAll('[data-item]')].map(node=>node.dataset.item)"),['rareCandy','mint','redMaple','shinyCharm']);
+  assert.deepEqual(await check("[...document.querySelectorAll('#bag-items > [data-item]')].map(node=>node.dataset.item)"),['rareCandy','mint','redMaple','shinyCharm']);
   assert.equal(await check("document.querySelector('[data-item=shinyCharm] .item-owned') === null"),true);
   assert.deepEqual(await check("[...document.querySelectorAll('#bag-items .item-actions button:not([hidden])')].map(button=>button.textContent)"),['사용','사용','사용']);
   await snap('bag');
@@ -426,6 +526,24 @@ try {
   assert.equal(await check("document.querySelectorAll('.known-moves .detail-move-row').length"),1);
 
   maple.destroy();
+  if(process.env.POKE_SETTINGS_SPACING_QA==='1'){
+    await check("document.querySelector('#difficulty-growth').value='1.2';document.querySelector('#difficulty-shop').value='0.8';document.querySelector('#difficulty-save').click()",settings);
+    await until("(async()=>{const c=await window.usage.companion();return c.economy.growthDifficulty===1.2&&c.economy.shopDifficulty===0.8&&!document.querySelector('#difficulty-save').disabled;})()",settings);
+    await check("document.querySelector('#difficulty-growth').value='1';document.querySelector('#difficulty-shop').value='1';document.querySelector('#difficulty-save').click()",settings);
+    await until("(async()=>{const c=await window.usage.companion();return c.economy.growthDifficulty===1&&c.economy.shopDifficulty===1&&!document.querySelector('#difficulty-save').disabled;})()",settings);
+    await check("document.querySelectorAll('details').forEach(d=>d.open=true)",settings);
+    for(const language of ['ko','en','ja','es','fr','pt','de','ru']){
+      await preferences.change({language});await until('document.documentElement.lang==='+JSON.stringify(language),settings);
+      for(const width of [360,490,650]){
+        settings.setContentSize(width,740);
+        const problems=await check(`(()=>{const issues=[];for(const select of document.querySelectorAll('select')){if(!select.getClientRects().length)continue;const r=select.getBoundingClientRect();if(r.left<0||r.right>innerWidth+1)issues.push(select.id||select.dataset.setting);const label=select.parentElement;if(label.tagName==='LABEL'&&label.firstChild?.nodeType===Node.TEXT_NODE){const range=document.createRange();range.selectNodeContents(label.firstChild);const text=range.getBoundingClientRect();const gap=r.top>=text.bottom-1?r.top-text.bottom:r.left-text.right;if(gap<8)issues.push((select.id||select.dataset.setting)+' text gap '+gap);}}if(document.documentElement.scrollWidth>innerWidth)issues.push('page overflow');return issues;})()`,settings);
+        assert.deepEqual(problems,[],language+' settings '+width);
+        assert.equal(await check("(()=>{const f=document.querySelector('.settings-actions').getBoundingClientRect(),b=document.querySelector('#difficulty-save').getBoundingClientRect();return f.bottom<=innerHeight+1&&b.top>=0&&b.bottom<=innerHeight&&document.querySelector('#settings-current-version').textContent==='v1.0.0';})()",settings),true,language+' visible save/version '+width);
+        if(language==='ko'&&width!==490){await check("document.querySelector('.settings-content').scrollTop=0",settings);await snap('settings-general-'+width,settings);await check("document.querySelector('#advanced-settings').scrollIntoView()",settings);await snap('settings-advanced-'+width,settings);publishUpdate({state:'available',version:'1.0.1',delivery:'browser'});await until("!document.querySelector('#update-banner').hidden",settings);await snap('settings-update-'+width,settings);publishUpdate({state:'current',version:'1.0.0',delivery:'browser'});}
+      }
+    }
+    console.log('PASS: settings dropdown/text spacing and horizontal bounds in eight languages at 360/490/650px.');
+  }
   for (const window of [main, settings, pet]) assert.equal(window.isVisible(), false);
   assert.deepEqual(errors, []);
   console.log('PASS: hidden UI, 8 languages, settings reload, service banner, GIF/agent reactions, capture evolution, details, retry, rounded meters, four editable moves, open-menu tooltips, keyboard control, popup bounds and reload');

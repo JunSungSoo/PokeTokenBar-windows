@@ -1,0 +1,21 @@
+
+Error occurred in handler for 'companion:details': Error: fixture offline
+    at file:///C:/Users/SungSoo/Desktop/dev/PokeTokenBar-windows/scripts/runtime-ui-smoke.mjs:93:63
+AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+
+false !== true
+
+    at run (file:///C:/Users/SungSoo/Desktop/dev/PokeTokenBar-windows/scripts/runtime-ui-smoke.mjs:322:154) {
+  generatedMessage: true,
+  code: 'ERR_ASSERTION',
+  actual: false,
+  expected: true,
+  operator: 'strictEqual',
+  diff: 'simple'
+}
+Renderer errors: []
+{
+  title: '알',
+  art: '<span class="pokemon-art egg-art home-sprite static-fallback"><img alt="" data-static-src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/egg.png" src="assets/items/egg.png" class="sprite-decoded"><canvas width="30" height="30" class="sprite-canvas egg-canvas" aria-hidden="true"></canvas><span aria-hidden="true" hidden="">🥚</span></span>',
+  status: '부화까지 5M 토큰'
+}

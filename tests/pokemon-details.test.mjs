@@ -97,7 +97,7 @@ test('capture evolution order, IVs and saved loadout survive reopening without m
   await new PokemonDetailsClient(join(dir,'metadata'), async url => new Response(JSON.stringify(url.includes('pokemon-species') ? fixture.species : fixture.pokemon))).get(1,'ko');
   assert.equal(await readFile(path,'utf8'),before);
 });
-test('same fixture matches the original Mac normalizedMoves implementation', { skip: !process.env.POKE_MAC_DETAILS_ORACLE }, () => {
+test('same fixture matches the original Mac normalizedMoves implementation', { skip: !process.env.POKE_MAC_DETAILS_ORACLE&&'Requires compiled Swift oracle: POKE_MAC_DETAILS_ORACLE (portable Docker runner supported)' }, () => {
   const natures = 'hardy lonely brave adamant naughty bold docile relaxed impish lax timid hasty serious jolly naive modest mild quiet bashful rash calm gentle sassy careful quirky'.split(' ');
   const cases = natures.flatMap(nature => [1,50,100].flatMap(level => [1,292].map(speciesID => ({ speciesID, baseStats: details.baseStats, level, nature, ivs: { hp:31, attack:0, defense:17, specialAttack:29, specialDefense:7, speed:3 } }))));
   const actual = JSON.parse(execFileSync(process.env.POKE_MAC_DETAILS_ORACLE, { input: JSON.stringify({ moves: fixture.pokemon.moves, stats: cases }), encoding:'utf8' }));
@@ -166,7 +166,7 @@ test('empty owned slots can be filled to four, while future level-up-only moves 
   assert.deepEqual((await new CompanionStore(path).read()).active.moves,['tackle','growl','toxic','charm']);
 });
 
-test('move defaults and replacements match the original Mac functions', {skip:!process.env.POKE_MAC_LOADOUT_ORACLE},async()=>{
+test('move defaults and replacements match the original Mac functions', {skip:!process.env.POKE_MAC_LOADOUT_ORACLE&&'Requires compiled Swift oracle: POKE_MAC_LOADOUT_ORACLE (portable Docker runner supported)'},async()=>{
   const {levelUpMoves,moveOptions,replacingMove}=await import('../dist/shared/pokemon-loadout.js');
   const data={moves:mergedMoves(details)};
   const cases=[1,5,50,100].flatMap(level=>[-1,0,1,2,3,4].flatMap(slot=>['tackle','vine-whip','toxic','unknown'].map(name=>({details:data,level,slot,name,moves:[{name:'tackle',learnedAtLevel:1},{name:'vine-whip',learnedAtLevel:7}]}))));
@@ -206,14 +206,14 @@ test('tooltips carry Mac targeting, classification, power, PP and percentage/alw
   assert.equal(moveTarget('allAdjacent'),'모두 (자신 제외)');assert.equal(moveTarget('allyTeam'),'아군 모두 (대기 포함)');
 });
 
-test('all bundled move tooltips match original Mac strings in all eight languages',{skip:!process.env.POKE_MAC_TOOLTIP_ORACLE},async()=>{
+test('all bundled move tooltips match original Mac strings in all eight languages',{skip:!process.env.POKE_MAC_TOOLTIP_ORACLE&&'Requires compiled Swift oracle: POKE_MAC_TOOLTIP_ORACLE (portable Docker runner supported)'},async()=>{
   const {moveTooltip}=await import('../dist/shared/move-tooltip.js');
   const {translate,languages}=await import('../dist/shared/localization.js');
   const catalog=JSON.parse(await readFile('src/companion-data/catalog.json','utf8'));
   const fairy=JSON.parse(await readFile('src/companion-data/gen6-fairy.json','utf8'));
   const names=[...new Set([...Object.keys(catalog.moves),...Object.keys(fairy.moves)])];
   const cases=languages.flatMap(language=>names.map(name=>({name,language})));
-  const originalRoot=process.env.POKE_MAC_REFERENCE ?? '../PokeTokenBar';
+  const originalRoot=process.env.POKE_MAC_RESOURCE_REFERENCE ?? process.env.POKE_MAC_REFERENCE ?? '../PokeTokenBar';
   const resources=join(originalRoot,'Sources/PokeTokenBar/Resources/BattleText');
   const expected=JSON.parse(execFileSync(process.env.POKE_MAC_TOOLTIP_ORACLE,[join(resources,'catalog.json'),join(resources,'gen6-fairy.json'),join(resources,'move-targets.json')],{input:JSON.stringify(cases),encoding:'utf8',maxBuffer:16*1024*1024}));
   const metadata={...details,moves:names.map(name=>({name,learnMethods:[{method:'machine',level:0}]}))};

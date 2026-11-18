@@ -1,3 +1,4 @@
+import{systemPowerSaver}from'./system-state.js';
 import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { app, dialog, ipcMain, nativeTheme, shell, type BrowserWindow } from 'electron';
@@ -13,7 +14,7 @@ export class SettingsStore {
     activityVisualization:'bars',theme: 'light', animated: true, back: false, refreshSeconds: 300, trend: '14', limitMode: 'used',
     providers: [...providers], petEnabled: false, petSize: 96, companionNotifications: true,
     limitNotifications: true, warnThreshold: 80, criticalThreshold: 95, updateNotifications: true,
-    trayTokens: true, trayCost: false, trayGrowth: false, trayLimits: true, tradeNickname: '', claudeRoots: [],
+    trayTokens: true, trayCost: false, trayGrowth: false, trayLimits: true, tradeNickname: '', claudeRoots: [],claudeTrackedAccount:'automatic',
   };
   private listeners: ((settings: AppSettings) => void)[] = [];
 
@@ -36,6 +37,8 @@ export class SettingsStore {
     if (!patch) throw new Error('설정 형식을 확인해 주세요.');
     for (const [key, value] of Object.entries(patch)) {
       const checks = {
+        skippedUpdateVersion:typeof value==='string'&&/^(?:|[0-9]+\.[0-9]+\.[0-9]+(?:[-+][a-zA-Z0-9.-]+)?)$/.test(value),
+        petPosition:!!object(value)&&['x','y'].every(axis=>typeof object(value)![axis]==='number'&&Number.isFinite(object(value)![axis])&&Math.abs(Number(object(value)![axis]))<100000),
         language: typeof value === 'string' && ['system', 'ko', 'en', 'ja', 'es', 'fr', 'pt', 'de', 'ru'].includes(value),
         animationQuality: typeof value === 'string' && ['powerSaver', 'balanced', 'smooth'].includes(value),
         statusChecks: typeof value === 'boolean',
@@ -61,6 +64,7 @@ export class SettingsStore {
         trayLimits: typeof value === 'boolean',
         claudeRoots: Array.isArray(value) && value.length <= 8 && value.every(path => typeof path === 'string' &&
           path.length > 0 && path.length <= 1024) && new Set(value).size === value.length,
+        claudeTrackedAccount:typeof value==='string'&&['automatic','highest','defaultAccount'].includes(value)||typeof value==='string'&&/^claude-[a-z0-9-]{1,80}$/.test(value),
         tradeNickname: typeof value === 'string' && value.trim().length <= 40,
       };
       if (!Object.hasOwn(checks, key) || !checks[key as keyof typeof checks]) throw new Error('지원하지 않는 설정 값입니다.');
@@ -102,6 +106,7 @@ export function registerSettingsIPC(store: SettingsStore, windows: () => (Browse
       if (window && !window.isDestroyed()) window.webContents.send('settings:changed', settings);
     }
   });
+  ipcMain.handle('settings:power-saver',event=>{authorized(event);return systemPowerSaver();});
   ipcMain.handle('settings:add-claude-root', async event => {
     const owner = authorized(event);
     const selected = await dialog.showOpenDialog(owner, { title: 'Claude Code 로그인 폴더 선택', properties: ['openDirectory'] });

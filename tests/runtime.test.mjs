@@ -100,7 +100,7 @@ test('disabled or untracked providers cannot be restored by late HTTP results', 
   releases.shift()(new Response(JSON.stringify({ components: [{ name: 'Codex API', status: 'major_outage' }] })));
   await pending; assert.deepEqual(checker.current(), []);
 });
-test('same inputs match compiled original Mac agent, status and GIF code', { skip: !process.env.POKE_MAC_RUNTIME_ORACLE }, () => {
+test('same inputs match compiled original Mac agent, status and GIF code', { skip: !process.env.POKE_MAC_RUNTIME_ORACLE&&'Requires compiled Swift oracle: POKE_MAC_RUNTIME_ORACLE (portable Docker runner supported)' }, () => {
   const actual = JSON.parse(execFileSync(process.env.POKE_MAC_RUNTIME_ORACLE, { input: JSON.stringify({ urls, operations, statuses, frames }), encoding: 'utf8' }));
   assert.deepEqual(plain(urls.map(url => parseAgentURL(url) ?? null)), actual.events);
   assert.deepEqual(runOperations(), actual.summaries);

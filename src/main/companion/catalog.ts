@@ -47,6 +47,9 @@ export function speciesFor(number: number, name?: string): Species {
     type: known?.type ?? types[type ?? ''] ?? '',
   };
 }
+export function displayedSpecies(species:Species,form?:string):Species{
+ return species.number===493&&form&&types[form]?{...species,type:types[form]}:species;
+}
 
 const natureKeys = ('hardy lonely brave adamant naughty bold docile relaxed impish lax timid hasty serious jolly naive ' +
   'modest mild quiet bashful rash calm gentle sassy careful quirky').split(' ');

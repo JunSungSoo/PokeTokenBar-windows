@@ -1,0 +1,10 @@
+import{createRequire}from'node:module';import{readFileSync,readdirSync}from'node:fs';import{resolve,join}from'node:path';import{createHash}from'node:crypto';import assert from'node:assert/strict';
+const dependency=readdirSync('node_modules/.pnpm').find(name=>name.startsWith('@electron+asar@'));const {extractFile}=createRequire(import.meta.url)(resolve('node_modules/.pnpm',dependency,'node_modules/@electron/asar/lib/asar.js'));
+const root=resolve(process.argv[2]??'output/instance-handoff-release/win-unpacked'),archive=join(root,'resources/app.asar'),metadata=JSON.parse(extractFile(archive,'package.json'));assert.equal(metadata.portableBuild,true);assert.equal(metadata.instanceHandoff,1);
+const files=['main/index.js','main/usage/ipc.js','main/usage/session-key.js','main/usage/limit-alerts.js','main/system-state.js','main/pet/controller.js','main/pet-preload.cjs','main/windows.js','main/drive-updates.js','shared/drive-release.js','shared/pet-presentation.js','renderer/pet.js','renderer/pet.css','renderer/pet.html','renderer/pet-presentation.js','renderer/egg-fit.js','renderer/sprite-player.js','renderer/battle-window.js','renderer/battle.css','renderer/theme.css','renderer/settings.html','renderer/settings.js','renderer/windows.js','renderer/update-banner.js','renderer/locale-data.js'];
+files.push('main/instance-handoff.js','main/instance-identity.js','main/instance-native.js','main/launch-associations.js');
+files.push('renderer/battle-sprites.js','renderer/battle-effects.js');
+const hash=buffer=>createHash('sha256').update(buffer).digest('hex');for(const path of files)assert.equal(hash(extractFile(archive,join('dist',path))),hash(readFileSync('dist/'+path)),path);
+assert.equal(hash(readFileSync(join(root,'resources/app.asar.unpacked/dist/main/power-monitor.ps1'))),hash(readFileSync('src/main/power-monitor.ps1')));
+assert.equal(hash(readFileSync(join(root,'resources/app.asar.unpacked/dist/main/instance-bridge.ps1'))),hash(readFileSync('src/main/instance-bridge.ps1')));
+console.log(JSON.stringify({version:metadata.version,portableBuild:metadata.portableBuild,instanceHandoff:metadata.instanceHandoff,verifiedFiles:files.length+2}));

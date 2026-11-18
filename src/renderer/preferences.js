@@ -13,3 +13,7 @@
     void window.desktop.openSettings().catch(error => console.error('설정 창을 열지 못했습니다.', error));
   });
 })();
+
+window.preferences.onPowerSaver?.(value=>{window.systemPowerSaver=value;window.dispatchEvent(new Event('system-power-changed'));});
+
+void window.preferences.readPower?.().then(value=>{window.systemPowerSaver=value;window.dispatchEvent(new Event('system-power-changed'));}).catch(()=>{});

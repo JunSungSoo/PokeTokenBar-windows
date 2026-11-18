@@ -54,20 +54,40 @@
     if (method) row.append(node('span', method, 'move-method'));
     return row;
   }
-  window.renderPokemonDetails = (payload, current, onMove, onItem) => {
+  window.renderPokemonDetails = (rawPayload, current, onMove, onItem,onAbility) => {
+    const payload=window.pokemonMath.projectDetailView(rawPayload,current.form);
     const { details, labels, stale } = payload;
     const content = node('div', undefined, 'pokemon-detail-sections');
     if (stale) content.append(node('p', '오프라인 · 저장된 정보', 'offline-cache-note'));
-    if (current.form) content.append(node('p', '정보는 기본 폼 기준', 'settings-hint'));
+    if (current.form&&details.speciesID!==493) content.append(node('p', '정보는 기본 폼 기준', 'settings-hint'));
     const individual = card('개체', 'individual-data');
     const identity = node('dl', undefined, 'detail-value-pairs');
     const gender = { male: '수컷', female: '암컷', genderless: '무성' }[current.gender];
     for (const [name, value] of [['레벨', current.level ?? '—'], ['성별', gender ?? '—'], ['성격', current.nature ?? '—']]) identity.append(node('dt', name), node('dd', String(value)));
     individual.append(identity);
+    const megaItems=window.battleCatalog?.items?.items?.filter(item=>item.mega?.baseID===details.speciesID)??[];
+    if(megaItems.length){
+      const open=node('button',window.i18n.t('메가진화 정보'));open.type='button';open.id='pokemon-mega-info';
+      open.addEventListener('click',()=>{
+        const dialog=node('dialog',undefined,'pokemon-mega-dialog'),heading=node('h2',window.i18n.t('메가진화 정보'));dialog.append(heading);
+        for(const stone of megaItems){const mega=stone.mega,section=card(window.battleUI.localized(stone.names),'mega-information'),image=node('img');image.alt='';image.width=96;image.height=96;image.src='https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/'+(current.shiny?'shiny/':'')+mega.pokemonID+'.png';section.append(image,node('p',mega.types.map(type=>labels.types[type.toLowerCase()]??type).join(' / ')),node('p',window.battleUI.ability(mega.ability)));
+          const info=window.battleCatalog.mega?.abilities?.[mega.ability.toLowerCase().replace(/[^a-z0-9]/g,'')];if(info)section.append(node('p',window.battleUI.localized(info.descriptions)));
+          const statKeys={hp:'hp',atk:'attack',def:'defense',spa:'special-attack',spd:'special-defense',spe:'speed'},bases=Object.fromEntries(Object.entries(mega.stats).map(([name,value])=>[statKeys[name],value]));section.append(statsCard('현재 능력치',window.pokemonMath.computedStats(details.speciesID,bases,current.level??100,current.ivs??{},current.nature??'')));dialog.append(section);
+        }
+        const close=node('button',window.i18n.t('닫기'));close.type='button';close.addEventListener('click',()=>dialog.close());dialog.append(close);dialog.addEventListener('close',()=>dialog.remove(),{once:true});document.body.append(dialog);dialog.showModal();
+      });individual.append(open);
+    }
     individual.append(node('h4', '특성'));
     const ability = labels.abilities[current.ability];
     const abilityValue = node('p', (ability?.name ?? current.ability ?? '—') + (current.abilityIsHidden ? ' · ' + window.i18n.t('숨겨진 특성') : ''));
-    if(ability){abilityValue.tabIndex=0;window.moveUI.bindTooltip(abilityValue,()=>ability.name+'\n'+ability.description);} individual.append(abilityValue);
+    if(ability){abilityValue.tabIndex=0;window.moveUI.bindTooltip(abilityValue,()=>ability.name+'\n'+ability.description);}
+    const abilityChoices=payload.abilityChoicesByForm?.[current.form??'']??payload.abilityChoicesByForm?.['']??details.abilities;
+    if(onAbility&&current.releasedAt===undefined&&current.species.at(-1)?.number===details.speciesID){
+      const selected=abilityChoices.find(a=>a.name.replace(/[^a-z0-9]/gi,'').toLowerCase()===String(current.ability??'').replace(/[^a-z0-9]/gi,'').toLowerCase())?.name;
+      const picker=window.moveUI.picker({id:'pokemon-ability',selected,options:abilityChoices.map(a=>({value:a.name,title:(labels.abilities[a.name]?.name??a.name)+(a.isHidden?' · '+window.i18n.t('숨겨진 특성'):''),tooltip:labels.abilities[a.name]?.description??''})),placeholder:window.i18n.t('특성'),accessibleLabel:window.i18n.t('특성')});
+      const feedback=node('p',undefined,'move-feedback');feedback.hidden=true;picker.addEventListener('change',async()=>{picker.disabled=true;try{await onAbility(picker.value);}catch(error){picker.value=selected;window.moveUI.refresh(picker);feedback.hidden=false;feedback.textContent=error.message;}finally{picker.disabled=false;}});individual.append(picker,feedback);
+    }else individual.append(abilityValue);
+    if(current.prayers>0)individual.append(node('p',window.i18n.t('기도 {n}회',{n:current.prayers})));
     if(onItem&&current.graduatedAt!==undefined&&current.releasedAt===undefined&&current.species.at(-1)?.number===details.speciesID){
       const U=window.battleUI,section=node('div',undefined,'collection-default-item');section.append(node('h4',U.t('기본 배틀 도구')));
       const held=U.item(current.battleDefaultItem),pick=node('button',held?U.localized(held.names):U.t('없음'),'move-picker');pick.type='button';pick.id='collection-default-battle-item';pick.setAttribute('aria-label',U.t('기본 배틀 도구'));pick.setAttribute('aria-haspopup','dialog');
@@ -114,7 +134,7 @@
     for (const [name, value] of [['타입', details.types.map(type => labels.types[type] ?? type).join(' / ')], ['키', (details.height / 10).toFixed(1) + ' m'], ['몸무게', (details.weight / 10).toFixed(1) + ' kg']]) values.append(node('dt', name), node('dd', value));
     species.append(values, node('h4', '가능한 특성'));
     const abilities = node('ul', undefined, 'detail-abilities');
-    for (const ability of details.abilities) {
+    for (const ability of abilityChoices) {
       const text = labels.abilities[ability.name];
       const item = node('li');
       item.append(node('strong', text?.name ?? ability.name));

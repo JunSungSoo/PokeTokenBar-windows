@@ -3,6 +3,8 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { object } from '../usage/jsonl.js';
 import { writeSaveAtomically } from './store.js';
+import {abilityOptions} from './profile.js';
+import {formCatalog} from './forms.js';
 import type { Language } from '../../shared/localization.js';
 import { statOrder, type PokemonDetails, type PokemonMove, type PokemonDetailView } from '../../shared/pokemon-details.js';
 
@@ -72,10 +74,12 @@ export function mergedMoves(details: PokemonDetails): PokemonMove[] {
 
 export function presentPokemonDetails(details: PokemonDetails, language: Language, stale = false, knownMoves: string[] = []): PokemonDetailView {
   const moves = mergedMoves(details);
-  return { details: { ...details, moves }, baseMoves:details.moves, stale, labels: {
+  const abilityChoicesByForm=Object.fromEntries(['',...(formCatalog[details.speciesID]??[])].map(form=>[form,abilityOptions(details.speciesID,form||undefined)]));
+  const allAbilities=[...details.abilities,...Object.values(abilityChoicesByForm).flat()];
+  return {abilityChoicesByForm, details: { ...details, moves }, baseMoves:details.moves, stale, labels: {
     species: { [details.speciesID]: localized(catalog.species[details.speciesID], language, details.name) },
     types: Object.fromEntries(Object.entries({ ...catalog.types, ...fairy.types }).map(([id, names]) => [id, localized(names, language, id)])),
-    abilities: Object.fromEntries(details.abilities.map(ability => [ability.name, { name: localized(catalog.abilities[key(ability.name)], language, ability.name), description: localized(catalog.abilityDescriptions[key(ability.name)], language, '') }])),
+    abilities: Object.fromEntries(allAbilities.map(ability => [ability.name, { name: localized(catalog.abilities[key(ability.name)], language, ability.name), description: localized(catalog.abilityDescriptions[key(ability.name)], language, '') }])),
     moves: Object.fromEntries([...new Set([...moves.map(move=>move.name),...knownMoves])].map(name => {
       const move={name};
       const text = fairy.moves[key(move.name)] ?? catalog.moves[key(move.name)];
