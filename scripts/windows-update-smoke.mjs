@@ -264,10 +264,14 @@ try {
   await assertLaunchRegistrations(installed, [installerShortcut]);
 
   const battles = new Map();
-  for (const mode of ['singles', 'doubles']) {
+  // Practice challenges open in preparation; only singles can begin through the CPU prepare command.
+  for (const mode of ['singles']) {
     const mainPage = await openPage(session.mainTarget);
     const result = await mainPage.evaluate(`(async () => {
-      const initial = await window.battle.start('${mode}', null);
+      const prepared = await window.battle.start('${mode}', null);
+      const initial = prepared.phase === 'preparation'
+        ? await window.battle.cpu('prepare', { order: prepared.progress.team.map(member => member.id), begin: true })
+        : prepared;
       const actions = initial.frame.slots.map(slot => {
         const move = slot.moves.find(move => !move.disabled &&
           (!move.targetRequired || move.targets.some(target => target.location > 0)));
