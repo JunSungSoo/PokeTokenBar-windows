@@ -7,7 +7,9 @@ import { createReadStream } from 'node:fs';
 import { access, cp, mkdir, readFile, rm, stat, writeFile } from 'node:fs/promises';
 import { createServer } from 'node:http';
 import { basename, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { promisify } from 'node:util';
+import electronBinary from 'electron';
 
 const rawPublicKey = publicKey => Buffer.from(publicKey.export({ format: 'jwk' }).x, 'base64url').toString('base64');
 
@@ -57,9 +59,11 @@ async function processesAt(executable, stop = false) {
 
 const startupEntry = () => powershell("(Get-ItemProperty -LiteralPath 'HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Run' -Name $env:POKE_NAME -ErrorAction SilentlyContinue).$env:POKE_NAME", { POKE_NAME: startupName });
 const protocolCommand = () => powershell("$key = Get-Item -LiteralPath 'HKCU:\\Software\\Classes\\poketokenbar\\shell\\open\\command' -ErrorAction SilentlyContinue; if ($key) { $key.GetValue('') }");
-const shortcutTarget = path => powershell('(New-Object -ComObject WScript.Shell).CreateShortcut($env:POKE_SHORTCUT).TargetPath', { POKE_SHORTCUT: path });
-const createShortcut = (path, target) => powershell('$link = (New-Object -ComObject WScript.Shell).CreateShortcut($env:POKE_SHORTCUT); $link.TargetPath = $env:POKE_TARGET; $link.Save()',
-  { POKE_SHORTCUT: path, POKE_TARGET: target });
+// WScript.Shell turns non-ANSI path characters into '?', so shortcuts go through Electron's Unicode shell API.
+const shortcutHelper = fileURLToPath(new URL('./shortcut-link.cjs', import.meta.url));
+const shortcutLink = async (...args) => (await execute(electronBinary, [shortcutHelper, ...args])).stdout.trim();
+const shortcutTarget = path => shortcutLink('read', path);
+const createShortcut = (path, target) => shortcutLink('write', path, target);
 const executableVersion = executable => powershell('(Get-Item -LiteralPath $env:POKE_TEST_EXE).VersionInfo.ProductVersion', { POKE_TEST_EXE: executable });
 const mentions = (text, executable) => text.toLowerCase().includes(executable.toLowerCase());
 
