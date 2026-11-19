@@ -8,7 +8,7 @@ const environment = (overrides = {}) => ({
   packaged: true,
   executablePath: installDirectory + '\\PokeTokenBar Windows.exe',
   appPath: installDirectory + '\\resources\\app.asar',
-  exists: path => path === installDirectory + '\\Uninstall PokeTokenBar Windows.exe',
+  exists: path => path === installDirectory + '\\Uninstall PokeTokenBar.exe',
   readText: path => {
     assert.equal(path, installDirectory + '\\resources\\app.asar\\package.json');
     return JSON.stringify({ version: '1.0.3' });

@@ -1,6 +1,7 @@
 import { win32 } from 'node:path';
 
-export const uninstallerName = 'Uninstall PokeTokenBar Windows.exe';
+// electron-builder names the uninstaller after executableName ('PokeTokenBar'), not productName.
+export const uninstallerName = 'Uninstall PokeTokenBar.exe';
 
 export type InstalledBuildEnvironment = {
   platform: string;
