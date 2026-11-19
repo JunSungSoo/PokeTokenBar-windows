@@ -126,3 +126,17 @@ jobs:
         run: node scripts/instance-handoff-smoke.mjs release/base/win-unpacked/PokeTokenBar.exe release/update/win-unpacked/PokeTokenBar.exe
       - name: Verify signed in-app update and ZIP folder to Setup.exe handoff
         run: node scripts/windows-update-smoke.mjs release/base release/update
+      - name: Collect app logs and settings on failure
+        if: failure()
+        shell: pwsh
+        run: |
+          $source = Join-Path $env:APPDATA 'PokeTokenBar Windows'
+          New-Item -ItemType Directory -Force app-data | Out-Null
+          Copy-Item -Recurse -Force -ErrorAction SilentlyContinue (Join-Path $source 'logs'), (Join-Path $source 'settings-v1.json') app-data
+      - name: Upload app logs and settings on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-update-app-data
+          path: app-data
+          if-no-files-found: warn

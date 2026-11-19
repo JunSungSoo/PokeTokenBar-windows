@@ -224,6 +224,7 @@ async function stopAll() {
 // Relaunches the updated install with a debugger and checks version, saves, settings and pet restoration.
 async function verifyUpdatedInstall(expected) {
   await stopAll();
+  console.log('petEnabled before relaunch:', JSON.parse(await readFile(settingsFile, 'utf8')).petEnabled);
   const session = await launchWithSettings(installed);
   try {
     const { settingsPage, mainTarget, port } = session;
@@ -336,6 +337,10 @@ try {
     return true;
   }, 60000);
   assert.equal(await sha256File(save), zipExpected.saveHash);
+  const petSetting = async () => JSON.parse(await readFile(settingsFile, 'utf8')).petEnabled;
+  console.log('petEnabled after takeover:', await petSetting());
+  await pause(5000);
+  console.log('petEnabled 5s after takeover:', await petSetting());
   await verifyUpdatedInstall(zipExpected);
   console.log('PASS: ZIP folder ' + base.version + ' → Setup.exe ' + update.version + ' handoff kept saves, settings, pet, login item, shortcuts and protocol');
 } finally {
