@@ -16,6 +16,8 @@ import { CompanionStore } from '../dist/main/companion/store.js';
 import { providers } from '../dist/shared/usage.js';
 import { shopCatalog } from '../dist/shared/companion.js';
 app.on('window-all-closed', () => {});
+// Windows Server CI runners report reduced motion, which disables the pet animations under test.
+app.commandLine.appendSwitch('force-prefers-no-reduced-motion');
 async function run() {
 const directory = await mkdtemp(join(tmpdir(), 'ptb-runtime-ui-'));
 app.setPath('userData', directory);
