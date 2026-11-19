@@ -1,13 +1,11 @@
 (() => {
- const cache=new Map(),mounts=new WeakMap();let assetBase='';
+ // fieldUnit is screen pixels per original 320×132 field unit; sprites keep PokéRogue's 1 atlas pixel = 1 field unit ratio.
+ const cache=new Map(),mounts=new WeakMap();let assetBase='',fieldUnit=351/132;
  const data=window.battleCatalog;
  function dimensions(p,back){
   const form=p.form?'-'+p.form:'',lookup=(rear)=>data.sizes.records[(rear?'back/':'')+p.speciesID+form] ?? data.sizes.records[(rear?'back/':'')+p.speciesID] ?? {width:64,height:64};
-  const front=lookup(false),rear=lookup(true),raw=back?rear:front;
-  const heightRecord=data.heights.records[p.speciesID+(p.form?'-'+p.form:'')] ?? data.heights.records[p.speciesID];
-  // Keep physical size differences visible, with headroom for the 151px stage and 11px foot inset.
-  const physical=72*Math.pow(Math.max(.1,(heightRecord?.decimetres ?? 10)/10),.65);const height=physical<=112?physical:112+28*(1-Math.exp(-(physical-112)/55));
-  const scale=Math.min(height/Math.max(1,front.height,rear.height),177/Math.max(1,front.width,rear.width));return{width:raw.width*scale,height:raw.height*scale};
+  const raw=lookup(back);
+  return{width:raw.width*fieldUnit,height:raw.height*fieldUnit};
  }
  function urls(p,back){
   const prefix=back?'back/':'',color=p.shiny?'shiny/':'';const form=window.battleCatalog.forms?.[p.speciesID]?.[p.form ?? ''] ?? {};
@@ -17,7 +15,7 @@
   if(p.speciesID===6&&!p.form)paths.unshift(assetBase+'player/base-sprites/'+(back?'back-':'')+'6'+(p.shiny?'-sh':'')+'.gif');return paths;
  }
  async function load(p,back){
-  const key=[p.speciesID,p.form,p.shiny,p.mega,back].join(':');if(cache.has(key))return cache.get(key);
+  const key=[p.speciesID,p.form,p.shiny,p.mega,back,fieldUnit].join(':');if(cache.has(key))return cache.get(key);
   const promise=(async()=>{
    let decoded;for(const url of urls(p,back))try{
     const response=await fetch(url,{cache:'force-cache',signal:AbortSignal.timeout(10000)});if(!response.ok)throw Error();const bytes=await response.arrayBuffer();
@@ -39,5 +37,5 @@
   void load(p,back).then(sprite=>{if(mounts.get(container)!==token||!container.isConnected)return;canvas.width=sprite.width;canvas.height=sprite.height;canvas.style.width=sprite.width+'px';canvas.style.height=sprite.height+'px';const context=canvas.getContext('2d');const began=performance.now(),timing=window.spriteTiming,minimum=timing.floors[window.appPreferences?.animationQuality]??.2,frames=timing.capFrameRate(sprite.delays,minimum);let last=-1;function draw(){if(!container.isConnected||mounts.get(container)!==token)return;const moving=animate&&window.appPreferences?.animated&&!matchMedia('(prefers-reduced-motion: reduce)').matches&&!p.fainted;const index=moving?(timing.frameAt(frames,(performance.now()-began)/1000)??0):0;if(index!==last){context.clearRect(0,0,canvas.width,canvas.height);context.drawImage(sprite.frames[index].canvas,0,0);last=index;}if(moving&&frames.length>1)setTimeout(draw,minimum*1000);}draw();}).catch(()=>{if(container.isConnected){const fallback=document.createElement('span');fallback.className='battle-sprite-missing';fallback.textContent='#'+p.speciesID;container.append(fallback);}});
  }
  async function actor(p,back,key,rect){const sprite=await load(p,back);sprite.encoded ??= sprite.frames.map(frame=>frame.canvas.toDataURL('image/png'));return{key,own:back,slot:Number(key.split('-').at(-1)),speciesID:p.speciesID,form:p.form??'',hpRatio:p.hp/Math.max(1,p.maxHP),shiny:p.shiny,texture:sprite.key,sprite:{frames:window.spriteTiming.capFrameRate(sprite.delays,window.spriteTiming.floors[window.appPreferences?.animationQuality]??.2).map(f=>sprite.encoded[f.index]),delays:window.spriteTiming.capFrameRate(sprite.delays,window.spriteTiming.floors[window.appPreferences?.animationQuality]??.2).map(f=>f.duration)},x:rect.x+rect.width/2,y:rect.y+rect.height-11,visible:!p.fainted};}
- window.battleSprites={mount,actor,dimensions,configure:base=>{assetBase=base;}};
+ window.battleSprites={mount,actor,dimensions,configure:base=>{assetBase=base;},setFieldUnit:unit=>{if(unit>0)fieldUnit=unit;}};
 })();

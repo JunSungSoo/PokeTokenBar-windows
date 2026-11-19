@@ -4,16 +4,19 @@ import {readFileSync} from 'node:fs';
 import {runInNewContext} from 'node:vm';
 
 const json=name=>JSON.parse(readFileSync('src/battle-assets/player/'+name+'.json','utf8'));
-test('battle sizes distinguish small and giant species while fitting either facing above the ground',()=>{
- const window={battleCatalog:{sizes:json('pokemon-sizes'),heights:json('pokemon-heights')}};
+test('battle sprites keep the original PokéRogue ratio of one atlas pixel per field unit',()=>{
+ const sizes=json('pokemon-sizes'),window={battleCatalog:{sizes}};
  runInNewContext(readFileSync('src/renderer/battle-sprites.js','utf8'),{window});
  const size=(speciesID,back=false)=>window.battleSprites.dimensions({speciesID},back);
- for(const back of [false,true]){
-  const small=size(595,back),large=size(321,back),pikachu=size(25,back),dragonite=size(149,back);
-  assert.ok(large.width*large.height>small.width*small.height*8,'Wailord must remain visibly larger than Joltik');
-  assert.ok(dragonite.height>pikachu.height*1.5,'Dragonite and Pikachu must have different silhouettes');
-  for(let id=1;id<=649;id++){const s=size(id,back);assert.ok(Number.isFinite(s.width)&&s.width>0&&s.width<=177.001);assert.ok(Number.isFinite(s.height)&&s.height>0&&s.height<=140.001);}
+ for(const unit of [351/132,299/132]){
+  window.battleSprites.setFieldUnit(unit);
+  for(const back of [false,true]){
+   for(const id of [595,321,25,149]){const record=sizes.records[(back?'back/':'')+id],actual=size(id,back);assert.ok(Math.abs(actual.width-record.width*unit)<1e-9&&Math.abs(actual.height-record.height*unit)<1e-9,'species '+id);}
+   const small=size(595,back),large=size(321,back);
+   assert.ok(large.width*large.height>small.width*small.height*4,'Wailord must remain visibly larger than Joltik');
+  }
  }
+ window.battleSprites.setFieldUnit(0);assert.equal(size(595).width,sizes.records['595'].width*299/132,'invalid units are ignored');
 });
 
 test('native battle layers keep the old sprite until ready and restore the new sprite before clearing',async()=>{

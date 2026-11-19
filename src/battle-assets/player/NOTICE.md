@@ -66,11 +66,18 @@ cosmetic selection from their shared random match nonces using SHA-256; this
 does not change battle weather, terrain, statistics or engine RNG. Native Pokémon
 GIFs, floating animation and existing sprite stages remain unchanged.
 
-Battle display size now uses original PokéAPI CSV height (decimetres), including
-all 649 species and 64 permitted Mega forms: extent = 90 * sqrt(metres), smoothly limited to 200 design pixels beyond 180, normalized
-against the largest front/back atlas dimension before the existing shared camera.
-Physical length is never forced into vertical image height. Source CSV snapshots
-and hashes are preserved in original/physical/ and pokemon-heights.json.
+Ground platforms use the unchanged original images/arenas/<arena>_a.png (player) and
+<arena>_b.png (opponent) for the same 16 arenas from the same assetRevision; `end` keeps its
+frame atlas (.json) and plays at the original 12 fps. Each file's Git blob hash matches the
+pinned revision. They are placed like ArenaBase after the encounter slide (player x 0,
+opponent x 20) over the original 320×132 visible field, with battlers at the original feet
+(106,148 / 236,84) and double offsets (-32,-8 / +32,0). Random biome props (_b_1.._b_3) are
+not used.
+
+Battle display size follows PokéRogue: one pokemon-sizes.json atlas pixel equals one
+field unit of the 320×132 arena, scaled with the platforms (sprite origin 0.5,1 at the
+original feet). The former PokéAPI height scaling is no longer used; its source snapshots
+remain in original/physical/ and pokemon-heights.json.
 
 MegaAnimation is a battle-space adaptation of pinned FormChangePhase and Animation
 spiral/arc/circle/spray commands, using unchanged evo_sparkle and charge/beam/

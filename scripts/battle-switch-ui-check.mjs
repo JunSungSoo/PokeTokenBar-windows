@@ -37,7 +37,7 @@ export async function checkBattleSwitch(window,prefs,snap){
     ctx.strokeStyle='#758170';ctx.beginPath();ctx.moveTo(x-100,y);ctx.lineTo(x+100,y);ctx.stroke();ctx.drawImage(image,x-image.width/2,y-image.height);ctx.fillStyle='#15251a';ctx.font='16px sans-serif';ctx.textAlign='center';ctx.fillText(name+' · '+(back?'뒤':'앞'),x,y+24);sizes.push({speciesID,back,width:image.width,height:image.height});
    }return{png:canvas.toDataURL('image/png').split(',')[1],sizes};
   })()`);
-  for(const back of [false,true]){const small=report.sizes.find(p=>p.speciesID===595&&p.back===back),large=report.sizes.find(p=>p.speciesID===321&&p.back===back);assert.ok(large.width*large.height>small.width*small.height*8);}
+  for(const back of [false,true]){const small=report.sizes.find(p=>p.speciesID===595&&p.back===back),large=report.sizes.find(p=>p.speciesID===321&&p.back===back);assert.ok(large.width*large.height>small.width*small.height*4,'original-ratio Wailord must stay visibly larger than Joltik');}
   if(process.env.POKE_UI_SCREENSHOTS){await mkdir(process.env.POKE_UI_SCREENSHOTS,{recursive:true});await writeFile(join(process.env.POKE_UI_SCREENSHOTS,'species-size-comparison.png'),Buffer.from(report.png,'base64'));}
   console.log('PASS: real decoded front/back sprites preserve small/giant size differences: '+JSON.stringify(report.sizes));
  }

@@ -43,7 +43,7 @@ battleData.megaSprites=await readdir(new URL('../src/battle-assets/player/mega-s
 const {appearance}=await import('../dist/main/companion/forms.js');
 battleData.forms=Object.fromEntries(Object.entries(formCatalog).map(([id,forms])=>[id,Object.fromEntries(forms.map(form=>[form,appearance(Number(id),form)]))]));
 for(const [key,file]of Object.entries({trainers:'trainers/names.json',playerManifest:'player/manifest.json',musicBattle:'music/wild-battle-source.json',musicVictory:'music/trainer-victory-source.json'}))battleData[key]=JSON.parse(await readFile(new URL('../src/battle-assets/'+file,import.meta.url),'utf8'));
-for(const [key,file]of Object.entries({shopText:'data/shop-text.json',items:'data/held-items.json',mega:'data/mega-text.json',speciesTypes:'data/species-types.json',sizes:'player/pokemon-sizes.json',heights:'player/pokemon-heights.json'}))battleData[key]=JSON.parse(await readFile(new URL('../src/battle-assets/'+file,import.meta.url),'utf8'));
+for(const [key,file]of Object.entries({shopText:'data/shop-text.json',items:'data/held-items.json',mega:'data/mega-text.json',speciesTypes:'data/species-types.json',sizes:'player/pokemon-sizes.json'}))battleData[key]=JSON.parse(await readFile(new URL('../src/battle-assets/'+file,import.meta.url),'utf8'));
 await writeFile(new URL('../dist/renderer/battle-catalog.js',import.meta.url),'window.battleCatalog='+JSON.stringify(battleData)+';\n');
 
 const {presentationEvents}=await import('../dist/shared/battle-presentation.js');
