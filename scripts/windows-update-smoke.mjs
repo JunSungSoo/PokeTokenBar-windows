@@ -61,9 +61,15 @@ const startupEntry = () => powershell("(Get-ItemProperty -LiteralPath 'HKCU:\\So
 const protocolCommand = () => powershell("$key = Get-Item -LiteralPath 'HKCU:\\Software\\Classes\\poketokenbar\\shell\\open\\command' -ErrorAction SilentlyContinue; if ($key) { $key.GetValue('') }");
 // WScript.Shell turns non-ANSI path characters into '?', so shortcuts go through Electron's Unicode shell API.
 const shortcutHelper = fileURLToPath(new URL('./shortcut-link.cjs', import.meta.url));
-const shortcutLink = async (...args) => (await execute(electronBinary, [shortcutHelper, ...args])).stdout.trim();
+// Electron can crash while shutting down on CI; the printed RESULT line is what matters.
+const shortcutLink = async (...args) => {
+  const stdout = await execute(electronBinary, [shortcutHelper, ...args]).then(result => result.stdout, error => error.stdout ?? '');
+  const line = stdout.split(/\r?\n/).find(row => row.startsWith('RESULT:'));
+  assert.ok(line, 'shortcut helper produced no result for ' + args.join(' '));
+  return line.slice('RESULT:'.length).trim();
+};
 const shortcutTarget = path => shortcutLink('read', path);
-const createShortcut = (path, target) => shortcutLink('write', path, target);
+const createShortcut = async (path, target) => assert.equal(await shortcutLink('write', path, target), 'true', 'shortcut write: ' + path);
 const executableVersion = executable => powershell('(Get-Item -LiteralPath $env:POKE_TEST_EXE).VersionInfo.ProductVersion', { POKE_TEST_EXE: executable });
 const mentions = (text, executable) => text.toLowerCase().includes(executable.toLowerCase());
 
