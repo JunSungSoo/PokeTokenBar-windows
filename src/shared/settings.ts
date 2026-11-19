@@ -7,6 +7,7 @@ export interface AppSettings {
   animationQuality: 'powerSaver' | 'balanced' | 'smooth';
   statusChecks: boolean;
   petAgentActivity: boolean;
+  beginnerMode: boolean;
   theme: 'system' | 'light' | 'dark';
   animated: boolean;
   back: boolean;

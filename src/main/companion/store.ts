@@ -840,7 +840,7 @@ export class CompanionStore {
     });
   }
 
-  update(observations: Observations, now: number): Promise<CompanionView> {
+  update(observations: Observations, now: number, usageMultiplier = 1): Promise<CompanionView> {
     const result = this.queue.then(async () => {
       const state = await load(this.path);
       if (this.tradeReservation) return view(state);
@@ -860,7 +860,7 @@ export class CompanionStore {
           if (previous === undefined && !first && entry.time < state.baseline!) continue;
           state.ledger[key] = total;
           changed = true;
-          if (!first) delta = Math.min(Number.MAX_SAFE_INTEGER, delta + (total - (previous ?? 0)));
+          if (!first) delta = Math.min(Number.MAX_SAFE_INTEGER, delta + (total - (previous ?? 0)) * usageMultiplier);
         }
       }
       const readyToReveal = state.active && disguised(state.active) && state.progress >= threshold(state.active, state.growthDifficulty ?? 1);

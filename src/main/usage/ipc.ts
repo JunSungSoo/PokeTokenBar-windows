@@ -45,6 +45,9 @@ async function extraRoot(provider: Provider): Promise<string | null> {
   }
 }
 
+// 초심자 모드에서 토큰 사용량을 경험치·상점 포인트로 환산할 때 곱하는 배율
+const beginnerUsageMultiplier = 10;
+
 export function registerUsageIPC(mainWindow: () => BrowserWindow | undefined, petWindow: () => BrowserWindow | undefined, showMainWindow: () => Promise<void>, settingsWindow: () => BrowserWindow | undefined, preferences: SettingsStore, onUsage: (snapshot: UsageSnapshot) => void, onLimits: (results: import('../../shared/usage.js').LimitResult[]) => void, onPetClick: () => void): (() => Promise<void>) & {forHandoff:()=>Promise<void>} {
   function authorized(event: Electron.IpcMainInvokeEvent): BrowserWindow {
     const window = [mainWindow(), settingsWindow()].find(window => window && !window.isDestroyed() && event.senderFrame === window.webContents.mainFrame);
@@ -226,7 +229,7 @@ export function registerUsageIPC(mainWindow: () => BrowserWindow | undefined, pe
           process.env.CURSOR_USAGE_API === '1', entries => { observations.set(provider, entries); });
         return [provider, usage] as const;
       }));
-      const growth = await companion.update(observations, +now).catch((error: unknown) => {
+      const growth = await companion.update(observations, +now, preferences.get().beginnerMode ? beginnerUsageMultiplier : 1).catch((error: unknown) => {
         console.error('Companion state could not be saved:', error);
         return null;
       });

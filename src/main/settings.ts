@@ -10,7 +10,7 @@ import { object } from './usage/jsonl.js';
 export class SettingsStore {
   private queue: Promise<unknown> = Promise.resolve();
   private value: AppSettings = {
-    language: 'system', animationQuality: 'powerSaver', statusChecks: true, petAgentActivity: true,
+    language: 'system', animationQuality: 'powerSaver', statusChecks: true, petAgentActivity: true, beginnerMode: false,
     activityVisualization:'bars',theme: 'light', animated: true, back: false, refreshSeconds: 300, trend: '14', limitMode: 'used',
     providers: [...providers], petEnabled: false, petSize: 96, companionNotifications: true,
     limitNotifications: true, warnThreshold: 80, criticalThreshold: 95, updateNotifications: true,
@@ -43,6 +43,7 @@ export class SettingsStore {
         animationQuality: typeof value === 'string' && ['powerSaver', 'balanced', 'smooth'].includes(value),
         statusChecks: typeof value === 'boolean',
         petAgentActivity: typeof value === 'boolean',
+        beginnerMode: typeof value === 'boolean',
         theme: ['system', 'light', 'dark'].includes(String(value)),
         animated: typeof value === 'boolean',
         back: typeof value === 'boolean',

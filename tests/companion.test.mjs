@@ -121,6 +121,23 @@ test('a streaming revision pays only its new tokens and old folders do not pay r
   assert.equal(await readFile(save, 'utf8'), '{"version":99}');
 });
 
+test('beginner usage multiplier scales growth and wallet but not shop prices', async t => {
+  const dir = await mkdtemp(join(tmpdir(), 'pocket-growth-beginner-'));
+  t.after(() => rm(dir, { recursive: true, force: true }));
+  const store = new CompanionStore(join(dir, 'companion-v1.json'), () => false);
+  const observation = (id, total) => ({ id, time, tokens: { total } });
+  const update = (rows, multiplier) => store.update(new Map([['claude', rows]]), time, multiplier);
+  const initial = await store.update(new Map(), baseline);
+  const beginner = await update([observation('first', 100)], 10);
+  assert.equal(beginner.raised, 1000);
+  assert.equal(beginner.economy.wallet, 1000);
+  assert.equal(beginner.progress, 1000);
+  assert.deepEqual(beginner.economy.prices, initial.economy.prices);
+  const normal = await update([observation('second', 100)], 1);
+  assert.equal(normal.raised, 1100);
+  assert.equal(normal.progress, 1100);
+});
+
 test('limit candy grants survive restart, ignore reset jitter and rearm on the correct edge', async t => {
   const dir = await mkdtemp(join(tmpdir(), 'pocket-candy-'));
   t.after(() => rm(dir, { recursive: true, force: true }));
