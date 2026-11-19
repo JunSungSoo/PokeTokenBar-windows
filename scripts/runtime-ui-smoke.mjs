@@ -133,7 +133,7 @@ try {
   for (const [language, label] of [['ko','홈'],['en','Home'],['ja','ホーム'],['es','Inicio'],['fr','Accueil'],['pt','Início'],['de','Startseite'],['ru','Главная']]) {
     await preferences.change({ language });
     await until(`document.documentElement.lang === ${JSON.stringify(language)} && document.querySelector('.app-tabs button').textContent.trim() === ${JSON.stringify(label)}`);
-    assert.equal(await check('document.documentElement.lang', settings), language);
+    await until(`document.documentElement.lang === ${JSON.stringify(language)}`, settings);
   }
   // Real quota windows include a reset date; it must not shadow the browser window.
   quotaResults = [{ provider:'claude', status:'available', windows:[{label:'5시간',usedPercent:42,resetsAt:Date.now()+7200000}] }];
