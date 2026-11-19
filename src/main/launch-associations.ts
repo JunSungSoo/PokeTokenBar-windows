@@ -1,5 +1,5 @@
 import{app,shell}from'electron';import{readdir}from'node:fs/promises';import{dirname,join}from'node:path';
-import{instanceNative}from'./instance-native.js';import{executableIdentity,sameExecutable}from'./instance-identity.js';import{newerVersion}from'../shared/drive-release.js';import{windowsAppID}from'../shared/windows.js';
+import{instanceNative}from'./instance-native.js';import{executableIdentity,sameExecutable}from'./instance-identity.js';import{newerVersion}from'../shared/release-version.js';import{windowsAppID}from'../shared/windows.js';
 export async function migrateLaunchAssociations(exe:string,version:string,previous:string[],options:{registryBase?:string;folders?:string[];protocol?:()=>boolean;native?:typeof instanceNative}={}){
  const native=options.native??instanceNative,old=new Set(previous),rows=await native<{name:string;exe?:string}[]>({action:'run',registryBase:options.registryBase},app.isPackaged);
  for(const row of rows??[]){if(!row.exe)continue;const identity=await executableIdentity(row.exe);if(identity&&!newerVersion(identity.version,version))old.add(identity.exe);}

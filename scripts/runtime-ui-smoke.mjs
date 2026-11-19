@@ -65,7 +65,7 @@ try {
   const publishUpdate=value=>{updateFixture=value;for(const owner of [main,settings])owner?.webContents.send('windows:update-state',value);return value;};
   ipcMain.handle('windows:update-state',()=>updateFixture);
   let updateDownloads=0;
-  ipcMain.handle('windows:update-download',()=>{updateDownloads++;return{...updateFixture,delivery:'browser',opened:true};});
+  ipcMain.handle('windows:update-install',()=>{updateDownloads++;return{...updateFixture,delivery:'browser',opened:true};});
   ipcMain.handle('windows:update-skip',async(_event,restore)=>{await preferences.change({skippedUpdateVersion:restore?'':updateFixture.version});return publishUpdate({...updateFixture,state:restore?'available':'skipped'});});
   ipcMain.handle('usage:scan-roots',async(_event,provider,raw)=>{const {matchingScanFiles}=await import('../dist/main/usage/scan.js');return matchingScanFiles(provider,raw);});
   ipcMain.handle('usage:session-key',()=>({configured:false,organizations:[]}));
@@ -205,8 +205,8 @@ try {
   assert.equal(await check("window.i18n.t('도감에서 Pikachu 보기')"), 'View Pikachu in Pokédex');
   await until("document.querySelector('[data-setting=animationQuality]').value === 'smooth'", settings);
   publishUpdate({state:'available',version:'9.9.9',delivery:'browser'});await until("!document.querySelector('#update-banner').hidden");
-  await check("document.querySelector('#update-banner .primary').click()");await until("document.querySelector('#update-banner').textContent.includes('Drive')");assert.equal(updateDownloads,1);
-  await check("document.querySelector('#desktop-update').click()",settings);await until("document.querySelector('#desktop-update-status').textContent.includes('Drive')",settings);assert.equal(updateDownloads,2);
+  await check("document.querySelector('#update-banner .primary').click()");await until("document.querySelector('#update-banner').textContent.includes('Run the installer')");assert.equal(updateDownloads,1);
+  await check("document.querySelector('#desktop-update').click()",settings);await until("document.querySelector('#desktop-update-status').textContent.includes('Run the installer')",settings);assert.equal(updateDownloads,2);
   await check("document.querySelector('#update-banner button').click()");await until("document.querySelector('#update-banner').hidden");assert.equal(preferences.get().skippedUpdateVersion,'9.9.9');
   await until("!document.querySelector('#desktop-update-skip').hidden",settings);await check("document.querySelector('#desktop-update-skip').click()",settings);await until("!document.querySelector('#update-banner').hidden");
   publishUpdate({state:'current',version:'1.0.0'});

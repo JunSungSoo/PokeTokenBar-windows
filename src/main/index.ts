@@ -13,6 +13,8 @@ import { windowsAppID } from '../shared/windows.js';
 import { loginArgument, registerWindowsIPC } from './windows.js';
 import { fileURLToPath } from 'node:url';
 import { registerUsageIPC } from './usage/ipc.js';
+import { createAppUpdateInstaller, readUpdateSource } from './update/app-updater.js';
+import { GitHubUpdateFeed } from './update/github-feed.js';
 
 const isWindows = process.platform === 'win32';
 if (isWindows) {
@@ -238,7 +240,14 @@ async function startApplication(){
       snapshot => { usageSummary = snapshot; if (tray) updateTrayMenu(); },
       results => { limitSummary = results; if (tray) updateTrayMenu(); }, () => agentController?.dismiss());
     const finishWrites = async () => { await finishUsage(); await preferences.finishWrites(); };
-    registerWindowsIPC(() => mainWindow, togglePet, finishWrites, () => settingsWindow, showSettings, preferences);
+    // Flushes saves and keeps pet state before another process replaces this one.
+    const prepareReplacement = async () => { await finishUsage.forHandoff(); await preferences.finishWrites(); handingOff = true; };
+    // Restarts the current version when an update fails after saves were flushed and usage suspended.
+    const recoverFromFailedUpdate = () => { console.error('Update install failed after preparing; restoring current app'); app.relaunch(); app.exit(0); };
+    const updateSource = readUpdateSource();
+    const installer = createAppUpdateInstaller(finishUsage.updateBlocked, prepareReplacement, recoverFromFailedUpdate, updateSource);
+    const feed = new GitHubUpdateFeed(fetch, Date.now, updateSource.feed, updateSource.keys);
+    registerWindowsIPC(() => mainWindow, togglePet, finishWrites, () => settingsWindow, showSettings, preferences, { installer, feed });
     registerSettingsIPC(preferences, () => [mainWindow, settingsWindow, petWindow], finishWrites);
     preferences.subscribe(settings => {
       if (tray) updateTrayMenu();
@@ -259,7 +268,7 @@ async function startApplication(){
     if (preferences.get().petEnabled) await togglePet();
     for (const argument of process.argv) if (/^poketokenbar:/i.test(argument)) agentController.accept(argument);
     if (!isWindows || process.argv.includes('--show')) await showMainWindow();
-    handoff?.setReady(async()=>{await finishUsage.forHandoff();await preferences.finishWrites();handingOff=true;});
+    handoff?.setReady(prepareReplacement);
     initialized();
     diagnostics.write('Version owner ready',{version:app.getVersion(),pid:process.pid});
   }

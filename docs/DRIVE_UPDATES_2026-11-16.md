@@ -1,3 +1,5 @@
+> 이 문서는 [docs/WINDOWS_GITHUB_UPDATES.md](WINDOWS_GITHUB_UPDATES.md)(2026-11-19)로 대체되었습니다.
+
 # 설정 저장·버전 표시 및 Google Drive 업데이트
 
 기준: Mac `origin/feature/battle` (`ad1bb7c9217028270ec28ebfb8d2dc05059a09da`)의 `SettingsView`, `UpdateChecker`, `DriveReleaseSource`.

@@ -13,7 +13,7 @@ pnpm dev
 
 `pnpm dev`는 TypeScript를 빌드한 뒤 Electron 기본 창을 엽니다. Electron 실행 파일은 첫 실행 때 다운로드될 수 있습니다. `pnpm typecheck`는 타입만 검사하고, `pnpm build`는 앱 파일을 `dist/`에 생성합니다. 이미 빌드했다면 `pnpm start`로 실행할 수 있습니다.
 
-GitHub Actions의 [Windows x64 CI](.github/workflows/windows-x64.yml)는 push와 pull request에서 의존성 설치, 타입 검사, 앱 빌드, 전체 테스트를 수행합니다. Windows x64 작업에는 NSIS 패키징과 Drive 업데이트 IPC 검증도 포함됩니다.
+GitHub Actions의 [Windows x64 CI](.github/workflows/windows-x64.yml)는 push와 pull request에서 의존성 설치, 타입 검사, 앱 빌드, 전체 테스트를 수행합니다. Windows x64 작업에는 NSIS 패키징과 GitHub 업데이트 IPC 검증도 포함됩니다.
 
 ## 트레이와 플로팅 펫
 
@@ -73,19 +73,17 @@ Mac의 PokeTokenBar에서 저장을 내보낸 뒤 Windows 앱에서 **Mac 저장
 
 버전은 `1.0.0`부터 시작합니다. 설정 화면 하단에는 현재 버전과 **저장하기** 버튼이 고정 표시됩니다. 본문을 스크롤해도 사라지지 않습니다. 설치된 앱에서는 **Windows 설정**으로 로그인 자동 실행을 켤 수 있습니다.
 
-업데이트는 Mac `feature/battle`처럼 [고정된 Windows Google Drive 파일](https://drive.google.com/file/d/1ykwLYTBaFVFfKR6NlDHXNcrk9p-lTQfY/view)의 공개 파일명에서 확인합니다. 예를 들어 설치된 앱이 `1.0.0`이고 파일명이 `PokeTokenBar-Windows-1.0.1.zip`이면 OS 알림과 창 상단의 **업데이트 다운로드** 버튼을 표시합니다. 같은 버전과 이전 버전에는 표시하지 않습니다. 자동 확인은 시작·창 열기·30분 주기이며, 성공한 조회만 30분간 재사용합니다. 설정에서 수동으로 다시 확인할 수도 있습니다.
+업데이트는 [GitHub Releases](https://github.com/JunSungSoo/PokeTokenBar-windows/releases)에서 확인합니다. 새 버전이 있으면 OS 알림과 창 상단에 **업데이트** 버튼을 표시합니다. 같은 버전과 이전 버전에는 표시하지 않습니다. 자동 확인은 시작·창 열기·30분 주기이며 설정에서 수동으로도 확인할 수 있습니다.
 
-다운로드 버튼은 브라우저에서 위 Drive 페이지를 엽니다. 새 ZIP을 내려받아 새 폴더에 모두 압축을 풀고 새 앱을 실행합니다. `1.0.1`부터는 상위 버전 실행 시 기존 앱의 저장을 마치고 종료한 뒤 새 앱으로 전환합니다. 로그인 시작프로그램, 기존 바탕화면·시작 메뉴·작업 표시줄 바로가기와 `poketokenbar:` 연결을 새 실행 경로로 갱신합니다. 자동 실행의 사용/사용 안 함 상태와 저장·설정은 유지합니다. 같은 버전이나 낮은 버전은 실행 중인 상위 버전을 대체하지 않습니다. 이전 실행 파일은 자동 삭제하지 않습니다. 건너뛴 버전은 배너에서 숨기고 설정에는 계속 표시하며, 다시 표시할 수 있습니다.
+버튼을 누르면 앱이 서명(Ed25519)과 파일 해시를 검증한 뒤 설치판을 내려받아 교체하고 다시 시작합니다. 배틀·챌린지·교환 중에는 거부하고, 진행 중인 저장을 마친 뒤 교체합니다. 로그인 자동 실행, 바로가기, `poketokenbar:` 연결, 저장·설정은 유지됩니다. 압축 폴더판은 자동 교체하지 않고 버튼이 릴리스 페이지를 엽니다. 키 관리, 배포 순서, Drive에서의 전환은 [Windows 자동 업데이트](docs/WINDOWS_GITHUB_UPDATES.md)를 보세요.
 
 전환 방식과 실제 실행 파일 검증 결과는 [버전 전환 검증](docs/INSTANCE_HANDOFF_2026-11-16.md)에 기록합니다.
 
-배포할 때는 같은 Drive 파일에 새 ZIP 버전을 올리고 **공개 파일 이름도** `PokeTokenBar-Windows-X.Y.Z.zip`으로 변경하세요. 파일 공유 링크의 ID를 유지해야 기존 앱이 찾을 수 있습니다. `package.json`의 버전도 동일하게 올려야 합니다. 파일은 [링크가 있는 모든 사용자에게 공개](https://support.google.com/drive/answer/2494822?hl=ko)하고, 새 내용은 [버전 관리에서 업로드](https://support.google.com/drive/answer/2409045?hl=ko)할 수 있습니다. Mac용 ZIP과 Windows ARM64 파일은 업데이트 후보로 처리하지 않습니다.
-
 NSIS는 사용자별로 설치합니다. 육성 저장, 로그 경로 설정, 가져오기 백업은 `%APPDATA%\PokeTokenBar Windows`에 저장됩니다. 설치 프로그램은 같은 앱 ID와 설치 위치를 사용하며, 제거 시에도 앱 데이터를 보존합니다. 일반 제거 시에는 로그인 자동 실행 등록을 정리합니다.
 
-테스트 설치 파일은 PowerShell에서 `$env:POKE_WINDOWS_QA = '1'; pnpm package:win`으로 빌드합니다. 결과는 `release/`에 생성됩니다. ZIP과 설치판 모두 인앱 업데이트 안내는 위 Drive 파일을 기준으로 합니다. [Windows x64 CI](.github/workflows/windows-x64.yml)는 격리된 Drive HTML 응답으로 버전 비교, 알림, 건너뛰기, 다운로드 페이지 열기와 IPC 권한을 검증합니다.
+테스트 설치 파일은 PowerShell에서 `$env:POKE_WINDOWS_QA = '1'; pnpm package:win`으로 빌드합니다. 결과는 `release/`에 생성됩니다. [Windows x64 CI](.github/workflows/windows-x64.yml)는 격리된 GitHub 릴리스 응답으로 서명 검증, 버전 비교, 알림, 건너뛰기, 다운로드 페이지 열기와 IPC 권한을 검증합니다.
 
-배포는 패키지 버전과 일치하는 `vX.Y.Z` 태그에서 [서명 배포 워크플로](.github/workflows/windows-release.yml)를 수동 실행합니다. 저장소에 `WINDOWS_CSC_LINK`와 `WINDOWS_CSC_KEY_PASSWORD` 비밀 값, `WINDOWS_PUBLISHER_NAME` 변수를 설정해야 합니다. 설치 파일과 같은 빌드에서 생성한 `latest.yml` 및 블록맵이 릴리스에 함께 올라갑니다.
+배포는 패키지 버전과 일치하는 `vX.Y.Z` 태그에서 [배포 워크플로](.github/workflows/windows-release.yml)를 수동 실행해 초안 릴리스를 만들고, 서명 PC에서 `pnpm release:sign X.Y.Z`로 서명·공개합니다. 인증서 비밀 값은 쓰지 않습니다. 절차는 [Windows 자동 업데이트](docs/WINDOWS_GITHUB_UPDATES.md)를 따릅니다.
 
 Windows 11 데스크톱에서는 설치 후 알림 영역의 아이콘을 좌클릭해 창이 열리고, 우클릭으로 플로팅 펫을 표시할 수 있는지 확인합니다. 펫을 모니터 사이에서 끌어 보고, 자동 실행을 켠 뒤 로그아웃했다가 다시 로그인해 트레이로 시작하는지 확인합니다. 화면 배율 100%와 150%에서 확인하고, 가져오기 또는 육성 기록이 있는 상태에서 업데이트한 뒤 도감과 진행이 그대로 열리는지 확인합니다.
 

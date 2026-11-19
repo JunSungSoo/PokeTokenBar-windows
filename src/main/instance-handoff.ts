@@ -1,5 +1,5 @@
 import{app,BrowserWindow}from'electron';import{readFile,readdir,mkdir,copyFile}from'node:fs/promises';import{join}from'node:path';import{randomUUID}from'node:crypto';import{spawn}from'node:child_process';
-import{newerVersion,releaseVersion}from'../shared/drive-release.js';import{executableIdentity,sameExecutable,type ExecutableIdentity}from'./instance-identity.js';import{instanceNative,type NativeOwner}from'./instance-native.js';import{writeSaveAtomically}from'./companion/store.js';
+import{newerVersion,releaseVersion}from'../shared/release-version.js';import{executableIdentity,sameExecutable,type ExecutableIdentity}from'./instance-identity.js';import{instanceNative,type NativeOwner}from'./instance-native.js';import{writeSaveAtomically}from'./companion/store.js';
 const delay=(ms:number)=>new Promise<void>(r=>setTimeout(r,ms));
 const alive=(pid:number)=>{try{process.kill(pid,0);return true;}catch{return false;}};
 export class InstanceHandoff {

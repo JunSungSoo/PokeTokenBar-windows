@@ -7,8 +7,10 @@
     "dev": "pnpm build && electron .",
     "start": "electron .",
     "typecheck": "tsc --noEmit",
+    "release:key": "node scripts/release/key.mjs",
+    "release:sign": "pnpm build && node scripts/release/sign.mjs",
     "build": "tsc && node scripts/copy-renderer.mjs",
-    "test": "pnpm build && node --test tests/usage.test.mjs tests/quota.test.mjs tests/parity-fixes.test.mjs tests/missing-features.test.mjs tests/usage-recap.test.mjs tests/companion.test.mjs tests/save-import.test.mjs tests/trade.test.mjs tests/battle.test.mjs tests/battle-progress.test.mjs tests/battle-presentation.test.mjs tests/battle-rendering.test.mjs tests/held-items.test.mjs tests/battle-lan.test.mjs tests/runtime.test.mjs tests/pokemon-details.test.mjs tests/presentation.test.mjs tests/pet-presentation.test.mjs tests/drive-updates.test.mjs tests/instance-identity.test.mjs",
+    "test": "pnpm build && node --test tests/usage.test.mjs tests/quota.test.mjs tests/parity-fixes.test.mjs tests/missing-features.test.mjs tests/usage-recap.test.mjs tests/companion.test.mjs tests/save-import.test.mjs tests/trade.test.mjs tests/battle.test.mjs tests/battle-progress.test.mjs tests/battle-presentation.test.mjs tests/battle-rendering.test.mjs tests/held-items.test.mjs tests/battle-lan.test.mjs tests/runtime.test.mjs tests/pokemon-details.test.mjs tests/presentation.test.mjs tests/pet-presentation.test.mjs tests/release-version.test.mjs tests/installed-build.test.mjs tests/instance-identity.test.mjs tests/update-manifest.test.mjs tests/update-installer.test.mjs tests/github-feed.test.mjs tests/update-source.test.mjs tests/release-signing.test.mjs",
     "package:win": "pnpm build && electron-builder --config electron-builder.config.cjs --win nsis --x64 --publish never"
   },
   "keywords": [],

@@ -4,15 +4,15 @@ export interface WindowsSettings {
   supported: boolean;
   updatesSupported?:boolean;
   version: string;
-  driveUpdateURL?:string;
   openAtLogin: boolean;
 }
 
 export interface UpdateStatus {
-  state: 'current' | 'available' | 'downloaded' | 'skipped';
+  state: 'current' | 'available' | 'downloaded' | 'skipped' | 'downloading' | 'failed';
   version: string;
   delivery?:'browser'|'installer';
   opened?:boolean;
+  error?:string;
 }
 
 export interface WindowsAPI {
@@ -27,7 +27,7 @@ export interface WindowsAPI {
   settings(): Promise<WindowsSettings>;
   login(enabled: boolean): Promise<WindowsSettings>;
   checkUpdate(): Promise<UpdateStatus>;
-  downloadUpdate(): Promise<UpdateStatus>;
-  installUpdate(): Promise<void>;
+  installUpdate(): Promise<UpdateStatus>;
+  openUpdatePage(): Promise<void>;
   togglePet(): Promise<boolean>;
 }

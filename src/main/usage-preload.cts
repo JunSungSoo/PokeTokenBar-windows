@@ -43,7 +43,7 @@ contextBridge.exposeInMainWorld('desktop', {
   settings: () => ipcRenderer.invoke('windows:settings'),
   login: enabled => ipcRenderer.invoke('windows:login', enabled),
   checkUpdate: () => ipcRenderer.invoke('windows:update-check'),
-  downloadUpdate: () => ipcRenderer.invoke('windows:update-download'),
+  openUpdatePage: () => ipcRenderer.invoke('windows:update-page'),
   installUpdate: () => ipcRenderer.invoke('windows:update-install'),
   togglePet: () => ipcRenderer.invoke('windows:pet'),
 } satisfies WindowsAPI);

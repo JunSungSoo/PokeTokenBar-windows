@@ -1,6 +1,9 @@
 import{join}from'node:path';import{release}from'node:os';
-import {DriveReleaseSource} from './drive-updates.js';
-import {newerVersion,windowsDriveURL} from '../shared/drive-release.js';
+import {GitHubUpdateFeed} from './update/github-feed.js';
+import type {UpdateInstaller} from './update/installer.js';
+import type {SignedRelease} from './update/manifest.js';
+import {newerVersion} from '../shared/release-version.js';
+import {windowsReleasePage} from '../shared/github-release.js';
 import { resolveLanguage, translate } from '../shared/localization.js';
 import type { SettingsStore } from './settings.js';
 import { app, ipcMain, Notification,shell, type BrowserWindow } from 'electron';
@@ -8,6 +11,15 @@ import { windowsAppID, type UpdateStatus, type WindowsSettings } from '../shared
 
 export const loginArgument = '--login-start';
 const loginOptions = () => ({ path: process.execPath, args: [loginArgument] });
+const updateCheckInterval = 30 * 60 * 1000;
+
+// Installer is passed only for installed builds; without it the update button opens the release page.
+export type WindowsUpdateOptions = {
+  feed?: Pick<GitHubUpdateFeed, 'check'>;
+  installer?: Pick<UpdateInstaller, 'install'>;
+  openPage?: (url: string) => Promise<void>;
+  automatic?: boolean;
+};
 
 export function registerWindowsIPC(
   mainWindow: () => BrowserWindow | undefined,
@@ -16,11 +28,13 @@ export function registerWindowsIPC(
   settingsWindow: () => BrowserWindow | undefined,
   showSettings: () => Promise<void>,
   preferences: SettingsStore,
-  updateOptions: {source?:DriveReleaseSource;openDownload?:(url:string)=>Promise<void>;automatic?:boolean} = {},
+  updateOptions: WindowsUpdateOptions = {},
 ): void {
   const supported = process.platform === 'win32' && app.isPackaged;
-  const source=updateOptions.source??new DriveReleaseSource();
-  const openDownload=updateOptions.openDownload??(url=>shell.openExternal(url));
+  const feed=updateOptions.feed??new GitHubUpdateFeed();
+  const installer=updateOptions.installer;
+  const delivery:UpdateStatus['delivery']=installer?'installer':'browser';
+  const openPage=updateOptions.openPage??(url=>shell.openExternal(url));
 
   function authorize(event: Electron.IpcMainInvokeEvent): void {
     const windows = [mainWindow(), settingsWindow()];
@@ -35,7 +49,7 @@ export function registerWindowsIPC(
       const current = app.getLoginItemSettings(loginOptions());
       openAtLogin = current.openAtLogin && current.executableWillLaunchAtLogin;
     }
-    return { supported, updatesSupported:true, driveUpdateURL:windowsDriveURL, version: app.getVersion(), openAtLogin };
+    return { supported, updatesSupported:true, version: app.getVersion(), openAtLogin };
   }
 
   ipcMain.handle('windows:open-settings', event => {
@@ -59,32 +73,47 @@ export function registerWindowsIPC(
 
   ipcMain.handle('windows:support',async(event,action:unknown)=>{authorize(event);if(action==='log'){shell.showItemInFolder(join(app.getPath('userData'),'logs','PokeTokenBar.log'));return;}const links:Record<string,string>={github:'https://github.com/chattymin/PokeTokenBar',website:'https://chattymin.github.io/PokeTokenBar/',sponsor:'https://github.com/sponsors/chattymin',report:'mailto:parkdongmin123@gmail.com?subject='+encodeURIComponent('PokeTokenBar Windows problem report')+'&body='+encodeURIComponent('Version: '+app.getVersion()+'\nOS: '+process.platform+' '+release()+'\n\nDescribe the problem:\n\nAttach PokeTokenBar.log if helpful.')};if(typeof action!=='string'||!links[action])throw new Error('Invalid support action');await shell.openExternal(links[action]);});
 
-  let available:string|undefined;
-  let lastUpdate:UpdateStatus={state:'current',version:app.getVersion(),delivery:'browser'};
-  const publish=(value:UpdateStatus)=>{lastUpdate={...value,delivery:'browser'};for(const window of [mainWindow(),settingsWindow()])if(window&&!window.isDestroyed())window.webContents.send('windows:update-state',lastUpdate);return lastUpdate;};
+  let availableRelease:SignedRelease|undefined;
+  let lastUpdate:UpdateStatus={state:'current',version:app.getVersion(),delivery};
+  const publish=(value:UpdateStatus)=>{lastUpdate={...value,delivery};for(const window of [mainWindow(),settingsWindow()])if(window&&!window.isDestroyed())window.webContents.send('windows:update-state',lastUpdate);return lastUpdate;};
   ipcMain.handle('windows:update-state',event=>{authorize(event);return lastUpdate;});
-  ipcMain.handle('windows:update-skip',async(event,restore:unknown)=>{authorize(event);if(typeof restore!=='boolean')throw new Error('Invalid update action');await preferences.change({skippedUpdateVersion:restore?'':available??''});return publish({state:available?(restore?'available':'skipped'):'current',version:available??app.getVersion()});});
-  let notifiedVersion:string|undefined,checking:Promise<UpdateStatus>|undefined;
+  ipcMain.handle('windows:update-skip',async(event,restore:unknown)=>{authorize(event);if(typeof restore!=='boolean')throw new Error('Invalid update action');const available=availableRelease?.version;await preferences.change({skippedUpdateVersion:restore?'':available??''});return publish({state:available?(restore?'available':'skipped'):'current',version:available??app.getVersion()});});
+  let notifiedVersion:string|undefined,checking:Promise<UpdateStatus>|undefined,installing:Promise<UpdateStatus>|undefined;
   function announce(status:UpdateStatus){
     if(status.state!=='available'||!preferences.get().updateNotifications||status.version===notifiedVersion||!Notification.isSupported())return;
     const language=resolveLanguage(preferences.get().language,app.getLocale());const notice=new Notification({title:translate('PokeTokenBar 업데이트',language),body:translate('{version} 버전을 사용할 수 있습니다.',language,{version:status.version})});notice.on('click',()=>{void showSettings().catch(console.error);});notice.show();notifiedVersion=status.version;
   }
+  // Checks are ignored while an install runs so the downloading state is not overwritten.
   function checkUpdate(minInterval=0):Promise<UpdateStatus>{
+    if(installing)return Promise.resolve(lastUpdate);
     if(checking)return checking;
-    checking=source.check(windowsDriveURL,minInterval).then(release=>{
-      available=newerVersion(release.version,app.getVersion())?release.version:undefined;
+    checking=feed.check(minInterval).then(release=>{
+      if(installing)return lastUpdate;
+      availableRelease=release&&newerVersion(release.version,app.getVersion())?release:undefined;const available=availableRelease?.version;
+      // A failed install keeps its reason and recovery button until the version changes or the user retries.
+      if(lastUpdate.state==='failed'&&available&&lastUpdate.version===available)return lastUpdate;
       const status=publish({state:available?(preferences.get().skippedUpdateVersion===available?'skipped':'available'):'current',version:available??app.getVersion()});announce(status);return status;
     }).finally(()=>{checking=undefined;});return checking;
   }
   ipcMain.handle('windows:update-check',event=>{authorize(event);return checkUpdate();});
-  const automaticCheck=()=>{if(preferences.get().updateNotifications)void checkUpdate(1800000).catch(error=>console.error('Drive update check failed:',error));};
+  const automaticCheck=()=>{if(preferences.get().updateNotifications)void checkUpdate(updateCheckInterval).catch(error=>console.error('Update check failed:',error));};
   if(updateOptions.automatic??app.isPackaged){
-    automaticCheck();const timer=setInterval(automaticCheck,1800000);timer.unref();
+    automaticCheck();const timer=setInterval(automaticCheck,updateCheckInterval);timer.unref();
     const watch=(_event:Electron.Event,window:BrowserWindow)=>window.on('show',()=>{if(window===mainWindow()||window===settingsWindow())automaticCheck();});app.on('browser-window-created',watch);
     let enabled=preferences.get().updateNotifications;preferences.subscribe(value=>{if(value.updateNotifications&&!enabled)automaticCheck();enabled=value.updateNotifications;});
     app.once('before-quit',()=>{clearInterval(timer);app.removeListener('browser-window-created',watch);});
   }
-  ipcMain.handle('windows:update-download',async event=>{authorize(event);if(!available||!newerVersion(available,app.getVersion()))throw new Error('먼저 업데이트를 확인해 주세요.');await openDownload(windowsDriveURL);return{...lastUpdate,opened:true};});
+  // Publishes downloading, then failed with the reason; on success the installer quits the app.
+  function installRelease(activeInstaller:Pick<UpdateInstaller,'install'>,release:SignedRelease):Promise<UpdateStatus>{
+    publish({state:'downloading',version:release.version});
+    return activeInstaller.install(release).then(()=>lastUpdate,error=>{console.error('Update install failed:',error);return publish({state:'failed',version:release.version,error:error instanceof Error?error.message:String(error)});}).finally(()=>{installing=undefined;});
+  }
+  ipcMain.handle('windows:update-install',async event=>{
+    authorize(event);const release=availableRelease;
+    if(!release||!newerVersion(release.version,app.getVersion()))throw new Error('먼저 업데이트를 확인해 주세요.');
+    if(!installer){await openPage(windowsReleasePage);return{...lastUpdate,opened:true};}
+    installing??=installRelease(installer,release);return installing;
+  });
+  ipcMain.handle('windows:update-page',async event=>{authorize(event);await openPage(windowsReleasePage);});
   ipcMain.handle('windows:quit',async event=>{authorize(event);await finishWrites();app.quit();});
-  ipcMain.handle('windows:update-install',event=>{authorize(event);throw new Error('Drive ZIP을 다운로드한 뒤 압축을 풀어 새 버전을 실행해 주세요.');});
 }

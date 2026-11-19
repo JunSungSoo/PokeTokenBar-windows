@@ -1,4 +1,4 @@
-name: Publish signed Windows x64 release
+name: Draft Windows x64 release
 
 on:
   workflow_dispatch:
@@ -29,22 +29,16 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm typecheck
       - run: pnpm test
-      - name: Build signed NSIS installer
+      - name: Build NSIS installer
         run: pnpm package:win
-        env:
-          CSC_LINK: ${{ secrets.WINDOWS_CSC_LINK }}
-          CSC_KEY_PASSWORD: ${{ secrets.WINDOWS_CSC_KEY_PASSWORD }}
-          POKE_WINDOWS_PUBLISHER: ${{ vars.WINDOWS_PUBLISHER_NAME }}
-      - name: Publish installer and update manifest
+      # Uploads a draft only; `pnpm release:sign` adds latest.yml.sig and publishes it.
+      - name: Upload draft release with installer and update manifest
         shell: pwsh
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           $installer = @(Get-ChildItem release/*-Setup.exe)
           if ($installer.Count -ne 1) { throw 'Expected one Windows setup executable.' }
-          $signature = Get-AuthenticodeSignature $installer[0].FullName
-          if ($signature.Status -ne 'Valid') { throw "Installer signature is not valid: $($signature.Status)" }
-          $blockmap = $installer[0].FullName + '.blockmap'
           $manifest = (Resolve-Path release/latest.yml).Path
-          gh release create $env:GITHUB_REF_NAME --verify-tag --generate-notes --title "PokeTokenBar Windows $env:GITHUB_REF_NAME" $installer[0].FullName $blockmap $manifest
+          gh release create $env:GITHUB_REF_NAME --verify-tag --draft --generate-notes --title "PokeTokenBar Windows $env:GITHUB_REF_NAME" $installer[0].FullName $manifest
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }

@@ -48,7 +48,7 @@ async function extraRoot(provider: Provider): Promise<string | null> {
 // 초심자 모드에서 토큰 사용량을 경험치·상점 포인트로 환산할 때 곱하는 배율
 const beginnerUsageMultiplier = 10;
 
-export function registerUsageIPC(mainWindow: () => BrowserWindow | undefined, petWindow: () => BrowserWindow | undefined, showMainWindow: () => Promise<void>, settingsWindow: () => BrowserWindow | undefined, preferences: SettingsStore, onUsage: (snapshot: UsageSnapshot) => void, onLimits: (results: import('../../shared/usage.js').LimitResult[]) => void, onPetClick: () => void): (() => Promise<void>) & {forHandoff:()=>Promise<void>} {
+export function registerUsageIPC(mainWindow: () => BrowserWindow | undefined, petWindow: () => BrowserWindow | undefined, showMainWindow: () => Promise<void>, settingsWindow: () => BrowserWindow | undefined, preferences: SettingsStore, onUsage: (snapshot: UsageSnapshot) => void, onLimits: (results: import('../../shared/usage.js').LimitResult[]) => void, onPetClick: () => void): (() => Promise<void>) & {forHandoff:()=>Promise<void>;updateBlocked:()=>boolean} {
   function authorized(event: Electron.IpcMainInvokeEvent): BrowserWindow {
     const window = [mainWindow(), settingsWindow()].find(window => window && !window.isDestroyed() && event.senderFrame === window.webContents.mainFrame);
     if (!window) {
@@ -466,5 +466,5 @@ export function registerUsageIPC(mainWindow: () => BrowserWindow | undefined, pe
     await companionEvents.finishWrites();
     await companion.finishWrites();
   };
-  return Object.assign(finish,{forHandoff:async()=>{suspended=true;clearInterval(timer);try{await trade.prepareHandoff();await scan?.catch(()=>{});await limits?.catch(()=>{});await applyingImport?.catch(()=>{});await historyStore.finishWrites();await companionEvents.finishWrites();await companion.finishWrites();await battle?.prepareHandoff();}catch(error){suspended=false;scheduleRefresh();throw error;}}});
+  return Object.assign(finish,{updateBlocked:()=>{const current=activity();return current.trade||current.battle;},forHandoff:async()=>{suspended=true;clearInterval(timer);try{await trade.prepareHandoff();await scan?.catch(()=>{});await limits?.catch(()=>{});await applyingImport?.catch(()=>{});await historyStore.finishWrites();await companionEvents.finishWrites();await companion.finishWrites();await battle?.prepareHandoff();}catch(error){suspended=false;scheduleRefresh();throw error;}}});
 }
