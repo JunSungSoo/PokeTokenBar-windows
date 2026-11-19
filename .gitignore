@@ -4,3 +4,6 @@ dist/
 
 /release/
 *.pem
+
+docs/
+code-report/
