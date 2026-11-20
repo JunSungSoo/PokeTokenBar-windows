@@ -5,6 +5,7 @@ import { join } from 'node:path';
 import test from 'node:test';
 import { CompanionStore } from '../dist/main/companion/store.js';
 import { collectUsage } from '../dist/main/usage/scan.js';
+import { beginnerUsageMultiplier } from '../dist/shared/settings.js';
 
 const baseline = Date.parse('2026-06-17T02:00:00Z');
 const time = baseline + 10000;
@@ -128,14 +129,14 @@ test('beginner usage multiplier scales growth and wallet but not shop prices', a
   const observation = (id, total) => ({ id, time, tokens: { total } });
   const update = (rows, multiplier) => store.update(new Map([['claude', rows]]), time, multiplier);
   const initial = await store.update(new Map(), baseline);
-  const beginner = await update([observation('first', 100)], 10);
-  assert.equal(beginner.raised, 1000);
-  assert.equal(beginner.economy.wallet, 1000);
-  assert.equal(beginner.progress, 1000);
+  const beginner = await update([observation('first', 100)], beginnerUsageMultiplier);
+  assert.equal(beginner.raised, 500);
+  assert.equal(beginner.economy.wallet, 500);
+  assert.equal(beginner.progress, 500);
   assert.deepEqual(beginner.economy.prices, initial.economy.prices);
   const normal = await update([observation('second', 100)], 1);
-  assert.equal(normal.raised, 1100);
-  assert.equal(normal.progress, 1100);
+  assert.equal(normal.raised, 600);
+  assert.equal(normal.progress, 600);
 });
 
 test('limit candy grants survive restart, ignore reset jitter and rearm on the correct edge', async t => {

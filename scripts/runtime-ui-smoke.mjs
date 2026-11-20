@@ -206,10 +206,43 @@ try {
   assert.equal(await check("window.i18n.t('최대 13.3M')"), 'Peak 13.3M');
   assert.equal(await check("window.i18n.t('도감에서 Pikachu 보기')"), 'View Pikachu in Pokédex');
   await until("document.querySelector('[data-setting=animationQuality]').value === 'smooth'", settings);
-  publishUpdate({state:'available',version:'9.9.9',delivery:'browser'});await until("!document.querySelector('#update-banner').hidden");
+  const updateLayout = `(() => {
+    const banner=document.querySelector('#update-banner');
+    const row=banner.querySelector('.update-banner-heading');
+    const message=row.querySelector('p').getBoundingClientRect();
+    const primary=row.querySelector('.primary');
+    const button=primary.getBoundingClientRect();
+    const skip=row.querySelector('.update-banner-skip')?.getBoundingClientRect();
+    const bounds=row.getBoundingClientRect();
+    return row.querySelector('p > strong')?.textContent === 'Version 9.9.9'
+      && message.right <= (skip?.left ?? button.left) - 5
+      && (primary.disabled ? !skip : skip && Math.abs(button.left - skip.right - 6) <= 1)
+      && Math.abs((message.top + message.bottom) - (button.top + button.bottom)) <= 2
+      && Math.abs(button.right - bounds.right) <= 1
+      && button.width <= bounds.width * .4 + 1
+      && (primary.disabled || button.height <= 28)
+      && getComputedStyle(primary).fontSize === '12px'
+      && banner.scrollWidth <= banner.clientWidth + 1;
+  })()`;
+  for(const window of [main,settings]){
+    const [width,height]=window.getContentSize();
+    try{
+      for(const compactWidth of [360,490]){
+        window.setContentSize(compactWidth,height);
+        await until(`innerWidth===${compactWidth}`,window);
+        for(const state of ['available','downloading']){
+          publishUpdate({state,version:'9.9.9',delivery:'browser'});
+          await until(`document.querySelector('#update-banner .primary')?.disabled === ${state==='downloading'}`,window);
+          assert.equal(await check(updateLayout,window),true,`Update banner layout at ${compactWidth}px / ${state}`);
+        }
+      }
+    }finally{window.setContentSize(width,height);}
+  }
+  publishUpdate({state:'available',version:'9.9.9',delivery:'browser'});
+  await until("document.querySelector('#update-banner .primary')?.disabled===false");
   await check("document.querySelector('#update-banner .primary').click()");await until("document.querySelector('#update-banner').textContent.includes('Run the installer')");assert.equal(updateDownloads,1);
   await check("document.querySelector('#desktop-update').click()",settings);await until("document.querySelector('#desktop-update-status').textContent.includes('Run the installer')",settings);assert.equal(updateDownloads,2);
-  await check("document.querySelector('#update-banner button').click()");await until("document.querySelector('#update-banner').hidden");assert.equal(preferences.get().skippedUpdateVersion,'9.9.9');
+  await check("document.querySelector('#update-banner .update-banner-skip').click()");await until("document.querySelector('#update-banner').hidden");assert.equal(preferences.get().skippedUpdateVersion,'9.9.9');
   await until("!document.querySelector('#desktop-update-skip').hidden",settings);await check("document.querySelector('#desktop-update-skip').click()",settings);await until("!document.querySelector('#update-banner').hidden");
   publishUpdate({state:'current',version:'1.0.0'});
   // Test the actual control's IPC route, rather than only writing the store.
@@ -424,10 +457,23 @@ try {
   assert.equal(await check("document.querySelector('[data-product=rareCandy] .item-icon img').src.endsWith('/assets/items/rare-candy.png')"),true);
   assert.equal(await check("document.querySelector('[data-product=eggUncommon] .rarity-badge').textContent"),'고급');
   assert.deepEqual(await check("['egg','eggUncommon','eggRare'].map(key=>{const card=document.querySelector('[data-product='+key+']');return [card.querySelector('.item-icon img').getAttribute('src'),card.querySelector('.rarity-badge')?.dataset.rarity ?? null]})"),[['assets/items/egg.png',null],['assets/items/egg.png','uncommon'],['assets/items/egg.png','rare']]);
+  assert.equal(await check("document.querySelector('[data-product=rareCandy] .item-desc strong')?.textContent"),'100M');
+  assert.equal(await check("document.querySelector('[data-product=eggUncommon] .item-actions button strong')?.textContent"),'2.5B');
+  await check("document.querySelector('[data-product=eggUncommon] .item-actions button').click()");
+  assert.equal(await check("document.querySelector('[data-product=eggUncommon] .item-preview strong')?.textContent"),'2.5B');
+  await check("document.querySelector('[data-product=eggUncommon] .item-actions .neutral').click()");
+  await preferences.change({language:'en'});
+  await until("document.querySelector('[data-product=rareCandy] .item-desc').textContent === \"Raises your Pokémon's EXP by 100M.\"");
+  assert.equal(await check("document.querySelector('[data-product=rareCandy] .item-desc strong')?.textContent"),'100M');
+  await preferences.change({language:'ko'});
+  await until("document.documentElement.lang === 'ko'");
   await snap('shop');
   // With no points every product is disabled and says how many points are missing.
   await check('window.renderCompanionTabs('+JSON.stringify({...state,economy:{...state.economy,wallet:0}})+')');
   assert.equal(await check("[...document.querySelectorAll('[data-product]')].filter(card=>card.querySelector('.item-actions .primary')).every(card=>card.querySelector('.item-actions .primary').disabled && /\\d.*포인트 더 필요해요$/.test(card.querySelector('.item-shortage')?.textContent ?? ''))"),true);
+  assert.equal(await check("document.querySelector('[data-product=eggUncommon] .item-shortage strong')?.textContent"),'2.5B');
+  await check('window.renderCompanionTabs('+JSON.stringify({...state,economy:{...state.economy,wallet:state.economy.prices.rareCandy-1}})+')');
+  assert.equal(await check("document.querySelector('[data-product=rareCandy] .item-shortage strong')?.textContent"),'1');
   await check('window.renderCompanionTabs('+JSON.stringify(state)+')');
   const balance=state.economy.wallet;
   await check("(() => { const card=document.querySelector('[data-product=rareCandy]'); const input=card.querySelector('input'); input.value='2';input.dispatchEvent(new Event('input'));card.querySelector('.item-actions button').click(); })()");
@@ -448,6 +494,8 @@ try {
     for (const language of ['de','ru','ko']) {
       await preferences.change({ language });
       await until(`document.documentElement.lang === '${language}' && innerWidth === ${width}`);
+      assert.equal(await check("document.querySelector('[data-item=rareCandy] .item-desc strong')?.textContent"),'100M');
+      assert.equal(await check("document.querySelector('[data-item=rareCandy] .item-preview strong')?.textContent"),'100M');
       const crampedItems = await check(`(() => {
         return [...document.querySelectorAll('#bag-items > [data-item]')].filter(card => {
           const right = card.getBoundingClientRect().right;
@@ -460,7 +508,9 @@ try {
     }
   }
   await snap('bag');
-  await check("document.querySelector('[data-item=rareCandy] .item-actions button').click();document.querySelector('[data-item=rareCandy] .item-actions button').click()");
+  await check("document.querySelector('[data-item=rareCandy] .item-actions button').click()");
+  assert.equal(await check("document.querySelector('[data-item=rareCandy] .item-preview strong')?.textContent"),'100M');
+  await check("document.querySelector('[data-item=rareCandy] .item-actions button').click()");
   await until("document.querySelector('#tab-home').getAttribute('aria-selected') === 'true'");
   assert.equal(state.economy.inventory.rareCandy,5);
   assert.equal(await check("document.querySelector('.home-feedback.candy').textContent"),'+100M XP');

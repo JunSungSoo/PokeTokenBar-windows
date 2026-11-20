@@ -36,21 +36,26 @@
       clearTimeout(retries.get(img)?.timer);retries.delete(img);
       const began = performance.now();
       let previous = -1;
+      const paused = () => previous !== -1 && petBox?.closest('.egg.dragging');
       async function tick() {
         if (!img.isConnected || img.src !== url || state.abort.signal.aborted) return;
-        if (!document.hidden && img.getClientRects().length && window.appPreferences?.animated !== false && !reduced.matches) {
+        if (!paused() && !document.hidden && img.getClientRects().length && window.appPreferences?.animated !== false && !reduced.matches) {
           const frames = window.spriteTiming.capFrameRate(durations, floor());
           const index = window.spriteTiming.frameAt(frames, (performance.now() - began) / 1000);
           if (index !== previous) {
             const { image } = await decoder.decode({ frameIndex: index });
             if (state.abort.signal.aborted) { image.close(); return; }
-            if (canvas.width !== image.displayWidth || canvas.height !== image.displayHeight) {
-              canvas.width = image.displayWidth; canvas.height = image.displayHeight;
+            if (!paused()) {
+              if (canvas.width !== image.displayWidth || canvas.height !== image.displayHeight) {
+                canvas.width = image.displayWidth; canvas.height = image.displayHeight;
+              }
+              const context = canvas.getContext('2d');
+              context.clearRect(0, 0, canvas.width, canvas.height);
+              context.drawImage(image, 0, 0);
+              previous = index;
+              img.classList.add('sprite-decoded');
             }
-            const context = canvas.getContext('2d');
-            context.clearRect(0, 0, canvas.width, canvas.height);
-            context.drawImage(image, 0, 0); image.close(); previous = index;
-            img.classList.add('sprite-decoded');
+            image.close();
           }
         }
         state.timer = setTimeout(() => { void tick().catch(fail); }, floor() * 1000);

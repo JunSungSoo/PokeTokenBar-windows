@@ -4,7 +4,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import test from 'node:test';
 import { collectUsage } from '../dist/main/usage/scan.js';
-import { createLogs, referenceTime } from './usage-fixtures.mjs';
+import { createLogs, referenceTime, writeLog } from './usage-fixtures.mjs';
 
 process.env.TZ = 'Asia/Seoul';
 
@@ -21,7 +21,7 @@ test('reads Codex and Claude JSONL with local dates, duplicates and broken lines
   const codex = await collectUsage('codex', roots.codex, now, [roots.codex]);
   assert.deepEqual(counters(codex), {
     today: tally(30, 5, 0, 10), week: tally(90, 15, 0, 50), month: tally(95, 16, 0, 50),
-    lastFiveHours: 45, extraRoot: roots.codex, unreadable: 0,
+    lastHour: 0, lastFiveHours: 45, extraRoot: roots.codex, unreadable: 0,
   });
 
   assert.deepEqual(Object.values(codex.daily).sort((a, b) => a - b), [6, 45, 110]);
@@ -29,17 +29,38 @@ test('reads Codex and Claude JSONL with local dates, duplicates and broken lines
   const claude = await collectUsage('claude', roots.claude, now, []);
   assert.deepEqual(counters(claude), {
     today: tally(2, 8, 0, 0), week: tally(7, 23, 10, 20), month: tally(12, 23, 10, 20),
-    lastFiveHours: 10, extraRoot: roots.claude, unreadable: 0,
+    lastHour: 0, lastFiveHours: 10, extraRoot: roots.claude, unreadable: 0,
   });
 
   for (const provider of ['codex', 'claude']) {
     const empty = await collectUsage(provider, roots.empty, now, []);
     assert.deepEqual(counters(empty), {
       today: tally(0, 0, 0, 0), week: tally(0, 0, 0, 0), month: tally(0, 0, 0, 0),
-      lastFiveHours: 0, extraRoot: roots.empty, unreadable: 0,
+      lastHour: 0, lastFiveHours: 0, extraRoot: roots.empty, unreadable: 0,
     });
     assert.equal((await collectUsage(provider, join(dir, 'missing'), now, [])).unreadable, 1);
   }
+});
+
+test('last-hour totals span midnight, deduplicate entries and exclude future timestamps', async t => {
+  const root = await mkdtemp(join(tmpdir(), 'poketokenbar-hour-'));
+  t.after(() => rm(root, { recursive: true, force: true }));
+  const now = new Date('2026-06-17T15:30:00Z');
+  const entry = (id, offset, tokens) => ({
+    type: 'assistant', timestamp: new Date(+now + offset).toISOString(),
+    message: { id, usage: { input_tokens: tokens } },
+  });
+  const hour = 60 * 60 * 1000;
+  const recent = entry('recent', -hour + 1, 40);
+  await writeLog(root, 'chat.jsonl', [
+    entry('older', -hour - 1, 50), entry('boundary', -hour, 7), recent,
+    entry('now', 0, 20), entry('future', 1, 100),
+  ], now);
+  await writeLog(root, 'copy.jsonl', [recent], now);
+  const usage = await collectUsage('claude', root, now, []);
+  assert.equal(usage.lastHour, 67);
+  const later = await collectUsage('claude', root, new Date(+now + 2), []);
+  assert.equal(later.lastHour, 120);
 });
 
 test('all 16 providers aggregate shared fixtures and match the macOS reference when supplied', async t => {
@@ -52,7 +73,7 @@ test('all 16 providers aggregate shared fixtures and match the macOS reference w
     kimi: 22, opencode: 48, hermes: 57, copilot: 37, devin: 34, aside: 25, cursor: 31, kiro: 5, antigravity: 38 };
   assert.equal(Object.keys(totals).length, 16);
   for (const [provider, total] of Object.entries(totals)) {
-    const { extraRoot, unreadable, daily, dailyCost, todayModels, ...actual } = await collectUsage(provider, roots[provider], new Date(referenceTime), []);
+    const { extraRoot, unreadable, daily, dailyCost, todayModels, lastHour, ...actual } = await collectUsage(provider, roots[provider], new Date(referenceTime), []);
     assert.equal(actual.today.total, total, provider);
     assert.equal(unreadable, 0, provider);
     if (provider === 'hermes') assert.deepEqual(actual.cost.today, { amount: 0, reported: true, estimated: false, unknown: false });

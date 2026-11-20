@@ -35,6 +35,7 @@ export interface ProviderUsage {
   week: Tokens;
   month: Tokens;
   cost: Record<'today' | 'week' | 'month', UsageCost>;
+  lastHour: number;
   lastFiveHours: number;
   extraRoot: string | null;
   unreadable: number;
@@ -95,7 +96,7 @@ export interface UsageAPI {
   changeCompanion(action: CompanionAction): Promise<CompanionView>;
   onStatuses(handler: (statuses: ServiceStatus[]) => void): void;
   statuses(): Promise<ServiceStatus[]>;
-  refresh(): Promise<UsageSnapshot>;
+  refresh(usageOnly?: boolean): Promise<UsageSnapshot>;
   configure(provider: Provider, reset: boolean): Promise<void>;
   limits(): Promise<LimitResult[]>;
 }

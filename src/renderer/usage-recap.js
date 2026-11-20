@@ -23,7 +23,7 @@
   get('recap-comparison').textContent=recap.inProgress&&recap.delta!==null?t({week:'지난주 같은 기간과 비교',month:'지난달 같은 기간과 비교',year:'작년 같은 기간과 비교'}[scope]):'';
   get('recap-previous').disabled=!recap.canGoBack;get('recap-next').disabled=offset>=0;get('recap-current').disabled=offset===0;get('recap-current').textContent=t({week:'이번 주',month:'이번 달',year:'올해'}[scope]);
  }
- function close(restore=true){if(!open)return;open=false;get('recap-screen').hidden=true;document.body.classList.remove('showing-recap');get('pane-home').hidden=document.body.dataset.tab!=='home';get('pane-home').scrollTop=scrollBefore;if(restore)focusBefore?.focus({preventScroll:true});}
+ function close(restore=true){if(!open)return;open=false;get('recap-screen').hidden=true;document.body.classList.remove('showing-recap');get('pane-home').hidden=document.body.dataset.tab!=='home';get('pane-home').scrollTop=scrollBefore;if(restore){focusBefore?.focus({preventScroll:true});if(!get('pane-home').hidden)window.dispatchEvent(new Event('usage-recap-closed'));}}
  document.addEventListener('DOMContentLoaded',()=>{
   get('usage-details').addEventListener('click',()=>{if(!snapshot)return;focusBefore=get('usage-details');scrollBefore=get('pane-home').scrollTop;open=true;offset=0;get('pane-home').hidden=true;get('recap-screen').hidden=false;document.body.classList.add('showing-recap');render();get('recap-back').focus();});
   get('recap-back').addEventListener('click',()=>close());get('recap-scope').addEventListener('change',event=>{scope=event.target.value;offset=0;render();});

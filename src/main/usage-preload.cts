@@ -27,7 +27,7 @@ contextBridge.exposeInMainWorld('usage', {
   onStatuses: handler => ipcRenderer.on('usage:statuses', (_event, statuses) => handler(statuses)),
   statuses: () => ipcRenderer.invoke('usage:statuses'),
   limits: () => ipcRenderer.invoke('usage:limits'),
-  refresh: () => ipcRenderer.invoke('usage:refresh'),
+  refresh: usageOnly => ipcRenderer.invoke('usage:refresh', usageOnly),
   configure: (provider, reset) => ipcRenderer.invoke('usage:configure', provider, reset),
 } satisfies UsageAPI);
 

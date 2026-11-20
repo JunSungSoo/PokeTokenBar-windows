@@ -1,5 +1,7 @@
 import type { Provider } from './usage.js';
 
+export const beginnerUsageMultiplier = 5;
+
 export interface AppSettings {
   skippedUpdateVersion?:string;
   petPosition?:{x:number;y:number};

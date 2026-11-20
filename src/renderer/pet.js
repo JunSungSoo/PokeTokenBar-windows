@@ -23,16 +23,41 @@ function render(){
 }
 function showNotice(value){if(notice&&notice.priority>value.priority)return;clearTimeout(noticeTimer);notice=value;noticeTimer=setTimeout(()=>{notice=undefined;render();},6000);render();}
 async function refreshHover(){const generation=++hoverGeneration;try{const info=await window.pet.hover();if(generation!==hoverGeneration||!hovering)return;hoverInfo=info;render();}catch{}}
-egg.addEventListener('pointerenter',()=>{hovering=true;clearTimeout(hoverTimer);hoverTimer=setTimeout(()=>void refreshHover(),300);});
+egg.addEventListener('pointerenter',()=>{if(pointer?.dragging)return;hovering=true;clearTimeout(hoverTimer);hoverTimer=setTimeout(()=>void refreshHover(),300);});
 egg.addEventListener('pointerleave',()=>{hovering=false;hoverInfo=undefined;hoverGeneration++;clearTimeout(hoverTimer);detector.reset();render();});
-function drag(phase,event){void window.pet.drag(phase,{x:event.screenX,y:event.screenY}).catch(()=>{});}
-egg.addEventListener('pointerdown',event=>{if(event.button!==0)return;pointer={id:event.pointerId,x:event.screenX,y:event.screenY,dragging:false};});
+function drag(phase,point){void window.pet.drag(phase,point).catch(()=>{});}
+const screenPoint=event=>({x:event.screenX,y:event.screenY});
+egg.addEventListener('pointerdown',event=>{
+ if(event.button!==0||pointer)return;
+ egg.setPointerCapture(event.pointerId);
+ suppressClick=false;
+ const start=screenPoint(event);
+ pointer={id:event.pointerId,start,last:start,dragging:false};
+});
 egg.addEventListener('pointermove',event=>{
- if(pointer){if(!pointer.dragging&&Math.hypot(event.screenX-pointer.x,event.screenY-pointer.y)>4){pointer.dragging=true;suppressClick=true;egg.setPointerCapture(event.pointerId);drag('start',{screenX:pointer.x,screenY:pointer.y});egg.classList.add('dragging');hovering=false;hoverInfo=undefined;hoverGeneration++;clearTimeout(hoverTimer);render();}if(pointer.dragging){cancelAnimationFrame(dragFrame);dragFrame=requestAnimationFrame(()=>drag('move',event));}return;}
+ if(pointer){
+  if(event.pointerId!==pointer.id)return;
+  const point=screenPoint(event);
+  pointer.last=point;
+  if(!pointer.dragging&&Math.hypot(point.x-pointer.start.x,point.y-pointer.start.y)>4){
+   pointer.dragging=true;suppressClick=true;
+   drag('start',pointer.start);egg.classList.add('dragging');
+   hovering=false;hoverInfo=undefined;hoverGeneration++;clearTimeout(hoverTimer);render();
+  }
+  if(pointer.dragging){cancelAnimationFrame(dragFrame);dragFrame=requestAnimationFrame(()=>drag('move',point));}
+  return;
+ }
  if(detector.feed(event.clientX,performance.now(),Math.max(10,(window.appPreferences?.petSize??96)*.15))&&!agentNote()&&!notice){heartsUntil=Date.now()+1800;clearTimeout(heartTimer);heartTimer=setTimeout(render,1810);render();}
 });
-function endDrag(event){if(pointer?.dragging){cancelAnimationFrame(dragFrame);drag('move',event);drag('end',event);egg.classList.remove('dragging');}pointer=undefined;}
-egg.addEventListener('pointerup',endDrag);egg.addEventListener('pointercancel',endDrag);
+function endDrag(event){
+ if(!pointer||event.pointerId!==pointer.id)return;
+ const finished=pointer;pointer=undefined;
+ if(!finished.dragging)return;
+ cancelAnimationFrame(dragFrame);
+ drag('end',event.type==='pointerup'?screenPoint(event):finished.last);
+ egg.classList.remove('dragging');
+}
+egg.addEventListener('pointerup',endDrag);egg.addEventListener('pointercancel',endDrag);egg.addEventListener('lostpointercapture',endDrag);
 function prayerParticle(){const size=window.appPreferences?.petSize??96,edge=Math.min(32,Math.max(14,size*.25)),particle=document.createElement('span');particle.className='prayer-particle'+(motion()?' moving':'');particle.textContent='🙏';particle.style.width=particle.style.height=edge+'px';particle.style.fontSize=edge*.8+'px';particle.style.left=(edge/2+Math.random()*(size-edge))+'px';particle.style.top=size*.7+'px';particle.style.setProperty('--rise',(edge/2-size*.7)+'px');particles.append(particle);setTimeout(()=>particle.remove(),1100);if(motion()){egg.classList.remove('react');void egg.offsetWidth;egg.classList.add('react');setTimeout(()=>egg.classList.remove('react'),310);}}
 egg.addEventListener('click',async()=>{if(suppressClick){suppressClick=false;return;}hoverGeneration++;clearTimeout(hoverTimer);try{const count=await window.pet.activate();if(count==null)return;prayerParticle();if(hovering)await refreshHover();}catch{}});
 function renderPet(updated){subject=updated;const species=updated.species,name=species?(window.speciesNames?.[species.number]?.[window.i18n.language]??species.name):tr('알에게 기도하기');egg.setAttribute('aria-label',name);egg.removeAttribute('title');

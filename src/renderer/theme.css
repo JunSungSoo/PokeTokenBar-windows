@@ -322,12 +322,14 @@ body.showing-recap .app-tabs { display: none; }
 .battle-history small { display:block; color:var(--muted); }
 
 #scan-roots { box-sizing:border-box;width:100%;resize:vertical;min-height:70px;font:inherit; }
-#update-banner { margin:8px;padding:8px; }
-#update-banner button { margin-right:6px; }
-#update-banner { flex: none; max-height: 35dvh; overflow-y: auto; }
-#update-banner p { margin: 0 0 8px; overflow-wrap: anywhere; }
-.update-banner-actions { display: flex; flex-wrap: wrap; gap: 8px; }
-#update-banner .update-banner-actions button { margin: 0; }
+#update-banner { flex: none; margin: 8px; padding: 8px; max-height: 35dvh; overflow-y: auto; }
+.update-banner-heading { display: flex; align-items: center; gap: 6px; }
+.update-banner-heading > p { flex: 1; min-width: 0; margin: 0; overflow-wrap: anywhere; }
+.update-banner-heading > button {
+  flex: none; max-inline-size: 40%; min-block-size: 26px; padding: 3px 8px; font-size: 12px;
+}
+#update-banner .update-banner-heading > .primary { border-radius: 9px; font-size: 12px; font-weight: 700; }
+.update-banner-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 6px; }
 
 /* ===== Pokedex 공통 컴포넌트 (Task 2): 새 클래스에만 적용되는 opt-in 규칙 ===== */
 :root { --font-body: "Pretendard", "Segoe UI Variable", "Segoe UI", "Apple SD Gothic Neo", system-ui, sans-serif; --font-px: "Galmuri11", "Pretendard", monospace; }
@@ -679,7 +681,7 @@ input[type="range"].ball-range::-webkit-slider-thumb {
 .item-card .item-title-row { grid-column: 2; grid-row: 1; align-self: end; display: flex; align-items: center; flex-wrap: wrap; gap: 4px 6px; }
 .item-card .item-title-row h3 { margin: 0; font-size: 15px; font-weight: 700; color: var(--ink); }
 .item-card .item-desc { grid-column: 2; grid-row: 2; align-self: start; margin: 0; font-size: 12px; line-height: 1.4; color: var(--sub); }
-.item-card .item-desc.item-shortage { color: var(--hp-bad); font-weight: 600; }
+.item-card .item-desc.item-shortage { color: var(--hp-bad); }
 .item-card .item-owned { font-size: 11px; font-weight: 700; color: var(--sub); }
 .item-card .quantity-stepper { grid-column: 2 / -1; justify-self: start; margin: 4px 0 0; gap: 4px; }
 .item-card .quantity-stepper > button:nth-of-type(1) { order: 0; }

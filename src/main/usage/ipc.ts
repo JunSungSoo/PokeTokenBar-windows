@@ -9,6 +9,7 @@ import {limitWarning,preserveLimits,trackedClaudeAccount} from '../../shared/lim
 import { registerMapleWindow } from '../companion/maple-window.js';
 import { PokemonDetailsClient } from '../companion/pokemon-details.js';
 import { resolveLanguage, translate } from '../../shared/localization.js';
+import { beginnerUsageMultiplier } from '../../shared/settings.js';
 import { ProviderStatusChecker } from './provider-status.js';
 import { limitAlertDetails, type AlertLedger } from './limit-alerts.js';
 import { writeSaveAtomically } from '../companion/store.js';
@@ -44,9 +45,6 @@ async function extraRoot(provider: Provider): Promise<string | null> {
     throw error;
   }
 }
-
-// 초심자 모드에서 토큰 사용량을 경험치·상점 포인트로 환산할 때 곱하는 배율
-const beginnerUsageMultiplier = 10;
 
 export function registerUsageIPC(mainWindow: () => BrowserWindow | undefined, petWindow: () => BrowserWindow | undefined, showMainWindow: () => Promise<void>, settingsWindow: () => BrowserWindow | undefined, preferences: SettingsStore, onUsage: (snapshot: UsageSnapshot) => void, onLimits: (results: import('../../shared/usage.js').LimitResult[]) => void, onPetClick: () => void): (() => Promise<void>) & {forHandoff:()=>Promise<void>;updateBlocked:()=>boolean} {
   function authorized(event: Electron.IpcMainInvokeEvent): BrowserWindow {
@@ -223,7 +221,7 @@ export function registerUsageIPC(mainWindow: () => BrowserWindow | undefined, pe
             week: { input: 0, output: 0, cacheWrite: 0, cacheRead: 0, total: 0 },
             month: { input: 0, output: 0, cacheWrite: 0, cacheRead: 0, total: 0 },
             cost: Object.fromEntries(['today', 'week', 'month'].map(key => [key, { amount: 0, reported: false, estimated: false, unknown: false }])),
-            lastFiveHours: 0, extraRoot: null, unreadable: 0 }] as const;
+            lastHour: 0, lastFiveHours: 0, extraRoot: null, unreadable: 0 }] as const;
         }
         const usage = await collectUsage(provider, await extraRoot(provider), now, provider==='claude'?(await claudeAccountSources(preferences.get().claudeRoots)).flatMap(source=>source.roots.map(root=>join(root,'projects'))):undefined,
           process.env.CURSOR_USAGE_API === '1', entries => { observations.set(provider, entries); });
@@ -265,10 +263,12 @@ export function registerUsageIPC(mainWindow: () => BrowserWindow | undefined, pe
     return scan;
   }
 
-  ipcMain.handle('usage:refresh', event => {
+  ipcMain.handle('usage:refresh', (event, usageOnly: unknown) => {
     authorized(event);
-    void refreshLimits().catch(error => console.error('Limit refresh failed:', error));
-    void refreshStatuses().catch(error => console.error('Provider status check failed:', error));
+    if (usageOnly !== true) {
+      void refreshLimits().catch(error => console.error('Limit refresh failed:', error));
+      void refreshStatuses().catch(error => console.error('Provider status check failed:', error));
+    }
     return refresh();
   });
 

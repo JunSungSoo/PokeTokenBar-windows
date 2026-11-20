@@ -290,6 +290,12 @@
     const image = element('img'); image.src = 'assets/ui/coin.svg'; image.alt = '';
     return image;
   }
+  function setItemAmounts(node, message, pattern = /(\d+(?:[.,]\d+)?[KMB](?![A-Za-z])|\d+(?=\s+(?:XP|EP)\b))/) {
+    node.dataset.noTranslate = '';
+    const text = window.i18n.t(message);
+    node.replaceChildren(...text.split(pattern).map((part, index) =>
+      index % 2 ? element('strong', part) : part));
+  }
   function card(item, owned = '') {
     const article = element('article', undefined, 'item-card dex-row');
     const top = element('div', undefined, 'item-heading');
@@ -297,7 +303,9 @@
     const name = element('div', undefined, 'item-title-row');
     name.append(element('h3', item.name));
     if (owned && item.sprite !== 'shiny-charm') name.append(element('span', owned, 'item-owned'));
-    titles.append(name, element('p', item.description, 'item-desc'));
+    const description = element('p', undefined, 'item-desc');
+    setItemAmounts(description, item.description);
+    titles.append(name, description);
     top.append(itemIcon(item), titles); article.append(top);
     return article;
   }
@@ -333,11 +341,12 @@
         primary.textContent = confirming === 'precious' ? '놓아주고 구매 확정' : actionLabel + (Number(quantity.value)>1 ? ' ×'+quantity.value : '');
       } else if (explain.unitPrice) {
         const priceText = compactTokens((Number(quantity.value) || 1)*explain.unitPrice);
-        primary.replaceChildren(coinIcon(), priceText);
+        primary.replaceChildren(coinIcon(), element('strong', priceText));
         primary.setAttribute('aria-label', window.i18n.t(actionLabel) + ' · ' + priceText);
       } else primary.textContent = actionLabel;
       const message = max ? explain(Number(quantity.value) || 1, confirming) : '';
-      preview.textContent = message; preview.hidden = !message || (explain.unitPrice && !confirming);
+      setItemAmounts(preview, message);
+      preview.hidden = !message || (explain.unitPrice && !confirming);
       summary.hidden = !hint;
     }
     quantity.addEventListener('input', () => { confirming=false; draw(); });
@@ -370,17 +379,18 @@
       if (owned && !egg && key !== 'shinyCharm') article.querySelector('.item-title-row h3').after(element('span', window.i18n.t('보유 ×{n}', {n:owned}), 'item-owned'));
       if (egg && key !== 'egg') { const badge=element('span',rarityLabels[key==='eggRare'?'rare':'uncommon'],'rarity-badge'); badge.dataset.rarity=key==='eggRare'?'rare':'uncommon'; article.querySelector('.item-title-row h3').after(badge); }
       if (egg && active) article.querySelector('.item-heading').after(element('p','놓아준 포켓몬도 도감에 남고, 같은 확률로 다시 만날 수 있어요. 키운 진행도만 사라져요.','egg-release-note'));
+      if (!affordable && !bought(key)) {
+        const description = article.querySelector('.item-desc');
+        const message = window.i18n.t('{count}포인트 더 필요해요', { count: compactTokens(item.price - economy.wallet) });
+        setItemAmounts(description, message, /(\d+(?:[.,]\d+)?[KMB]?)/);
+        description.classList.add('item-shortage');
+      }
       if (bought(key)) { article.append(element('p','✓ '+window.i18n.t('보유 중'),'passive-owned')); return article; }
       const hint = egg && !active ? '지금 품고 있는 알이 부화하면 살 수 있어요.' : '';
-      if (!affordable) {
-        const shortage = article.querySelector('.item-desc');
-        shortage.textContent = window.i18n.t('{count}포인트 더 필요해요', { count: compactTokens(item.price - economy.wallet) });
-        shortage.classList.add('item-shortage');
-      }
       const explain = (count, confirming) => {
         const total = compactTokens(count * item.price);
         if (confirming === 'precious') return window.i18n.t(active?.shiny?'⚠️ 이로치 포켓몬이에요! 정말 놓아줄까요?':'⚠️ 전설 포켓몬이에요! 정말 놓아줄까요?');
-        if (confirming && egg) return '현재 파트너를 놓아주고 성장을 처음부터 시작합니다. ' + total;
+        if (confirming && egg) return window.i18n.t('현재 파트너를 놓아주고 성장을 처음부터 시작합니다. {price}', { price: total });
         return confirming ? window.i18n.t('{name} 구매할까요?',{name:window.i18n.t(item.name) + (count>1 ? ' ×'+count : '')}) : '가격 '+total;
       };
       explain.precious = egg && (active?.shiny || active?.rarity === 'legendary');

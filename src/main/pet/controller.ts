@@ -21,7 +21,7 @@ export class PetAgentController {
   private moving = false;
   private reduceMotion = false;private noticeVisible=false;private positionTimer?:ReturnType<typeof setTimeout>;
   private attached = new WeakSet<BrowserWindow>();
-  private dragging?:{x:number;y:number;origin:{x:number;y:number}};
+  private dragging?: { start: { x: number; y: number }; last: { x: number; y: number }; origin: { x: number; y: number } };
   private suppressDoneRun=false;
   private repaintTimer?:ReturnType<typeof setTimeout>;
   private shapes=new WeakMap<BrowserWindow,string>();
@@ -35,15 +35,49 @@ export class PetAgentController {
     ipcMain.handle('pet:layout',(event,value:unknown)=>{authorize(event);if(typeof value!=='boolean')throw new Error('Invalid pet layout');if(this.noticeVisible!==value){this.noticeVisible=value;this.publish();}});
     ipcMain.handle('pet:repaint',event=>{authorize(event);this.repaint(pet()!);});
     ipcMain.handle('pet:drag',(event,phase:unknown,point:unknown)=>{
-      authorize(event);const value=point as {x?:unknown;y?:unknown};
-      if(!['start','move','end'].includes(String(phase))||typeof value?.x!=='number'||typeof value?.y!=='number'||!Number.isFinite(value.x)||!Number.isFinite(value.y)||Math.abs(value.x)>100000||Math.abs(value.y)>100000)throw new Error('Invalid pet drag');
-      const window=pet()!,size=settings.get().petSize;
-      if(phase==='start'){clearInterval(this.animation);this.moving=false;this.away=false;this.home=undefined;this.suppressDoneRun=true;this.dragging={x:value.x,y:value.y,origin:petOrigin(window.getBounds(),size)};}
-      if(!this.dragging)return;
-      const bounds=window.getBounds(),area=screen.getDisplayNearestPoint({x:value.x,y:value.y}).workArea;
-      const x=this.dragging.origin.x+value.x-this.dragging.x-(bounds.width-size)/2,y=this.dragging.origin.y+value.y-this.dragging.y-(bounds.height-size);
-      window.setPosition(Math.round(Math.max(area.x,Math.min(x,area.x+area.width-bounds.width))),Math.round(Math.max(area.y,Math.min(y,area.y+area.height-bounds.height))));
-      if(phase==='end'){this.dragging=undefined;this.home=window.getBounds();void settings.change({petPosition:petOrigin(this.home,size)}).catch(console.error);}
+      authorize(event);
+      const value = point as { x?: unknown; y?: unknown };
+      if ((phase !== 'start' && phase !== 'move' && phase !== 'end') ||
+        typeof value?.x !== 'number' || typeof value?.y !== 'number' ||
+        !Number.isFinite(value.x) || !Number.isFinite(value.y) ||
+        Math.abs(value.x) > 100000 || Math.abs(value.y) > 100000) throw new Error('Invalid pet drag');
+      const window = pet()!, size = settings.get().petSize;
+      const bounds = window.getBounds();
+      if (phase === 'start') {
+        clearInterval(this.animation);
+        this.moving = false;
+        this.away = false;
+        this.home = undefined;
+        this.suppressDoneRun = true;
+        const start = { x: value.x, y: value.y };
+        const origin = { x: bounds.x + (bounds.width - size) / 2, y: bounds.y + bounds.height - size };
+        this.dragging = { start, last: start, origin };
+        return;
+      }
+      const drag = this.dragging;
+      if (!drag) return;
+      if (value.x !== drag.last.x || value.y !== drag.last.y) {
+        drag.last = { x: value.x, y: value.y };
+        const area = screen.getDisplayNearestPoint(drag.last).workArea;
+        const left = drag.origin.x + value.x - drag.start.x - (bounds.width - size) / 2;
+        const top = drag.origin.y + value.y - drag.start.y - (bounds.height - size);
+        const x = Math.round(Math.max(area.x, Math.min(left, area.x + area.width - bounds.width)));
+        const y = Math.round(Math.max(area.y, Math.min(top, area.y + area.height - bounds.height)));
+        if (x !== bounds.x || y !== bounds.y) {
+          window.setPosition(x, y);
+          if (process.platform === 'win32') {
+            const summary = this.tracker.summary();
+            this.applyWindowsShape(window, size, this.noticeVisible || Boolean(summary.waiting || summary.done));
+            // Position-only changes of the transparent HWND do not trigger the resize repaint.
+            this.repaint(window);
+          }
+        }
+      }
+      if (phase === 'end') {
+        this.dragging = undefined;
+        this.home = window.getBounds();
+        void settings.change({ petPosition: petOrigin(this.home, size) }).catch(console.error);
+      }
     });
     ipcMain.handle('pet:agent-read', event => { authorize(event); return this.tracker.summary(); });
     ipcMain.handle('pet:agent-dismiss', event => { authorize(event); this.dismiss(); });
@@ -86,6 +120,16 @@ export class PetAgentController {
     if(before.x===target.x&&before.y===target.y&&Math.abs(before.width-target.width)<=1&&Math.abs(before.height-target.height)<=1)return;
     window.setBounds(target);
     if(before.width!==target.width||before.height!==target.height)this.repaint(window);
+  }
+
+  private applyWindowsShape(window: BrowserWindow, size: number, bubble: boolean): boolean {
+    const surface = window.getBounds();
+    const scale = screen.getDisplayMatching(surface).scaleFactor;
+    const key = [size, bubble, surface.width, surface.height, scale].join(':');
+    if (this.shapes.get(window) === key) return false;
+    window.setShape(petSurfaceShape(size, bubble, surface));
+    this.shapes.set(window, key);
+    return true;
   }
 
   private move(window: BrowserWindow, target: Bounds, animated: boolean): void {
@@ -144,6 +188,7 @@ export class PetAgentController {
         clearTimeout(this.positionTimer);
         clearTimeout(this.repaintTimer);
         this.noticeVisible=false;
+        this.dragging = undefined;
         this.tracker.reset();
         this.home = undefined;
         this.away = false;
@@ -182,10 +227,6 @@ export class PetAgentController {
           y: bounds.y + bounds.height - dimensions.height, ...dimensions });
       }
     }
-    if(process.platform==='win32'){
-      const surface=window.getBounds(),scale=screen.getDisplayMatching(surface).scaleFactor;
-      const key=[size,bubble,surface.width,surface.height,scale].join(':');
-      if(this.shapes.get(window)!==key){window.setShape(petSurfaceShape(size,bubble,surface));this.shapes.set(window,key);this.repaint(window);}
-    }
+    if (process.platform === 'win32' && this.applyWindowsShape(window, size, bubble)) this.repaint(window);
   }
 }

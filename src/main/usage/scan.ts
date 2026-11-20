@@ -216,7 +216,9 @@ export async function collectUsage(
   const todayKey = localDay(now);
   const weekKey = localDay(ranges.week);
   const monthKey = localDay(ranges.month);
+  const hourStart = +now - 60 * 60 * 1000;
   const blockStart = +now - 5 * 60 * 60 * 1000;
+  let lastHour = 0;
   let lastFiveHours = 0;
   function addCost(costTotal: UsageCost, entry: Entry) {
     if (!entry.tokens.total) return;
@@ -241,6 +243,7 @@ export async function collectUsage(
     if (localDay(new Date(entry.time)) === todayKey) {add(today, cost.today, entry);if(entry.model)todayModels[entry.model]=(todayModels[entry.model]??0)+entry.tokens.total;}
   }
   for (const entry of entries) {
+    if (entry.time >= hourStart && entry.time <= +now) lastHour += entry.tokens.total;
     if (entry.time >= blockStart) lastFiveHours += entry.tokens.total;
     const day = localDay(new Date(entry.time));
     if (day > todayKey) continue;
@@ -253,5 +256,5 @@ export async function collectUsage(
   }
   daily[todayKey] = today.total;
   dailyCost[todayKey] = cost.today;
-  return { todayModels, daily, dailyCost, today, week, month, cost, lastFiveHours, extraRoot, unreadable: found.unreadable + unreadableFiles.size };
+  return { todayModels, daily, dailyCost, today, week, month, cost, lastHour, lastFiveHours, extraRoot, unreadable: found.unreadable + unreadableFiles.size };
 }

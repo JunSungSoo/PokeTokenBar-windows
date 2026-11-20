@@ -4,7 +4,8 @@ const dollars=new Intl.NumberFormat('en-US',{style:'currency',currency:'USD',min
 const status=document.querySelector('#status'),refreshButton=document.querySelector('#refresh'),limitButton=document.querySelector('#load-limits'),trendPeriod=document.querySelector('#trend-period');
 const primaryProviders=['claude','codex'],H=window.usageHistory;
 const t=(text,args)=>window.i18n.t(text,args);
-let lastSnapshot,companion,lastRefreshedAt,limitResults,selectedProvider='claude',limitMode='used',selectedAccount;
+let lastSnapshot,companion,lastRefreshedAt,limitResults,selectedProvider,limitMode='used',selectedAccount;
+let refreshGeneration=0,providerSelectionVersion=0;
 function element(tag,content,className){const node=document.createElement(tag);if(content!==undefined)node.textContent=content;if(className)node.className=className;return node;}
 function renderCompanion(state){if(state){companion=state;if(lastSnapshot){lastSnapshot.companion=state;window.usageRecap.update(lastSnapshot);}}window.renderCompanionTabs(state);}
 function sumCost(costs){return costs.reduce((sum,cost)=>({amount:sum.amount+cost.amount,reported:sum.reported||cost.reported,estimated:sum.estimated||cost.estimated,unknown:sum.unknown||cost.unknown}),{amount:0,reported:false,estimated:false,unknown:false});}
@@ -12,25 +13,30 @@ function costLabel(cost){const output=element('span',cost.reported||cost.estimat
 function dailyKey(date){return String(Date.UTC(date.getFullYear(),date.getMonth(),date.getDate()));}
 function availableRows(usage){const allowed=window.appPreferences?.providers??Object.keys(usage);return Object.entries(usage).filter(([id])=>allowed.includes(id));}
 function renderTrend(usage){
- const now=new Date(),rows=availableRows(usage),history=window.usageRecap.history(),streak=H.currentStreak(history,now),badge=document.querySelector('#usage-streak');
+ const now=new Date(),row=usage[selectedProvider],daily=row?.daily??{},streak=H.currentStreak(window.usageRecap.history(),now),badge=document.querySelector('#usage-streak');
  badge.hidden=!streak.days;badge.textContent='🔥 '+(streak.days>=29?streak.days+'+':streak.days);badge.title=t(streak.includesToday?'{count}일 연속 사용':'{count}일 연속 — 오늘 사용하면 이어집니다',{count:streak.days});
  const mode=window.appPreferences?.activityVisualization??'bars',toggle=document.querySelector('#trend-visualization');toggle.textContent=mode==='bars'?'● ○':'○ ●';toggle.setAttribute('aria-label',t('활동 그래프 전환'));toggle.setAttribute('aria-pressed',String(mode==='heatmap'));
  const readout=document.querySelector('#trend-readout'),chart=document.querySelector('#usage-trend'),legend=document.querySelector('#trend-legend'),peakLabel=document.querySelector('#trend-peak');
+ const label=row?element('span',lastSnapshot.labels[selectedProvider]):undefined;
+ const color=selectedProvider==='claude'?'#d78162':selectedProvider==='codex'?'#538dd7':'#6b9b6d';
+ label?.style.setProperty('--series',color);
  function showDay(date,total,cost){readout.replaceChildren(new Intl.DateTimeFormat(window.i18n.language,{month:'numeric',day:'numeric',weekday:'short'}).format(date)+' '+compactTokens(total)+' ',costLabel(cost));}
  if(mode==='heatmap'){
-  trendPeriod.hidden=true;chart.className='activity-heatmap';legend.replaceChildren(element('span',t('최근 16주')));
-  const start=H.stepDay(H.recapPeriod('week',now,0,window.usageRecap.firstWeekday()).start,-15*7),today=H.dayKey(now),values=Array.from({length:112},(_,i)=>{const date=H.stepDay(start,i),key=H.dayKey(date);return{date,key,tokens:history.tokensByDay[key]??0,known:key<=today&&(history.coveredSince?key>=history.coveredSince:key===today)};}),peak=Math.max(1,...values.map(day=>day.tokens));
-  peakLabel.textContent=t('최근 활동');chart.replaceChildren(...values.map(day=>{const cell=element('button');cell.type='button';cell.className='heatmap-day';cell.dataset.level=day.known?String(day.tokens?Math.max(1,Math.ceil(day.tokens/peak*4)):0):'unknown';cell.disabled=!day.known;const label=new Intl.DateTimeFormat(window.i18n.language,{month:'short',day:'numeric'}).format(day.date)+' · '+(day.known?groupedTokens.format(day.tokens)+' '+t('토큰'):t('기록 없음'));cell.title=label;cell.setAttribute('aria-label',label);for(const event of ['pointerenter','focus','click'])cell.addEventListener(event,()=>showDay(day.date,day.tokens,sumCost([])));return cell;}));
-  showDay(now,history.tokensByDay[today]??0,sumCost([]));return;
+  trendPeriod.hidden=true;chart.className='activity-heatmap';legend.replaceChildren(...(label?[label]:[]),element('span',t('최근 16주')));
+  const start=H.stepDay(H.recapPeriod('week',now,0,window.usageRecap.firstWeekday()).start,-15*7),today=H.dayKey(now),recentStart=H.dayKey(H.stepDay(now,-29));
+  const values=Array.from({length:112},(_,i)=>{
+   const date=H.stepDay(start,i),key=H.dayKey(date),day=dailyKey(date);
+   return{date,day,tokens:daily[day]??0,known:Boolean(row)&&key<=today&&(key>=recentStart||Object.hasOwn(daily,day))};
+  }),peak=Math.max(1,...values.map(day=>day.tokens));
+  peakLabel.textContent=t('최근 활동');chart.replaceChildren(...values.map(day=>{const cell=element('button');cell.type='button';cell.className='heatmap-day';cell.dataset.level=day.known?String(day.tokens?Math.max(1,Math.ceil(day.tokens/peak*4)):0):'unknown';cell.disabled=!day.known;const title=new Intl.DateTimeFormat(window.i18n.language,{month:'short',day:'numeric'}).format(day.date)+' · '+(day.known?groupedTokens.format(day.tokens)+' '+t('토큰'):t('기록 없음'));cell.title=title;cell.setAttribute('aria-label',title);for(const event of ['pointerenter','focus','click'])cell.addEventListener(event,()=>showDay(day.date,day.tokens,row?.dailyCost[day.day]??sumCost([])));return cell;}));
+  chart.onpointerleave=()=>showDay(now,daily[dailyKey(now)]??0,row?.dailyCost[dailyKey(now)]??sumCost([]));chart.onpointerleave();return;
  }
  trendPeriod.hidden=false;chart.className='trend-bars';
  const length=trendPeriod.value==='month'?now.getDate():Number(trendPeriod.value)||14;
- const ids=[...primaryProviders.filter(id=>rows.some(([p])=>p===id)),...rows.filter(([id,row])=>!primaryProviders.includes(id)&&Object.values(row.daily).some(n=>n>0)).map(([id])=>id)];
- const colors=['#d78162','#538dd7','#6b9b6d','#a887bd','#c79b45','#6cabb0','#bc7794','#8093ac'];
- const values=Array.from({length},(_,i)=>{const date=H.stepDay(now,i-length+1),key=dailyKey(date),amounts=ids.map(id=>usage[id].daily[key]??0);return{date,amounts,total:amounts.reduce((a,b)=>a+b,0),cost:sumCost(rows.flatMap(([,row])=>row.dailyCost[key]?[row.dailyCost[key]]:[]))};});
+ const values=Array.from({length},(_,i)=>{const date=H.stepDay(now,i-length+1),key=dailyKey(date);return{date,total:daily[key]??0,cost:row?.dailyCost[key]??sumCost([])};});
  const peak=Math.max(0,...values.map(day=>day.total));peakLabel.textContent=t('최대')+' '+compactTokens(peak);
- chart.replaceChildren(...values.map((day,index)=>{const number=day.date.getDate(),today=index===length-1,mark=element('button',undefined,'trend-day'+(today?' today':''));mark.type='button';mark.title=new Intl.DateTimeFormat(window.i18n.language,{month:'short',day:'numeric'}).format(day.date)+' · '+groupedTokens.format(day.total)+' '+t('토큰');mark.setAttribute('aria-label',mark.title);const bar=element('span',undefined,'trend-stack');bar.setAttribute('aria-hidden','true');day.amounts.forEach((amount,i)=>{if(!amount)return;const segment=element('span',undefined,'trend-segment');segment.style.setProperty('--share',amount/(peak||1)*100+'%');segment.style.setProperty('--series',colors[i%colors.length]);bar.append(segment);});mark.append(bar,element('span',today||number===1||index%7===0?String(number):'','trend-axis'));for(const event of ['pointerenter','focus','click'])mark.addEventListener(event,()=>showDay(day.date,day.total,day.cost));return mark;}));
- legend.replaceChildren(...ids.map((id,i)=>{const label=element('span',lastSnapshot.labels[id]);label.style.setProperty('--series',colors[i%colors.length]);return label;}));chart.onpointerleave=()=>showDay(values.at(-1).date,values.at(-1).total,values.at(-1).cost);chart.onpointerleave();
+ chart.replaceChildren(...values.map((day,index)=>{const number=day.date.getDate(),today=index===length-1,mark=element('button',undefined,'trend-day'+(today?' today':''));mark.type='button';mark.title=new Intl.DateTimeFormat(window.i18n.language,{month:'short',day:'numeric'}).format(day.date)+' · '+groupedTokens.format(day.total)+' '+t('토큰');mark.setAttribute('aria-label',mark.title);const bar=element('span',undefined,'trend-stack');bar.setAttribute('aria-hidden','true');if(day.total){const segment=element('span',undefined,'trend-segment');segment.style.setProperty('--share',day.total/peak*100+'%');segment.style.setProperty('--series',color);bar.append(segment);}mark.append(bar,element('span',today||number===1||index%7===0?String(number):'','trend-axis'));for(const event of ['pointerenter','focus','click'])mark.addEventListener(event,()=>showDay(day.date,day.total,day.cost));return mark;}));
+ legend.replaceChildren(...(label?[label]:[]));chart.onpointerleave=()=>showDay(values.at(-1).date,values.at(-1).total,values.at(-1).cost);chart.onpointerleave();
 }
 // Fills the home card's vs-yesterday line and 7-day bars; today uses the displayed total.
 function renderTodayWeek(rows,today){
@@ -47,18 +53,42 @@ function renderProvider(usage){
  }
  for(const chip of document.querySelectorAll('#usage-providers button'))chip.setAttribute('aria-pressed',String(chip.dataset.provider===selectedProvider));renderLimits();renderServiceStatus();
 }
-function render({usage,labels,activity,activityGate}){
+function selectProvider(id){
+ if(id!==selectedProvider){selectedProvider=id;selectedAccount=undefined;}
+}
+function render({usage,labels,activity,activityGate},selectDefault=false){
  if(activityGate)window.dispatchEvent(new CustomEvent('activity-gate',{detail:activityGate}));
  updateRefreshAge();
  if(activity)window.dispatchEvent(new CustomEvent('usage-activity',{detail:activity}));window.usageRecap.update(lastSnapshot);
  const rows=availableRows(usage),all=rows.map(([,row])=>row),total=period=>all.reduce((sum,row)=>sum+row[period].total,0),cost=period=>sumCost(all.map(row=>row.cost[period])),today=total('today');
  document.querySelector('#today-total').textContent=compactTokens(today);document.querySelector('#today-exact').textContent=today>=1000?groupedTokens.format(today):'';document.querySelector('#today-cost').replaceChildren(costLabel(cost('today')));renderTodayWeek(rows,today);
  document.querySelector('#usage-periods').replaceChildren(...[['week','이번 주'],['month','이번 달']].map(([period,label])=>{const span=element('span');span.append(element('span',t(label)),document.createTextNode(' '),element('strong',compactTokens(total(period))),document.createTextNode(' '),costLabel(cost(period)));return span;}));
- const visible=[...primaryProviders.filter(id=>rows.some(([p])=>p===id)),...rows.filter(([id,row])=>!primaryProviders.includes(id)&&(row.month.total||row.week.total||row.extraRoot)).map(([id])=>id)];
- if(!visible.includes(selectedProvider))selectedProvider=visible[0];const controls=document.querySelector('#usage-providers');controls.hidden=visible.length<2;controls.replaceChildren(...visible.map(id=>{const chip=element('button',labels[id]);chip.type='button';chip.dataset.provider=id;chip.addEventListener('click',()=>{selectedProvider=id;selectedAccount=undefined;renderProvider(lastSnapshot.usage);});return chip;}));
+ const visible=[
+  ...primaryProviders.filter(id=>rows.some(([provider])=>provider===id)),
+  ...rows.filter(([id,row])=>!primaryProviders.includes(id)&&
+   (row.lastHour||row.month.total||row.week.total||row.extraRoot||Object.values(row.daily).some(total=>total>0))).map(([id])=>id),
+ ];
+ if(selectDefault||!visible.includes(selectedProvider)){
+  const best=visible.reduce((best,id)=>(usage[id].lastHour??0)>(usage[best].lastHour??0)?id:best,visible[0]);
+  selectProvider(best);
+ }
+ const controls=document.querySelector('#usage-providers');controls.hidden=visible.length<2;controls.replaceChildren(...visible.map(id=>{const chip=element('button',labels[id]);chip.type='button';chip.dataset.provider=id;chip.addEventListener('click',()=>{providerSelectionVersion++;selectProvider(id);renderTrend(lastSnapshot.usage);renderProvider(lastSnapshot.usage);});return chip;}));
  renderTrend(usage);renderProvider(usage);const errors=all.reduce((sum,row)=>sum+row.unreadable,0);status.hidden=!errors;status.textContent=errors?t('일부 로그를 읽지 못했습니다 ({count}개).',{count:errors}):'';
 }
-async function refresh(){refreshButton.disabled=true;if(!lastSnapshot){status.hidden=false;status.textContent=t('사용량을 읽는 중입니다…');}try{lastSnapshot=await window.usage.refresh();lastRefreshedAt=Date.now();render(lastSnapshot);renderCompanion(lastSnapshot.companion);}catch{status.hidden=false;status.textContent=t('사용량을 갱신하지 못했습니다. 잠시 후 다시 시도하세요.');}finally{refreshButton.disabled=false;}}
+async function refresh({selectDefault=false,usageOnly=false}={}){
+ const generation=++refreshGeneration,selectionVersion=providerSelectionVersion;
+ refreshButton.disabled=true;
+ if(!lastSnapshot){status.hidden=false;status.textContent=t('사용량을 읽는 중입니다…');}
+ try{
+  const snapshot=await window.usage.refresh(usageOnly);
+  if(generation!==refreshGeneration)return;
+  lastSnapshot=snapshot;lastRefreshedAt=Date.now();
+  render(snapshot,selectDefault&&selectionVersion===providerSelectionVersion);
+  renderCompanion(snapshot.companion);
+ }catch{
+  if(generation===refreshGeneration){status.hidden=false;status.textContent=t('사용량을 갱신하지 못했습니다. 잠시 후 다시 시도하세요.');}
+ }finally{if(generation===refreshGeneration)refreshButton.disabled=false;}
+}
 function renderLimits(){
  const section=document.querySelector('.official-limits'),message=document.querySelector('#limit-status'),list=document.querySelector('#limit-rows'),tabs=document.querySelector('#limit-accounts');
  const results=limitResults?.filter(row=>row.provider===selectedProvider)??[];section.hidden=!['claude','codex','antigravity','cursor','opencode','grok'].includes(selectedProvider);if(section.hidden||limitButton.disabled)return;
@@ -100,7 +130,11 @@ trendPeriod.addEventListener('change',()=>{void window.preferences.change({trend
 document.querySelector('#trend-visualization').addEventListener('click',()=>{void window.preferences.change({activityVisualization:window.appPreferences?.activityVisualization==='heatmap'?'bars':'heatmap'}).catch(()=>{});});
 window.usage.onSnapshot(value=>{lastSnapshot=value;lastRefreshedAt=Date.now();render(value);renderCompanion(value.companion);});
 window.usage.onLimits(value=>{limitResults=value;renderLimits();});
-refreshButton.addEventListener('click',()=>void refresh());window.usage.onCompanion(renderCompanion);void window.usage.companion().then(state=>{if(!companion&&!lastSnapshot)renderCompanion(state);},()=>{if(!companion&&!lastSnapshot)renderCompanion(null);});void refresh();
+refreshButton.addEventListener('click',()=>void refresh({selectDefault:document.body.dataset.tab==='home'&&!window.usageRecap.isOpen()}));
+const refreshHome=()=>void refresh({selectDefault:true,usageOnly:true});
+window.addEventListener('app-tab-changed',event=>{if(event.detail.current==='home')refreshHome();});
+window.addEventListener('usage-recap-closed',refreshHome);
+window.usage.onCompanion(renderCompanion);void window.usage.companion().then(state=>{if(!companion&&!lastSnapshot)renderCompanion(state);},()=>{if(!companion&&!lastSnapshot)renderCompanion(null);});void refresh({selectDefault:true});
 window.addEventListener('preferences-changed',event=>{trendPeriod.value=event.detail.trend;limitMode=event.detail.limitMode;if(lastSnapshot)render(lastSnapshot);});
 let serviceStatuses=[];
 function renderServiceStatus(){const banner=document.querySelector('#provider-status-banner'),entry=serviceStatuses.find(row=>row.provider===selectedProvider);banner.hidden=window.appPreferences?.statusChecks===false||!entry||entry.indicator==='none';if(banner.hidden){banner.textContent='';return;}const names={minor:'성능 저하',major:'부분 장애',critical:'심각한 장애',maintenance:'유지보수',unknown:'상태 불명'};banner.textContent=entry.component+' · '+t(names[entry.indicator]);banner.title=new Date(entry.checkedAt).toLocaleString(window.i18n.language);}
