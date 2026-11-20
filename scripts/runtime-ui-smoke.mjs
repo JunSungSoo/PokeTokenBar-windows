@@ -443,6 +443,22 @@ try {
   assert.deepEqual(await check("[...document.querySelectorAll('#bag-items > [data-item]')].map(node=>node.dataset.item)"),['rareCandy','mint','redMaple','shinyCharm']);
   assert.equal(await check("document.querySelector('[data-item=shinyCharm] .item-owned') === null"),true);
   assert.deepEqual(await check("[...document.querySelectorAll('#bag-items .item-actions button:not([hidden])')].map(button=>button.textContent)"),['사용','사용','사용']);
+  for (const width of [360,490]) {
+    main.setContentSize(width,665);
+    for (const language of ['de','ru','ko']) {
+      await preferences.change({ language });
+      await until(`document.documentElement.lang === '${language}' && innerWidth === ${width}`);
+      const crampedItems = await check(`(() => {
+        return [...document.querySelectorAll('#bag-items > [data-item]')].filter(card => {
+          const right = card.getBoundingClientRect().right;
+          const textRows = card.querySelectorAll('.item-title-row, .item-desc');
+          return [...textRows].some(row => row.getBoundingClientRect().right < right - 1 || row.scrollWidth > row.clientWidth + 1)
+            || card.scrollWidth > card.clientWidth + 1;
+        }).map(card => card.dataset.item);
+      })()`);
+      assert.deepEqual(crampedItems,[],`Bag text width at ${width}px / ${language}`);
+    }
+  }
   await snap('bag');
   await check("document.querySelector('[data-item=rareCandy] .item-actions button').click();document.querySelector('[data-item=rareCandy] .item-actions button').click()");
   await until("document.querySelector('#tab-home').getAttribute('aria-selected') === 'true'");

@@ -697,6 +697,13 @@ input[type="range"].ball-range::-webkit-slider-thumb {
 .item-card .passive-owned { color: light-dark(#197d38, #79cb8b); font-weight: 700; }
 .item-card .item-hint:empty { display: none; }
 
+#bag-items .item-card { grid-template-columns: 48px minmax(0, 1fr); }
+#bag-items .item-card:not([data-confirming="true"]) .item-actions {
+  grid-column: 2; grid-row: auto; margin-top: 4px;
+}
+#bag-items .item-card:not([data-confirming="true"]) .item-preview { flex: 1; }
+#bag-items :is(.item-title-row h3, .item-desc, .item-preview, .item-hint) { overflow-wrap: anywhere; }
+
 #trade-panel.trade-panel { display: flex; flex-direction: column; gap: 10px; padding: 0; background: transparent; border: 0; border-radius: 0; }
 .trade-panel .dex-panel { padding: 16px; }
 .trade-panel .trade-identity { padding: 0 4px; border: 0; }
