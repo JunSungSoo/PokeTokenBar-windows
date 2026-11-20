@@ -13,5 +13,5 @@ its original MP3 bytes even though its packaged filename uses `.ogg`. Web Audio
 decodes the actual file format.
 
 Preserve the player, base/mega sprite, trainer and music notices and licensing files.
-`tests/battle-presentation.test.mjs` compares the complete original player and trainer
-trees and the authoritative engine files to the reference checkout.
+`tests/battle-presentation.test.mjs` compares the complete original player and trainer  
+trees and the authoritative engine files to the reference checkout..
