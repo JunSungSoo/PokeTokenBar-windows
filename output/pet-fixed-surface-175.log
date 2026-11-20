@@ -1,3 +1,0 @@
-
-PASS: 12 hover cycles at 48/96/192px restore the exact static frame and position.
-PASS: exact-size original egg, no dot handle, persistent prayer hover through IPC/settings updates, rapid prayer count, particle expiry, pixel hearts, drag persistence and Pokémon click.

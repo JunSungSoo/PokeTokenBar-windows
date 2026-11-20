@@ -1,2 +1,0 @@
-
-PASS: Unicode executable/shortcut paths, startup entry retargeting, disabled startup approval, custom arguments and URL protocol survive; unrelated and newer shortcuts are preserved.

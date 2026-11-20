@@ -1,6 +1,0 @@
-
-Error occurred in handler for 'companion:details': Error: fixture offline
-    at file:///C:/Users/SungSoo/Desktop/dev/PokeTokenBar-windows/scripts/runtime-ui-smoke.mjs:93:63
-PASS: compact home totals, provider token/model details, history recap scopes/navigation/Escape, heatmap persistence, empty providers, 8 languages and 360/490px bounds.
-PASS: held-item previews, same/used Apply guards, cancel, keyboard commit, translated None/restrictions and eight-language popup bounds.
-PASS: hidden UI, 8 languages, settings reload, service banner, GIF/agent reactions, capture evolution, details, retry, rounded meters, four editable moves, open-menu tooltips, keyboard control, popup bounds and reload

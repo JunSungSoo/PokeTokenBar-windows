@@ -1,3 +1,0 @@
-
-PASS: desktop compositor has no pixels outside the pet after six hover/leave cycles [{"size":96,"cycle":0,"stray":0,"bounds":{"x":230,"y":300,"width":96,"height":96}},{"size":96,"cycle":1,"stray":0,"bounds":{"x":230,"y":300,"width":96,"height":96}},{"size":96,"cycle":2,"stray":0,"bounds":{"x":230,"y":300,"width":96,"height":96}},{"size":192,"cycle":0,"stray":0,"bounds":{"x":182,"y":204,"width":192,"height":192}},{"size":192,"cycle":1,"stray":0,"bounds":{"x":182,"y":204,"width":192,"height":192}},{"size":192,"cycle":2,"stray":0,"bounds":{"x":182,"y":204,"width":192,"height":192}}]
-PASS: actual desktop compositing and initial egg/prayer UI.
