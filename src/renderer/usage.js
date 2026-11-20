@@ -79,9 +79,10 @@ function renderLimits(){
    // The HP bar always fills with the remaining share; only the number follows limitMode.
    const track=element('span',undefined,'hp-track quota-track'),meter=document.createElement('progress');meter.max=100;meter.value=Math.min(100,Math.max(0,100-bucket.usedPercent));meter.setAttribute('aria-label',bucket.label);track.append(meter);
    const shown=t(limitMode==='remaining'?'남음 {percent}%':'사용 {percent}%',{percent:format.format(view.percent)});meter.setAttribute('aria-valuetext',shown);
-   bar.append(badge,element('span',bucket.label.split(' · ').map(part=>t(part)).join(' · '),'hp-name'),track,element('strong',shown));
+   const name=bucket.label.split(' · ').map(part=>part.toLowerCase()==='codex'?'Codex':t(part)).join(' · ');
+   bar.append(badge,element('span',name,'hp-name'),element('strong',shown),track);
    if(view.marker!==null){
-    const marker=element('span',undefined,'quota-pace-marker');marker.style.left=Q.displayPercent(view.pace*100,true)+'%';marker.setAttribute('aria-hidden','true');track.append(marker);
+    const marker=element('span',undefined,'quota-pace-marker');marker.style.left='clamp(1px, '+Q.displayPercent(view.pace*100,true)+'%, calc(100% - 1px))';marker.setAttribute('aria-hidden','true');track.append(marker);
     let help=t('페이스 — 창 시간만큼 균등하게 썼다면 지금 {percent}입니다.',{percent:format.format(Q.displayPercent(view.pace*100,limitMode==='remaining'))+'%'});
     if(view.tier!==null){const names=['여유 많음','여유','페이스대로','조금 빠름','빠름','매우 빠름'];const delta=view.delta>0?t('페이스보다 {points}%p 더 씀',{points:view.delta}):view.delta<0?t('페이스보다 {n}%p 덜 씀',{n:-view.delta}):'';help=t(names[view.tier])+(delta?' · '+delta:'')+'\n'+help;}
     row.title=help;meter.setAttribute('aria-description',help);

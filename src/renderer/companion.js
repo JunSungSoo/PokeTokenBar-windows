@@ -30,6 +30,7 @@
   let homeActivity = 'sleep';
   let collectionScroll = 0;
   let dexScroll = 0;
+  let collectionPaneScroll = 0;
   let logScroll = 0;
   let selectedDex;
   const savedSort={dex:'number',log:'recent'};
@@ -456,8 +457,11 @@
   };
 
   function showDetail(number, rowID) {
-    detailsFocus = document.activeElement;
-    collectionScroll = get('captures').scrollTop; dexScroll = get('collection-list').scrollTop;
+    if (!detail) {
+      detailsFocus = document.activeElement;
+      collectionScroll = get('captures').scrollTop; dexScroll = get('collection-list').scrollTop;
+      collectionPaneScroll = get('pane-collection').scrollTop;
+    }
     openTab('collection');
     detail = { number, rowID };
     renderCollection();
@@ -482,8 +486,9 @@
       detail = undefined;
       renderCollection();
       get('captures').scrollTop=collectionScroll; get('collection-list').scrollTop=dexScroll;
-      if (detailsFocus?.isConnected) detailsFocus.focus();
-      else get(log ? 'log-mode' : 'dex-mode').focus();
+      if (detailsFocus?.isConnected) detailsFocus.focus({preventScroll:true});
+      else get(log ? 'log-mode' : 'dex-mode').focus({preventScroll:true});
+      get('pane-collection').scrollTop=collectionPaneScroll;
     });
     const options = element('select');
     options.setAttribute('aria-label', '포획 개체와 형태');
@@ -500,13 +505,19 @@
       element('h2', speciesName(species)), element('p', [species.type, rarityLabels[current.rarity ?? 'common'],
         current.level ? 'Lv. ' + current.level : '', current.nature].filter(Boolean).join(' · ')));
     if(current.championAchievedAt!==undefined)title.append(element('span',window.i18n.t('챌린지 챔피언'),'champion-badge'));identity.append(sprite(species, appearance, true), title);
-    const line = element('div', undefined, 'evolution-line');
-    for (const entry of current.species) line.append(button(speciesName(entry), () => showDetail(entry.number, current.id)));
     const representative = state.economy.representative;
     const pinned = representative?.speciesID === number && representative.form === appearance.form;
-    const pin = button(pinned ? '현재 파트너 따라가기' : '대표 포켓몬 지정', () =>
-      change({ kind: 'representative', speciesID: pinned ? null : number, form: appearance.form },
-        pinned ? '현재 파트너를 따라갑니다.' : '대표 포켓몬으로 지정했습니다.'), 'primary');
+    const pin = button('', async () => {
+      await change({ kind: 'representative', speciesID: pinned ? null : number, form: appearance.form },
+        pinned ? '현재 파트너를 따라갑니다.' : '대표 포켓몬으로 지정했습니다.');
+      content.querySelector('.detail-representative')?.focus({preventScroll:true});
+    }, 'detail-representative');
+    const star=element('span',pinned ? '★' : '☆');star.setAttribute('aria-hidden','true');pin.append(star);
+    pin.setAttribute('aria-pressed',String(pinned));
+    pin.setAttribute('aria-label',window.i18n.t(pinned ? '현재 파트너 따라가기' : '대표 포켓몬 지정'));
+    pin.title=pin.getAttribute('aria-label');
+    title.classList.add('detail-title');
+    identity.append(pin);
     const key = window.i18n.language + ':' + number;
     const payload = detailData.get(key);
     content.replaceChildren(back);
@@ -520,7 +531,7 @@
       const appearances=element('div',undefined,'appearance-picker');
       for(const [shiny,label]of [[false,'일반'],[true,'이로치']]){const toggle=button(label,()=>{detail.shiny=shiny;detail.rowID=undefined;renderDetail();});toggle.setAttribute('aria-pressed',String(selectedShiny===shiny));appearances.append(toggle);}content.append(appearances);
     }
-    content.append(identity);if(rows.length>1)content.append(options);content.append(line,pin);
+    content.append(identity);if(rows.length>1)content.append(options);
     if (payload) {
       title.querySelector('h2').textContent = payload.labels.species[number] ?? speciesName(species);
       const projected=window.pokemonMath.projectDetailView(payload,current.form);

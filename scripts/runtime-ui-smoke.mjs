@@ -156,7 +156,7 @@ try {
   assert.equal(await check("document.querySelector('.quota-forecast').dataset.warning"),'true');
   assert.equal(await check("document.querySelector('#limit-rows li').dataset.gauge"),'4');
   assert.equal(await check("document.querySelector('#limit-rows li').title.includes('빠름')"),true);
-  const usedMarker=await check("parseFloat(document.querySelector('.quota-pace-marker').style.left)");
+  const usedMarker=await check("(()=>{const m=document.querySelector('.quota-pace-marker').getBoundingClientRect(),r=document.querySelector('.quota-track').getBoundingClientRect();return (m.left+m.width/2-r.left)/r.width*100;})()");
   assert.ok(Math.abs(usedMarker-75)<.1);
   await check("document.querySelector('.official-limits').scrollIntoView({block:'end',behavior:'instant'})");
   await check("new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)))");
@@ -169,8 +169,8 @@ try {
   const target=[36,165,245,255];let fillPixel=bitmap.subarray(0,4);for(let offset=0;offset<bitmap.length;offset+=4)if(target.every((v,i)=>Math.abs(bitmap[offset+i]-v)<=2)){fillPixel=Uint8Array.from(target);break;}
   assert.deepEqual([...fillPixel.subarray(0,4)],[36,165,245,255],'fast gauge must render the HP warning color, including CSS cascade');
   await preferences.change({limitMode:'remaining'});
-  await until("parseFloat(document.querySelector('.quota-pace-marker').style.left)>70");
-  const remainingMarker=await check("parseFloat(document.querySelector('.quota-pace-marker').style.left)");
+  await until("(()=>{const m=document.querySelector('.quota-pace-marker').getBoundingClientRect(),r=document.querySelector('.quota-track').getBoundingClientRect();return (m.left+m.width/2-r.left)/r.width*100;})()>70");
+  const remainingMarker=await check("(()=>{const m=document.querySelector('.quota-pace-marker').getBoundingClientRect(),r=document.querySelector('.quota-track').getBoundingClientRect();return (m.left+m.width/2-r.left)/r.width*100;})()");
   assert.ok(Math.abs(remainingMarker-usedMarker)<.1);
   await snap('quota-remaining');
   await check("document.querySelectorAll('#limit-accounts button')[1].click()");
@@ -272,6 +272,25 @@ try {
   assert.equal(await check("[...document.querySelectorAll('.capture-card')].every(card => card.scrollWidth <= card.clientWidth)"),true);
   await check("[...document.querySelectorAll('.capture-card')].find(card => card.querySelectorAll('.capture-stage').length===3).querySelectorAll('.capture-stage')[2].click()");
   await until("document.querySelectorAll('#dex-detail .individual-stats .detail-stat-row').length === 6");
+  // Detail must remain bounded by the collection pane and expose all its content.
+  for (const height of [420,740]) {
+    main.setContentSize(440,height);
+    await until(`innerHeight === ${height}`);
+    await check("new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)))");
+    const viewport=await check(`(() => {
+      const detail=document.querySelector('#dex-detail'), rect=detail.getBoundingClientRect(), pane=document.querySelector('#pane-collection').getBoundingClientRect();
+      detail.scrollTop=0;
+      return {height:detail.clientHeight,total:detail.scrollHeight,top:rect.top,bottom:rect.bottom,paneBottom:pane.bottom};
+    })()`);
+    assert.ok(viewport.height>0 && viewport.total>viewport.height,'detail has a bounded scroll viewport');
+    assert.ok(viewport.bottom<=viewport.paneBottom+1 && viewport.bottom<=height,'detail stays within the window');
+    await check("document.querySelector('#dex-detail').scrollTop=300");
+    assert.ok(await check("document.querySelector('#dex-detail').scrollTop>0"),'detail can scroll');
+    await check("document.querySelector('#dex-detail').scrollTop=document.querySelector('#dex-detail').scrollHeight");
+    assert.equal(await check(`(() => {const detail=document.querySelector('#dex-detail'),last=detail.querySelector('.complete-moves .detail-move-row:last-child').getBoundingClientRect();return last.bottom<=detail.getBoundingClientRect().bottom+1 && last.top>=detail.getBoundingClientRect().top;})()`),true,'last learnable move is reachable');
+  }
+  await check("document.querySelector('#dex-detail').scrollTop=0");
+  assert.equal(await check("document.querySelector('#dex-detail .evolution-line')"),null);
   assert.equal(await check("document.querySelectorAll('#dex-detail .individual-stats .detail-stat-row').length"),6);
   assert.equal(await check("document.querySelectorAll('#dex-detail .detail-abilities > li').length"),2);
   assert.equal(await check("document.querySelectorAll('#dex-detail .complete-moves .detail-move-row').length"),3);
@@ -321,14 +340,14 @@ try {
   }
   await preferences.change({ language:'ko' });
   await until("document.querySelectorAll('#dex-detail .individual-stats .detail-stat-row').length === 6");
-  await check("document.querySelector('#dex-detail .evolution-line button').click()");
+  await check("document.querySelector('#dex-detail > button').click();[...document.querySelectorAll('.capture-card')].find(card=>card.querySelectorAll('.capture-stage').length===3).querySelectorAll('.capture-stage')[0].click()");
   await until("document.querySelector('#dex-detail .detail-loading')?.textContent.includes('못했')");
   await check("[...document.querySelectorAll('#dex-detail button')].find(button => button.textContent==='다시 시도').click()");
   await until("document.querySelectorAll('#dex-detail .individual-stats .detail-stat-row').length === 6");
   // Selecting another captured individual keeps its own profile; old network responses do not reopen details.
   await check("(() => { const select=document.querySelector('#dex-detail > select'); select.value='released'; select.dispatchEvent(new Event('change')); })()");
   assert.equal(await check("document.querySelector('#dex-detail > select').value"),'released');
-  await check("document.querySelector('#dex-detail > select').value='chain'; document.querySelector('#dex-detail > select').dispatchEvent(new Event('change')); document.querySelectorAll('#dex-detail .evolution-line button')[1].click()");
+  await check("document.querySelector('#dex-detail > button').click();[...document.querySelectorAll('.capture-card')].find(card=>card.querySelectorAll('.capture-stage').length===3).querySelectorAll('.capture-stage')[1].click()");
   await until("document.querySelector('#dex-detail .detail-loading') !== null");
   await check("document.querySelector('#dex-detail > button').click()");
   delayDetail();
@@ -454,6 +473,14 @@ try {
   }
   assert.equal(await check("document.querySelectorAll('.dex-card.representative').length"),1);
   assert.equal(await check("document.querySelectorAll('.dex-raising').length"),1);
+  await check("document.querySelector('#pane-collection').scrollTop=document.querySelector('#pane-collection').scrollHeight");
+  const listScroll=await check("document.querySelector('#pane-collection').scrollTop");
+  assert.ok(listScroll>0,'gallery fixture scrolls');
+  await check("[...document.querySelectorAll('#dex .dex-card')].at(-1).click()");
+  await until("!document.querySelector('#dex-detail').hidden && document.querySelector('#dex-detail .complete-moves') !== null");
+  await check("document.querySelector('#dex-detail').scrollTop=document.querySelector('#dex-detail').scrollHeight;document.querySelector('#dex-detail > button').click()");
+  assert.equal(await check("document.querySelector('#dex-detail').hidden"),true);
+  assert.ok(Math.abs(await check("document.querySelector('#pane-collection').scrollTop")-listScroll)<=1,'return restores collection position');
   await snap('collection');
   await check("document.querySelector('#log-mode').click()");await snap('capture-log');
   await check('window.renderCompanionTabs('+JSON.stringify(savedState)+')');
@@ -471,6 +498,16 @@ try {
   await until("document.querySelector('#partner-art button') !== null");
   await check("document.querySelector('#partner-art button').click()");
   await until("document.querySelectorAll('.known-moves .move-picker').length === 4");
+  assert.equal(await check("document.querySelector('.detail-representative').textContent"),'☆');
+  assert.equal(await check("document.querySelector('.detail-representative').getAttribute('aria-pressed')"),'false');
+  await check("document.querySelector('.detail-representative').click()");
+  await until("document.querySelector('.detail-representative').getAttribute('aria-pressed')==='true' && !document.querySelector('#pane-collection').inert");
+  assert.equal(await check("document.querySelector('.detail-representative').textContent"),'★');
+  assert.equal((await new CompanionStore(join(directory,'companion-v1.json')).read()).economy.representative.speciesID,1);
+  await check("document.querySelector('.detail-representative').click()");
+  await until("document.querySelector('.detail-representative').getAttribute('aria-pressed')==='false' && !document.querySelector('#pane-collection').inert");
+  assert.equal(await check("document.querySelector('.detail-representative').textContent"),'☆');
+  assert.equal((await new CompanionStore(join(directory,'companion-v1.json')).read()).economy.representative,null);
   assert.deepEqual((await companion.read()).active.moves,['growl','tackle','vine-whip']);
   await check("document.querySelector('.known-moves .move-picker[data-slot=\"0\"]').click()");
   assert.equal(await check("document.querySelector('.move-option[data-move=hyper-beam]') !== null"),false);
