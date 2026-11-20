@@ -70,10 +70,10 @@ const t = (source: string, args: Record<string, string | number> = {}) => transl
 const preferences = new SettingsStore(join(app.getPath('userData'), 'settings-v1.json'));
 
 async function showSettings(): Promise<void> {
-  if (settingsWindow) { settingsWindow.show(); settingsWindow.focus(); return; }
+  if (settingsWindow) { if (settingsWindow.isMinimized()) settingsWindow.restore(); settingsWindow.show(); settingsWindow.focus(); return; }
   const window = createWindow({
     width: 600, height: 740, minWidth: 400, minHeight: 420, title: t('PokeTokenBar 설정'),
-    autoHideMenuBar: true,
+    autoHideMenuBar: true, frame: false,
     webPreferences: { preload: fileURLToPath(new URL('./usage-preload.cjs', import.meta.url)) },
   });
   settingsWindow = window;
@@ -94,9 +94,13 @@ function createWindow(options: Electron.BrowserWindowConstructorOptions): Browse
   return window;
 }
 
+// Narrowest width that still shows the lens, LEDs, title and all six header buttons.
+const mainMinimumWidth = 440;
+
 async function showMainWindow(): Promise<void> {
   if (mainWindow) {
     if (!mainWindow.webContents.isLoading()) {
+      if (mainWindow.isMinimized()) mainWindow.restore();
       mainWindow.show();
       mainWindow.focus();
     }
@@ -107,7 +111,7 @@ async function showMainWindow(): Promise<void> {
   const width = Math.min(490, workArea.width);
   const height = Math.min(740, workArea.height);
   const window = createWindow({
-    width, height, minWidth: Math.min(width, 360), minHeight: Math.min(height, 430), skipTaskbar: isWindows, autoHideMenuBar: isWindows,
+    width, height, minWidth: Math.min(width, mainMinimumWidth), minHeight: Math.min(height, 430), skipTaskbar: isWindows, autoHideMenuBar: isWindows, frame: false,
     webPreferences: { preload: fileURLToPath(new URL('./usage-preload.cjs', import.meta.url)) },
   });
   mainWindow = window;
@@ -134,7 +138,7 @@ async function showMainWindow(): Promise<void> {
 }
 
 function toggleMainWindow(): void {
-  if (mainWindow?.isVisible()) mainWindow.hide();
+  if (mainWindow?.isVisible() && !mainWindow.isMinimized()) mainWindow.hide();
   else void showMainWindow().catch(reportError);
 }
 

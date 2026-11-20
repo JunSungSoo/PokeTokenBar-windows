@@ -6,7 +6,7 @@ import {newerVersion} from '../shared/release-version.js';
 import {windowsReleasePage} from '../shared/github-release.js';
 import { resolveLanguage, translate } from '../shared/localization.js';
 import type { SettingsStore } from './settings.js';
-import { app, ipcMain, Notification,shell, type BrowserWindow } from 'electron';
+import { app, BrowserWindow, ipcMain, Notification, shell } from 'electron';
 import { windowsAppID, type UpdateStatus, type WindowsSettings } from '../shared/windows.js';
 
 export const loginArgument = '--login-start';
@@ -43,6 +43,14 @@ export function registerWindowsIPC(
     }
   }
 
+  // Resolves the authorized main/settings window that sent a window-control request.
+  function senderWindow(event: Electron.IpcMainInvokeEvent): BrowserWindow {
+    authorize(event);
+    const window = BrowserWindow.fromWebContents(event.sender);
+    if (!window || window.isDestroyed()) throw new Error('Unexpected window control request');
+    return window;
+  }
+
   function settings(): WindowsSettings {
     let openAtLogin = false;
     if (supported) {
@@ -66,6 +74,14 @@ export function registerWindowsIPC(
     app.setLoginItemSettings({ ...loginOptions(), name: windowsAppID, openAtLogin: enabled, enabled });
     return settings();
   });
+  // The tray popup skips the Windows taskbar, so minimizing it hides it until the tray reopens it.
+  ipcMain.handle('windows:minimize', event => {
+    const window = senderWindow(event);
+    if (process.platform === 'win32' && window === mainWindow()) window.hide();
+    else window.minimize();
+  });
+  // Same result as the former native close button: the window is destroyed and the tray keeps the app alive.
+  ipcMain.handle('windows:close', event => { senderWindow(event).close(); });
   ipcMain.handle('windows:pet', event => {
     authorize(event);
     return togglePet();

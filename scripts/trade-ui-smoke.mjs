@@ -44,6 +44,8 @@ try{
   async function connect(){await check("document.querySelector('#trade-host').click()");await until(()=>trade.state().codes.length>0);peer.connect('127.0.0.1:'+trade.state().codes[0].split(':')[1],'Peer');await until(()=>trade.state().phase==='connected');await until(()=>check("document.querySelectorAll('.trade-choice').length === 2"));}
   await connect();
   assert.equal(await check("document.querySelector('.trade-choice').dataset.id"),'left-active');
+  // Party rows show the national number and the rarity badge.
+  assert.equal(await check("/^#\\d{3}/.test(document.querySelector('.trade-choice.party-row small').textContent) && document.querySelector('.trade-choice .rarity-badge') !== null"),true);
   await check("document.querySelector('[data-id=left-dex]').click()");await peer.offer('right-active');
   await until(()=>check("!document.querySelector('#trade-accept').disabled"));
   assert.equal(await check("document.querySelector('#trade-warning').hidden"),false);

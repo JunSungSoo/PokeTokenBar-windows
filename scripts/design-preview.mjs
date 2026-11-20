@@ -93,7 +93,7 @@ try {
     await capture(name);
   }
   // Supported compact widths: cards must keep an actual visible sprite area.
-  for(const width of [360,490]) {
+  for(const width of [440,490]) {
     main.setContentSize(width,665);
     await evaluate("document.querySelector('#tab-collection').click()");
     assert.deepEqual(await evaluate("[...document.querySelectorAll('.dex-card')].filter(card=>card.scrollWidth>card.clientWidth+1 || card.scrollHeight>card.clientHeight+1).map(card=>card.textContent)"),[]);
@@ -113,7 +113,7 @@ try {
   await new Promise(resolve=>setTimeout(resolve,200));
   await writeFile(join(output,'app-redesign.png'),(await board.webContents.capturePage()).toPNG());
   assert.deepEqual(errors,[]);
-  console.log('PASS: light/dark captures, 360/490px containment and visible original sprites. Output: '+output);
+  console.log('PASS: light/dark captures, 440/490px containment and visible original sprites. Output: '+output);
 } catch(error) { console.error(error); process.exitCode=1; }
 finally {
   board?.destroy();main?.destroy();

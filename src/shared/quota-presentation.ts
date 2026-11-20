@@ -45,3 +45,5 @@ export function accountBlocks(entries:readonly AttributionEntry[],accounts:reado
  for(const entry of entries){if(entry.time<now-18000000)continue;const id=accountOwner(entry.claudeSessions??[],entry.time,accounts);if(id)(grouped[id]??=[]).push(entry);}
  for(const [id,turns]of Object.entries(grouped)){const window=windows[id];if(window?.notStarted)continue;const block=activeBlock(turns,now,window?.reset);if(block)out[id]=block;}return out;
 }
+// Gauge tiers come from gaugeTier (pace-aware): 0-2 ok, 3-4 warn, 5 bad.
+export function hpLevel(gauge:number):'ok'|'warn'|'bad'{return gauge>=5?'bad':gauge>=3?'warn':'ok';}

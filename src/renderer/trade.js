@@ -3,6 +3,9 @@
   const t = (text, values) => window.i18n.t(text, values);
   const rarities = {common:'일반',uncommon:'고급',rare:'희귀',legendary:'전설'};
   const name = species => window.speciesNames?.[species.number]?.[window.i18n.language] ?? species.name;
+  const pokemonNumber = number => '#' + String(number).padStart(3, '0');
+  // Shows a form in the current language, falling back to English and then the internal key.
+  const formName = (form, number) => form ? window.formNames?.[number]?.[form]?.[window.i18n.language] ?? window.formNames?.[number]?.[form]?.en ?? form : '';
   let state, companion, working=false, options=[], choiceRequest=0, overwrite=false;
   const choice=get('choice'), nickname=get('nickname');
   function node(tag,text,className) { const element=document.createElement(tag);if(text!==undefined)element.textContent=text;if(className)element.className=className;return element; }
@@ -17,8 +20,7 @@
     get('repick').disabled=get('reject').disabled=working || !connected;
     for(const button of get('choices').querySelectorAll('button'))button.disabled=working || !connected || state.accepted;
   }
-  function preview(item) {
-    const row=node('div',undefined,'trade-mon');
+  function spriteArt(item) {
     const art=node('span',undefined,'pokemon-art');
     const img=node('img');img.alt='';
     const base='https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/';
@@ -28,13 +30,28 @@
     img.addEventListener('error',()=>{if(img.src!==staticSrc)img.src=staticSrc;else img.remove();});
     img.src=window.appPreferences?.animated && !matchMedia('(prefers-reduced-motion: reduce)').matches
       ? base+'versions/generation-v/black-white/animated/'+color+(item.species.animated ?? item.species.number)+'.gif' : staticSrc;
-    art.append(img);const info=node('span',undefined,'trade-mon-info');
+    art.append(img);return art;
+  }
+  function preview(item) {
+    const row=node('div',undefined,'trade-mon');
+    const art=spriteArt(item);const info=node('span',undefined,'trade-mon-info');
     const title=node('span',undefined,'trade-mon-title');title.append(node('strong',name(item.species)));
     const badge=node('span',t(rarities[item.rarity]),'rarity-badge');badge.dataset.rarity=item.rarity;title.append(badge);
     if(item.shiny)title.append(node('span','✦','shiny-indicator'));
-    info.append(title,node('small',['#'+String(item.species.number).padStart(3,'0'),item.level?'Lv. '+item.level:'',t(item.nature),item.form ?? ''].filter(Boolean).join(' · ')));
+    info.append(title,node('small',[pokemonNumber(item.species.number),item.level?'Lv. '+item.level:'',t(item.nature),formName(item.form,item.species.number)].filter(Boolean).join(' · ')));
     info.append(node('small',item.active?t('육성 중')+' · '+compactTokens(item.progress)+' '+t('토큰'):t('도감')));
     row.append(art,info);return row;
+  }
+  function partyRow(item) {
+    const button=node('button',undefined,'trade-choice party-row');button.type='button';button.dataset.id=item.id;
+    const info=node('span',undefined,'party-info'),heading=node('span',undefined,'party-name');
+    heading.append(node('strong',name(item.species)));
+    if(item.level)heading.append(node('span','Lv.'+item.level,'party-level px'));
+    if(item.shiny)heading.append(node('span','✦','shiny-indicator'));
+    const origin=item.active?t('육성 중')+' · '+compactTokens(item.progress)+' '+t('토큰'):t('도감');
+    info.append(heading,node('small',[pokemonNumber(item.species.number),t(item.nature),formName(item.form,item.species.number),origin].filter(Boolean).join(' · ')));
+    const badge=node('span',t(rarities[item.rarity]),'rarity-badge party-control');badge.dataset.rarity=item.rarity;
+    button.append(spriteArt(item),info,badge);return button;
   }
   function renderWarning() {
     overwrite=false;
@@ -75,7 +92,7 @@
     options=result;choice.replaceChildren(...options.map(item=>new Option(item.label,item.id)));
     if(options.some(item=>item.id===selected))choice.value=selected;
     get('choices').replaceChildren(...options.map(item=>{
-      const button=node('button');button.type='button';button.dataset.id=item.id;button.className='trade-choice';button.append(preview(item));
+      const button=partyRow(item);
       button.addEventListener('click',()=>{choice.value=item.id;void run(()=>window.trade.offer(item.id));});return button;
     }));
     if(!options.length)get('choices').append(node('p',t('아직 잡은 포켓몬이 없어요!')));

@@ -24,6 +24,8 @@ export interface WindowsAPI {
   onOpenDex(handler:()=>void):void;
   openSettings(): Promise<void>;
   quit(): Promise<void>;
+  minimizeWindow(): Promise<void>;
+  closeWindow(): Promise<void>;
   settings(): Promise<WindowsSettings>;
   login(enabled: boolean): Promise<WindowsSettings>;
   checkUpdate(): Promise<UpdateStatus>;

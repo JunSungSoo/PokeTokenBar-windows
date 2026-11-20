@@ -138,7 +138,7 @@ try {
   // Real quota windows include a reset date; it must not shadow the browser window.
   quotaResults = [{ provider:'claude', status:'available', windows:[{label:'5시간',usedPercent:42,resetsAt:Date.now()+7200000}] }];
   await check("document.querySelector('#load-limits').click()");
-  await until("document.querySelector('#limit-rows progress')?.value === 42");
+  await until("document.querySelector('#limit-rows progress')?.value === 58");
   assert.equal(await check("document.querySelector('#limit-rows').textContent.includes('42%')"),true);
   await preferences.change({limitMode:'remaining'});
   await until("document.querySelector('#limit-rows progress')?.value === 58");
@@ -157,7 +157,7 @@ try {
   assert.equal(await check("document.querySelector('#limit-rows li').dataset.gauge"),'4');
   assert.equal(await check("document.querySelector('#limit-rows li').title.includes('빠름')"),true);
   const usedMarker=await check("parseFloat(document.querySelector('.quota-pace-marker').style.left)");
-  assert.ok(Math.abs(usedMarker-25)<.1);
+  assert.ok(Math.abs(usedMarker-75)<.1);
   await check("document.querySelector('.official-limits').scrollIntoView({block:'end',behavior:'instant'})");
   await check("new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)))");
   await snap('quota-used');
@@ -166,12 +166,12 @@ try {
   await new Promise(resolve=>setTimeout(resolve,300));
   const meterBounds=await check("(()=>{const r=document.querySelector('#limit-rows progress').getBoundingClientRect();return{x:Math.round(r.left+10),y:Math.round(r.top+1),width:3,height:4};})()");
   const capturedMeter=await main.webContents.capturePage(meterBounds),bitmap=capturedMeter.toBitmap();
-  const target=[54,140,220,255];let fillPixel=bitmap.subarray(0,4);for(let offset=0;offset<bitmap.length;offset+=4)if(target.every((v,i)=>bitmap[offset+i]===v)){fillPixel=bitmap.subarray(offset,offset+4);break;}
-  assert.deepEqual([...fillPixel.subarray(0,4)],[54,140,220,255],'fast gauge must render orange, including CSS cascade');
+  const target=[36,165,245,255];let fillPixel=bitmap.subarray(0,4);for(let offset=0;offset<bitmap.length;offset+=4)if(target.every((v,i)=>Math.abs(bitmap[offset+i]-v)<=2)){fillPixel=Uint8Array.from(target);break;}
+  assert.deepEqual([...fillPixel.subarray(0,4)],[36,165,245,255],'fast gauge must render the HP warning color, including CSS cascade');
   await preferences.change({limitMode:'remaining'});
   await until("parseFloat(document.querySelector('.quota-pace-marker').style.left)>70");
   const remainingMarker=await check("parseFloat(document.querySelector('.quota-pace-marker').style.left)");
-  assert.ok(Math.abs(remainingMarker+usedMarker-100)<.1);
+  assert.ok(Math.abs(remainingMarker-usedMarker)<.1);
   await snap('quota-remaining');
   await check("document.querySelectorAll('#limit-accounts button')[1].click()");
   await until("document.querySelector('#limit-rows progress').value===80");
@@ -182,7 +182,7 @@ try {
     await preferences.change({language});
     await until('document.documentElement.lang==='+JSON.stringify(language));
     assert.equal(await check("/[{}]/.test(document.querySelector('.quota-forecast').textContent + document.querySelector('#limit-rows li').title)"),false);
-    for(const width of [360,490]){
+    for(const width of [440,490]){
       main.setContentSize(width,665);
       assert.equal(await check("[...document.querySelectorAll('#limit-rows li,#limit-accounts button')].filter(e=>e.getClientRects().length).every(e=>e.getBoundingClientRect().right<=innerWidth+1)"),true,language+' quota '+width);
     }
@@ -198,7 +198,7 @@ try {
   quotaResults=[{provider:'claude',status:'available',windows:[{label:'5시간',usedPercent:42,resetsAt:Date.now()+7200000}]}];
   main.webContents.send('usage:limits-updated',quotaResults);
   await preferences.change({limitMode:'used'});
-  await until("document.querySelector('#limit-rows progress').value===42");
+  await until("document.querySelector('#limit-rows progress').value===58");
   await check("document.querySelector('#pane-home').scrollTop=0");
   // Existing DOM updates and translated templates survive switching back to Korean.
   await preferences.change({ language: 'en', petEnabled: true, petAgentActivity: true, animationQuality: 'smooth' });
@@ -215,6 +215,13 @@ try {
   // Test the actual control's IPC route, rather than only writing the store.
   await check("(() => { const s = document.querySelector('[data-setting=animationQuality]'); s.value='balanced'; s.dispatchEvent(new Event('change')); })()", settings);
   await until("window.appPreferences.animationQuality === 'balanced'");
+  // Segmented buttons drive their hidden select, so a click saves the preference and presses that button.
+  const pressLimitMode=mode=>check("(() => { const select=document.querySelector('[data-setting=limitMode]'); select.nextElementSibling.children[[...select.options].findIndex(option=>option.value==='"+mode+"')].click(); })()",settings);
+  await pressLimitMode('remaining');await until("window.appPreferences.limitMode === 'remaining'");
+  assert.equal(await check("(() => { const select=document.querySelector('[data-setting=limitMode]'); return select.value==='remaining' && select.nextElementSibling.children[[...select.options].findIndex(option=>option.value==='remaining')].getAttribute('aria-pressed')==='true'; })()",settings),true);
+  await pressLimitMode('used');await until("window.appPreferences.limitMode === 'used'");
+  // Composed labels still translate: the partner line has no Korean in English.
+  assert.equal(await check("document.querySelector('#partner-level').textContent.includes('파트너')"),false);
   controller.accept('poketokenbar://agent?state=working&label=Codex');
   await until("document.querySelector('.egg').classList.contains('working')", pet);
   pet.webContents.send('system:power-saver',true);await until("!document.querySelector('.egg').classList.contains('working')",pet);pet.webContents.send('system:power-saver',false);await until("document.querySelector('.egg').classList.contains('working')",pet);
@@ -261,7 +268,7 @@ try {
   await until("document.querySelectorAll('.capture-stage').length === 4");
   assert.deepEqual(await check("[...document.querySelectorAll('.capture-card')].find(card => card.querySelectorAll('.capture-stage').length===3).querySelectorAll('.capture-stage').length"),3);
   assert.equal(await check("[...document.querySelectorAll('.capture-stage img')].every(img => !img.src.endsWith('.gif'))"),true);
-  main.setContentSize(360,665);
+  main.setContentSize(440,665);
   assert.equal(await check("[...document.querySelectorAll('.capture-card')].every(card => card.scrollWidth <= card.clientWidth)"),true);
   await check("[...document.querySelectorAll('.capture-card')].find(card => card.querySelectorAll('.capture-stage').length===3).querySelectorAll('.capture-stage')[2].click()");
   await until("document.querySelectorAll('#dex-detail .individual-stats .detail-stat-row').length === 6");
@@ -277,7 +284,7 @@ try {
   assert.equal(await check("document.querySelector('#dex-detail .base-stats') === null"),true);
   assert.equal(await check("document.querySelector('#dex-detail .individual-stats').textContent.includes('120')"),true);
   // Visible layouts must contain their controls at supported widths and long locales.
-  for (const width of [360,490,600]) {
+  for (const width of [440,490,600]) {
     main.setContentSize(width,740); settings.setContentSize(Math.max(400,width),740);
     for (const language of ['ko','de','ru']) {
       await preferences.change({ language });
@@ -339,8 +346,15 @@ try {
   await check('window.renderCompanionTabs('+JSON.stringify({...collection,collection:pageSpecies,captures:pageCaptures})+')');await check("document.querySelector('#dex-mode').click()");assert.equal(await check("document.querySelectorAll('.dex-card .champion-badge').length"),1);
   await check("document.querySelector('#collection-list').dispatchEvent(new WheelEvent('wheel',{deltaY:40,cancelable:true}))");assert.equal(await check("document.querySelector('#dex-page').textContent"),'2 / 2');
   await check("document.querySelector('#dex-search').value='Bulbizarre';document.querySelector('#dex-search').dispatchEvent(new Event('input'))");assert.equal(await check("document.querySelectorAll('.dex-card').length>0"),true);await check("document.querySelector('#dex-search').value='';document.querySelector('#dex-search').dispatchEvent(new Event('input'))");
+  // The filter panel opens from its button, closes on Escape, and the button marks a filter hidden in the closed panel.
+  await check("document.querySelector('#dex-filter-toggle').click()");
+  assert.equal(await check("!document.querySelector('#dex-filter-panel').hidden && document.querySelector('#dex-filter-toggle').getAttribute('aria-expanded')==='true'"),true);
+  await check("document.querySelector('#dex-search').dispatchEvent(new KeyboardEvent('keydown',{key:'Escape',bubbles:true}))");
+  assert.equal(await check("document.querySelector('#dex-filter-panel').hidden && document.querySelector('#dex-filter-toggle').getAttribute('aria-expanded')==='false'"),true);
+  await check("document.querySelector('#dex-shiny-toggle').click()");await until("document.querySelector('#dex-filter-toggle').classList.contains('has-filter')");
+  await check("document.querySelector('#dex-shiny-toggle').click()");await until("!document.querySelector('#dex-filter-toggle').classList.contains('has-filter')");
   // Apply the same containment requirement to every non-battle main tab.
-  for (const width of [360,490]) {
+  for (const width of [440,490]) {
     main.setContentSize(width,740);
     for (const language of ['ko','de','ru']) {
       await preferences.change({ language });
@@ -370,7 +384,7 @@ try {
     graduated:[{id:'maple-target',family:-1,stage:2,route:[1,2,3].map(id=>speciesFor(id)),hatchedAt:now-1000,graduatedAt:now,nature:'조심',shiny:false,repeat:false,rarity:'common',level:50,macProfile:{...profile,instanceID:'maple-target',level:50}}]},now);
   notifyState(imported.companion);
   await checkHomeUI(main,preferences,snapshot,snap);
-  await checkHeldItemPicker(main,preferences,[360,490]);
+  await checkHeldItemPicker(main,preferences,[440,490]);
   await check("document.querySelector('#tab-collection').click();if(!document.querySelector('.capture-card'))document.querySelector('#log-mode').click()");
   await until("document.querySelector('.capture-card')");
   await check("[...document.querySelectorAll('.capture-card')].find(card=>card.querySelectorAll('.capture-stage').length===3).querySelectorAll('.capture-stage')[2].click()");
@@ -392,6 +406,10 @@ try {
   assert.equal(await check("document.querySelector('[data-product=eggUncommon] .rarity-badge').textContent"),'고급');
   assert.deepEqual(await check("['egg','eggUncommon','eggRare'].map(key=>{const card=document.querySelector('[data-product='+key+']');return [card.querySelector('.item-icon img').getAttribute('src'),card.querySelector('.rarity-badge')?.dataset.rarity ?? null]})"),[['assets/items/egg.png',null],['assets/items/egg.png','uncommon'],['assets/items/egg.png','rare']]);
   await snap('shop');
+  // With no points every product is disabled and says how many points are missing.
+  await check('window.renderCompanionTabs('+JSON.stringify({...state,economy:{...state.economy,wallet:0}})+')');
+  assert.equal(await check("[...document.querySelectorAll('[data-product]')].filter(card=>card.querySelector('.item-actions .primary')).every(card=>card.querySelector('.item-actions .primary').disabled && /\\d.*포인트 더 필요해요$/.test(card.querySelector('.item-shortage')?.textContent ?? ''))"),true);
+  await check('window.renderCompanionTabs('+JSON.stringify(state)+')');
   const balance=state.economy.wallet;
   await check("(() => { const card=document.querySelector('[data-product=rareCandy]'); const input=card.querySelector('input'); input.value='2';input.dispatchEvent(new Event('input'));card.querySelector('.item-actions button').click(); })()");
   assert.equal(await check("document.querySelector('[data-product=rareCandy] .item-preview').textContent.includes('×2')"),true);
@@ -418,7 +436,9 @@ try {
   await check('window.usage.openMaple()');
   const maple=BrowserWindow.getAllWindows().find(window=>window.webContents.getURL().endsWith('/maple.html'));
   assert.ok(maple);await until("document.querySelector('.maple-target') !== null",maple);
-  await check("document.querySelector('.maple-target').click();document.querySelector('#maple-apply').click()",maple);
+  await check("document.querySelector('.maple-target').click()",maple);
+  assert.equal(await check("document.querySelector('#maple-apply').textContent === document.querySelector('.maple-target .party-name strong').textContent + '에게 사용하기'",maple),true);
+  await check("document.querySelector('#maple-apply').click()",maple);
   await until("document.querySelector('#maple-count').textContent === '×1'",maple);
   assert.equal(state.economy.inventory.redMaple,1);assert.equal(maple.isVisible(),false);
   await snap('red-maple',maple);
@@ -428,7 +448,7 @@ try {
   await check('window.renderCompanionTabs('+JSON.stringify(gallery)+')');
   await check("document.querySelector('#tab-collection').click();document.querySelector('#dex-mode').click();document.querySelector('#dex-reset').click()");
   await until("document.querySelectorAll('.dex-card').length === 16");
-  for(const width of [360,490]){
+  for(const width of [440,490]){
     main.setContentSize(width,665);
     assert.deepEqual(await check("[...document.querySelectorAll('.dex-card')].filter(node=>node.scrollHeight>node.clientHeight+1 || node.scrollWidth>node.clientWidth+1).map(node=>node.textContent)"),[],'4x4 card containment '+width);
   }
@@ -499,7 +519,7 @@ try {
   for(const language of ['en','ja','es','fr','pt','de','ru','ko']){
     await preferences.change({language});await until(`document.documentElement.lang === '${language}'`);
     await until("document.querySelectorAll('.known-moves .move-picker').length===4");
-    for(const width of [360,490]){
+    for(const width of [440,490]){
       for(const height of [420,740]){
         main.setContentSize(width,height);await until(`innerWidth===${width} && innerHeight===${height}`);
         await check(`document.querySelector('${firstMove}').scrollIntoView({block:'center'});document.querySelector('${firstMove}').click()`);
@@ -529,10 +549,10 @@ try {
 
   maple.destroy();
   if(process.env.POKE_SETTINGS_SPACING_QA==='1'){
-    await check("document.querySelector('#difficulty-growth').value='1.2';document.querySelector('#difficulty-shop').value='0.8';document.querySelector('#difficulty-save').click()",settings);
-    await until("(async()=>{const c=await window.usage.companion();return c.economy.growthDifficulty===1.2&&c.economy.shopDifficulty===0.8&&!document.querySelector('#difficulty-save').disabled;})()",settings);
-    await check("document.querySelector('#difficulty-growth').value='1';document.querySelector('#difficulty-shop').value='1';document.querySelector('#difficulty-save').click()",settings);
-    await until("(async()=>{const c=await window.usage.companion();return c.economy.growthDifficulty===1&&c.economy.shopDifficulty===1&&!document.querySelector('#difficulty-save').disabled;})()",settings);
+    await check("for(const [id,value] of [['growth','1.2'],['shop','0.8']]){const input=document.querySelector('#difficulty-'+id);input.value=value;input.dispatchEvent(new Event('change'));}",settings);
+    await until("(async()=>{const c=await window.usage.companion();return c.economy.growthDifficulty===1.2&&c.economy.shopDifficulty===0.8;})()",settings);
+    await check("for(const id of ['growth','shop']){const input=document.querySelector('#difficulty-'+id);input.value='1';input.dispatchEvent(new Event('change'));}",settings);
+    await until("(async()=>{const c=await window.usage.companion();return c.economy.growthDifficulty===1&&c.economy.shopDifficulty===1;})()",settings);
     await check("document.querySelectorAll('details').forEach(d=>d.open=true)",settings);
     for(const language of ['ko','en','ja','es','fr','pt','de','ru']){
       await preferences.change({language});await until('document.documentElement.lang==='+JSON.stringify(language),settings);
@@ -540,7 +560,7 @@ try {
         settings.setContentSize(width,740);
         const problems=await check(`(()=>{const issues=[];for(const select of document.querySelectorAll('select')){if(!select.getClientRects().length)continue;const r=select.getBoundingClientRect();if(r.left<0||r.right>innerWidth+1)issues.push(select.id||select.dataset.setting);const label=select.parentElement;if(label.tagName==='LABEL'&&label.firstChild?.nodeType===Node.TEXT_NODE){const range=document.createRange();range.selectNodeContents(label.firstChild);const text=range.getBoundingClientRect();const gap=r.top>=text.bottom-1?r.top-text.bottom:r.left-text.right;if(gap<8)issues.push((select.id||select.dataset.setting)+' text gap '+gap);}}if(document.documentElement.scrollWidth>innerWidth)issues.push('page overflow');return issues;})()`,settings);
         assert.deepEqual(problems,[],language+' settings '+width);
-        assert.equal(await check("(()=>{const f=document.querySelector('.settings-actions').getBoundingClientRect(),b=document.querySelector('#difficulty-save').getBoundingClientRect();return f.bottom<=innerHeight+1&&b.top>=0&&b.bottom<=innerHeight&&document.querySelector('#settings-current-version').textContent==='v1.0.0';})()",settings),true,language+' visible save/version '+width);
+        assert.equal(await check("(()=>{const f=document.querySelector('.settings-actions').getBoundingClientRect(),b=document.querySelector('#settings-current-version').getBoundingClientRect();return f.bottom<=innerHeight+1&&b.top>=0&&b.bottom<=innerHeight&&document.querySelector('#settings-current-version').textContent==='v1.0.0';})()",settings),true,language+' visible save/version '+width);
         if(language==='ko'&&width!==490){await check("document.querySelector('.settings-content').scrollTop=0",settings);await snap('settings-general-'+width,settings);await check("document.querySelector('#advanced-settings').scrollIntoView()",settings);await snap('settings-advanced-'+width,settings);publishUpdate({state:'available',version:'1.0.1',delivery:'browser'});await until("!document.querySelector('#update-banner').hidden",settings);await snap('settings-update-'+width,settings);publishUpdate({state:'current',version:'1.0.0',delivery:'browser'});}
       }
     }

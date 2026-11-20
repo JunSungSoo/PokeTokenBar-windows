@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'self'; script-src 'self'; connect-src https://raw.githubusercontent.com; img-src 'self' https://raw.githubusercontent.com">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'self'; font-src 'self'; script-src 'self'; connect-src https://raw.githubusercontent.com; img-src 'self' https://raw.githubusercontent.com">
     <title>PokeTokenBar Windows</title>
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="battle.css">
@@ -38,35 +38,50 @@
     <script src="battle.js" defer></script>
   </head>
   <body class="app-window">
-    <main>
-      <aside id="update-banner" class="surface" hidden aria-live="polite"></aside><header class="app-brand" aria-label="PokeTokenBar"><span class="brand-mark" aria-hidden="true"></span><strong data-no-translate>PokeTokenBar</strong><span class="brand-platform" data-no-translate>WINDOWS</span></header>
-      <nav class="app-tabs" role="tablist" aria-label="앱 메뉴">
-        <button type="button" role="tab" id="tab-home" aria-controls="pane-home" aria-selected="true" tabindex="0">홈</button>
-        <button type="button" role="tab" id="tab-shop" aria-controls="pane-shop" aria-selected="false" tabindex="-1">상점</button>
-        <button type="button" role="tab" id="tab-bag" aria-controls="pane-bag" aria-selected="false" tabindex="-1">가방</button>
-        <button type="button" role="tab" id="tab-collection" aria-controls="pane-collection" aria-selected="false" tabindex="-1">도감</button>
-        <button type="button" role="tab" id="tab-trade" aria-controls="pane-trade" aria-selected="false" tabindex="-1">교환</button>
-        <button type="button" role="tab" id="tab-battle" aria-controls="pane-battle" aria-selected="false" tabindex="-1">배틀</button>
-      </nav>
+    <main class="dex-shell">
+      <div class="dex-shell-header">
+        <img class="dex-lens" src="assets/ui/lens.svg" alt=""><span class="dex-leds" aria-hidden="true"><i></i><i></i><i></i></span><h1 class="dex-title" data-no-translate>PokeTokenBar</h1>
+        <span class="dex-meta" id="refresh-age"></span>
+        <span class="dex-actions">
+          <button id="refresh" class="shell-icon" type="button" aria-label="새로고침" title="새로고침">↻</button><button id="footer-pet" class="shell-icon" type="button" aria-label="플로팅 펫 표시/숨기기" title="플로팅 펫 표시/숨기기"></button><button id="open-settings" class="shell-icon" type="button" aria-label="설정 창 열기" title="설정">⚙</button><button id="footer-quit" class="shell-icon" type="button" aria-label="종료" title="종료"></button><button id="window-minimize" class="shell-icon" type="button" aria-label="창 최소화" title="창 최소화"></button><button id="window-close" class="shell-icon" type="button" aria-label="창 닫기" title="창 닫기"></button>
+        </span>
+      </div>
+      <div class="dex-hinge" aria-hidden="true"></div>
+      <div class="dex-screen">
+      <aside id="update-banner" class="surface" hidden aria-live="polite"></aside>
       <p id="companion-message" role="status" hidden></p>
       <section role="tabpanel" id="pane-home" aria-labelledby="tab-home" tabindex="0">
-        <section class="companion surface" aria-labelledby="companion-title">
-          <div class="partner"><div id="partner-art"></div><div class="partner-info">
-            <div class="partner-title"><h2 id="companion-title">알</h2><span id="home-rarity" class="rarity-badge" hidden></span></div><div id="home-types" class="type-badges"></div><p id="profile" hidden></p>
-            <progress id="growth" aria-label="파트너 성장 진행률" max="1" value="0" hidden></progress>
-            <p id="companion-status" role="status">육성 기록을 읽는 중입니다…</p>
-          <p id="companion-mood" class="companion-mood"></p>
+        <section class="companion" aria-labelledby="companion-title">
+          <div class="partner dex-panel"><div id="partner-art"></div><div class="partner-info">
+            <p id="partner-level" class="px partner-level">파트너</p>
+            <div class="partner-title"><h2 id="companion-title">알</h2><span id="home-rarity" class="rarity-badge" hidden></span><div id="home-types" class="type-badges"></div></div><p id="profile" hidden></p>
+            <progress id="growth" class="exp-bar" aria-label="파트너 성장 진행률" max="1" value="0" hidden></progress>
+            <div class="exp-caption"><span aria-hidden="true">EXP</span><span id="companion-status" role="status">육성 기록을 읽는 중입니다…</span></div>
           </div></div>
+          <div class="textbox home-mood"><p id="companion-mood" class="companion-mood"></p></div>
           <p id="ditto-reveal" role="status" hidden></p>
-          <div class="home-evolution-navigation"><button id="evolution-back" type="button" aria-label="이전 진화 보기" hidden>‹</button><div id="evolution-line" class="evolution-line"></div><button id="evolution-forward" type="button" aria-label="다음 진화 보기" hidden>›</button></div>
         </section>
-        <section class="home-usage" aria-labelledby="usage-title">
+        <section class="home-usage dex-panel" aria-labelledby="usage-title">
           <h2 id="usage-title">오늘 사용한 토큰</h2>
           <div class="usage-today">
-            <strong id="today-total">—</strong><span id="today-exact"></span><span id="today-cost"></span>
+            <strong id="today-total">—</strong><span id="today-exact"></span>
           </div>
-          <div id="usage-periods" class="usage-periods"></div>
+          <p class="today-summary"><span id="today-cost"></span><span id="today-compare" hidden></span></p>
+          <div id="today-week" class="today-week" aria-hidden="true"></div>
           <p id="status" role="status" hidden></p>
+        </section>
+        <section class="official-limits dex-panel" aria-labelledby="limits-title">
+          <div class="limit-toolbar">
+            <h3 id="limits-title">한도 (공식)</h3>
+            <button id="load-limits" type="button">갱신</button>
+          </div>
+          <p id="limit-status" role="status">공식 한도 불러오기</p>
+          <div id="limit-accounts" class="usage-providers" aria-label="계정"></div>
+          <ul id="limit-rows"></ul>
+        </section>
+        <div class="home-evolution-navigation"><button id="evolution-back" type="button" aria-label="이전 진화 보기" hidden>‹</button><div id="evolution-line" class="evolution-line"></div><button id="evolution-forward" type="button" aria-label="다음 진화 보기" hidden>›</button></div>
+        <div class="home-details dex-panel">
+          <div id="usage-periods" class="usage-periods"></div>
           <div class="usage-actions"><span id="usage-streak" hidden></span><button id="usage-details" type="button" aria-label="사용량 돌아보기">상세</button></div>
           <section class="usage-trend" aria-label="일별 사용량 그래프">
             <div class="trend-heading">
@@ -81,16 +96,7 @@
           <div id="usage-providers" class="usage-providers" role="group" aria-label="제공자별 오늘 사용량과 한도"></div>
           <p id="provider-status-banner" class="service-incident" role="status" hidden></p>
           <div id="provider-usage" class="provider-usage"></div>
-          <section class="official-limits" aria-labelledby="limits-title">
-            <h3 id="limits-title">한도 (공식)</h3>
-            <div class="limit-toolbar">
-              <p id="limit-status" role="status">공식 한도 불러오기</p>
-              <button id="load-limits" type="button">갱신</button>
-            </div>
-            <div id="limit-accounts" class="usage-providers" aria-label="계정"></div>
-            <ul id="limit-rows"></ul>
-          </section>
-        </section>
+        </div>
       </section>
       <section id="recap-screen" aria-label="사용량 돌아보기" tabindex="-1" hidden>
         <header class="recap-navigation"><button id="recap-back" type="button">‹ 뒤로</button><select id="recap-scope" aria-label="사용량 돌아보기"><option value="week">주간</option><option value="month">월간</option><option value="year">연간</option></select></header>
@@ -99,30 +105,36 @@
         <p id="recap-best-day"></p><p id="recap-comparison"></p>
       </section>
       <section role="tabpanel" id="pane-shop" aria-labelledby="tab-shop" tabindex="0" hidden>
-        <h2 class="pane-title">상점</h2>
-        <section id="shop-wallet" class="surface" aria-label="토큰 지갑"></section>
-        <section id="shop-products" class="card-list" aria-label="판매 상품"></section>
+        <div class="shop-awning" aria-hidden="true"></div>
+        <section id="shop-wallet" class="dex-panel" aria-label="토큰 지갑"></section>
+        <div class="textbox shop-greeting"><p>어서 오세요! 무엇을 찾으시나요?</p></div>
+        <section id="shop-products" class="dex-panel" aria-label="판매 상품"></section>
       </section>
       <section role="tabpanel" id="pane-bag" aria-labelledby="tab-bag" tabindex="0" hidden>
-        <h2 class="pane-title">가방</h2>
-        <section id="bag-items" class="card-list" aria-label="보유 아이템"></section>
+        <section id="bag-items" class="dex-panel" aria-label="보유 아이템"></section>
       </section>
       <section role="tabpanel" id="pane-collection" aria-labelledby="tab-collection" tabindex="0" hidden>
         <section id="collection-content" class="surface" aria-label="도감과 포획 기록">
           <div id="collection-list">
-            <div class="collection-modes" aria-label="컬렉션 보기">
+            <div id="dex-summary" class="dex-panel"></div>
+            <div class="collection-search-row">
+              <label class="dex-search-field"><span class="dex-search-icon" aria-hidden="true"></span><input id="dex-search" type="search" aria-label="이름 또는 번호 검색" placeholder="이름 또는 번호 검색"></label>
+              <button type="button" id="dex-filter-toggle" class="dex-filter-toggle" aria-label="필터와 정렬" title="필터와 정렬" aria-expanded="false" aria-controls="dex-filter-panel"><span class="dex-filter-icon" aria-hidden="true"></span></button>
+            </div>
+            <div class="collection-modes segmented" aria-label="컬렉션 보기">
               <button type="button" id="dex-mode" aria-pressed="true">도감</button>
               <button type="button" id="log-mode" aria-pressed="false">포획 기록</button>
             </div>
-            <div class="collection-filters">
-              <input id="dex-search" type="search" aria-label="이름 또는 번호 검색" placeholder="이름 또는 번호 검색">
+            <div class="collection-filters dex-panel" id="dex-filter-panel" hidden>
               <select hidden id="dex-rarity" aria-label="희귀도"><option value="">모든 희귀도</option><option value="common">일반</option><option value="uncommon">고급</option><option value="rare">희귀</option><option value="legendary">전설</option></select>
               <select hidden id="dex-region" aria-label="지방"><option value="">모든 지방</option></select>
-              <select id="dex-sort" aria-label="정렬"></select>
-              <input id="dex-shiny" type="checkbox" hidden><button id="dex-shiny-toggle" type="button" aria-label="이로치만" aria-pressed="false" title="이로치만">✧</button>
-              <button type="button" id="dex-reset" aria-label="필터 초기화" title="필터 초기화">↺</button>
+              <div id="dex-filter-chips"></div>
+              <div class="collection-filter-controls">
+                <select id="dex-sort" aria-label="정렬"></select>
+                <input id="dex-shiny" type="checkbox" hidden><button id="dex-shiny-toggle" type="button" aria-label="이로치만" aria-pressed="false" title="이로치만"><span class="dex-sparkle" aria-hidden="true"></span></button>
+                <button type="button" id="dex-reset" aria-label="필터 초기화" title="필터 초기화">↺</button>
+              </div>
             </div>
-            <div id="dex-summary"></div>
             <ul id="dex"></ul>
             <div class="collection-pages" id="dex-pages"><button type="button" id="dex-prev" aria-label="이전 페이지">‹</button><span id="dex-page"></span><button type="button" id="dex-next" aria-label="다음 페이지">›</button></div>
             <ul id="captures" hidden></ul>
@@ -134,30 +146,30 @@
       <section role="tabpanel" id="pane-trade" aria-labelledby="tab-trade" tabindex="0" hidden>
       <section id="trade-panel" class="trade-panel">
         <header class="trade-identity"><h2>교환</h2><p id="trade-peer"></p></header>
-        <div id="trade-connection" class="trade-connection">
+        <div id="trade-connection" class="trade-connection dex-panel">
           <p>같은 네트워크에서 한쪽이 방을 열고 다른 쪽이 연결 코드를 입력하세요.</p>
           <label for="trade-nickname">내 교환 닉네임</label>
           <input id="trade-nickname" maxlength="40" placeholder="PokeTokenBar Windows">
-          <button id="trade-host" type="button">방 열기</button>
+          <button id="trade-host" class="primary" type="button">방 열기</button>
           <div id="trade-codes" class="trade-codes"></div>
           <label for="trade-code">연결 코드</label>
-          <div class="trade-connect-row"><input id="trade-code" placeholder="192.168.0.2:12345" maxlength="21" spellcheck="false" autocapitalize="off"><button id="trade-connect" type="button">연결</button></div>
+          <div class="trade-connect-row"><input id="trade-code" placeholder="192.168.0.2:12345" maxlength="21" spellcheck="false" autocapitalize="off"><button id="trade-connect" class="secondary" type="button">연결</button></div>
         </div>
-        <section id="trade-picker" hidden>
+        <section id="trade-picker" class="dex-panel" hidden>
           <h3>교환할 대상 선택</h3>
           <select id="trade-choice" hidden aria-label="보낼 포켓몬"></select>
           <div id="trade-choices" class="trade-choices"></div>
           <button id="trade-offer" type="button" disabled>제안</button>
         </section>
-        <section id="trade-proposal" hidden>
+        <section id="trade-proposal" class="dex-panel" hidden>
           <h3>교환 제안</h3>
           <p class="eyebrow">내가 줄 것</p><div id="trade-mine" class="trade-preview"></div>
           <p class="eyebrow">내가 받을 것</p><div id="trade-theirs" class="trade-preview"></div>
           <p id="trade-warning" class="trade-warning" role="note" hidden></p>
           <div class="trade-actions"><button id="trade-repick" type="button">교환할 대상 선택</button><div class="trade-decision"><button id="trade-accept" class="primary" type="button" disabled>승인</button><button id="trade-reject" type="button">거절</button></div></div>
         </section>
-        <p id="trade-status" role="status" aria-live="polite"></p>
-        <section id="trade-backup-panel" hidden><p id="trade-backup"></p><button id="trade-backup-open" type="button">백업 폴더 열기</button></section>
+        <p id="trade-status" class="textbox" role="status" aria-live="polite"></p>
+        <section id="trade-backup-panel" class="dex-panel" hidden><p id="trade-backup"></p><button id="trade-backup-open" type="button">백업 폴더 열기</button></section>
         <button id="trade-close" type="button" disabled>취소</button>
       </section>
       </section>
@@ -168,10 +180,15 @@
         <p>6대6 싱글 · 27연전 · HP·PP 유지</p><p id="battle-status" role="status"></p>
       </section>
       </section>
-      <footer class="app-footer">
-        <div class="refresh-tools"><button id="refresh" type="button" aria-label="새로고침" title="새로고침">↻</button><span id="refresh-age"></span></div><div class="footer-tools"><button id="footer-pet" type="button" aria-label="플로팅 펫 표시/숨기기" title="플로팅 펫 표시/숨기기"></button>
-        <button id="open-settings" type="button" aria-label="설정 창 열기" title="설정">⚙</button><button id="footer-quit" type="button" aria-label="종료" title="종료"></button></div>
-      </footer>
+      <nav class="app-tabs dex-tabs" role="tablist" aria-label="앱 메뉴">
+        <button type="button" role="tab" id="tab-home" aria-controls="pane-home" aria-selected="true" tabindex="0">홈</button>
+        <button type="button" role="tab" id="tab-shop" aria-controls="pane-shop" aria-selected="false" tabindex="-1">상점</button>
+        <button type="button" role="tab" id="tab-bag" aria-controls="pane-bag" aria-selected="false" tabindex="-1">가방</button>
+        <button type="button" role="tab" id="tab-collection" aria-controls="pane-collection" aria-selected="false" tabindex="-1">도감</button>
+        <button type="button" role="tab" id="tab-trade" aria-controls="pane-trade" aria-selected="false" tabindex="-1">교환</button>
+        <button type="button" role="tab" id="tab-battle" aria-controls="pane-battle" aria-selected="false" tabindex="-1">배틀</button>
+      </nav>
+      </div>
     </main>
   </body>
 </html>

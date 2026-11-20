@@ -32,6 +32,13 @@ function renderTrend(usage){
  chart.replaceChildren(...values.map((day,index)=>{const number=day.date.getDate(),today=index===length-1,mark=element('button',undefined,'trend-day'+(today?' today':''));mark.type='button';mark.title=new Intl.DateTimeFormat(window.i18n.language,{month:'short',day:'numeric'}).format(day.date)+' · '+groupedTokens.format(day.total)+' '+t('토큰');mark.setAttribute('aria-label',mark.title);const bar=element('span',undefined,'trend-stack');bar.setAttribute('aria-hidden','true');day.amounts.forEach((amount,i)=>{if(!amount)return;const segment=element('span',undefined,'trend-segment');segment.style.setProperty('--share',amount/(peak||1)*100+'%');segment.style.setProperty('--series',colors[i%colors.length]);bar.append(segment);});mark.append(bar,element('span',today||number===1||index%7===0?String(number):'','trend-axis'));for(const event of ['pointerenter','focus','click'])mark.addEventListener(event,()=>showDay(day.date,day.total,day.cost));return mark;}));
  legend.replaceChildren(...ids.map((id,i)=>{const label=element('span',lastSnapshot.labels[id]);label.style.setProperty('--series',colors[i%colors.length]);return label;}));chart.onpointerleave=()=>showDay(values.at(-1).date,values.at(-1).total,values.at(-1).cost);chart.onpointerleave();
 }
+// Fills the home card's vs-yesterday line and 7-day bars; today uses the displayed total.
+function renderTodayWeek(rows,today){
+ const now=new Date(),totals=Array.from({length:7},(_,i)=>i===6?today:rows.reduce((sum,[,row])=>sum+(row.daily[dailyKey(H.stepDay(now,i-6))]??0),0)),yesterday=totals[5];
+ const compare=document.querySelector('#today-compare'),change=yesterday?Math.round(Math.abs(today-yesterday)/yesterday*100):0;compare.hidden=!yesterday;
+ compare.textContent=!yesterday?'':!change?t('어제와 같아요'):t(today>yesterday?'어제보다 {percent}% 많아요':'어제보다 {percent}% 적어요',{percent:format.format(change)});
+ const peak=Math.max(1,...totals);document.querySelector('#today-week').replaceChildren(...totals.map((total,i)=>{const bar=element('span',undefined,'today-week-bar'+(i===6?' today':''));bar.style.setProperty('--share',Math.max(4,total/peak*100)+'%');return bar;}));
+}
 function renderProvider(usage){
  const data=usage[selectedProvider],line=document.querySelector('#provider-usage');line.replaceChildren();line.hidden=!data||!availableRows(usage).some(([id])=>id===selectedProvider);
  if(!line.hidden){const heading=element('div',undefined,'provider-summary');heading.append(element('strong',lastSnapshot.labels[selectedProvider]),element('span',compactTokens(data.today.total)),costLabel(data.cost.today));line.append(heading);
@@ -45,7 +52,7 @@ function render({usage,labels,activity,activityGate}){
  updateRefreshAge();
  if(activity)window.dispatchEvent(new CustomEvent('usage-activity',{detail:activity}));window.usageRecap.update(lastSnapshot);
  const rows=availableRows(usage),all=rows.map(([,row])=>row),total=period=>all.reduce((sum,row)=>sum+row[period].total,0),cost=period=>sumCost(all.map(row=>row.cost[period])),today=total('today');
- document.querySelector('#today-total').textContent=compactTokens(today);document.querySelector('#today-exact').textContent=today>=1000?groupedTokens.format(today):'';document.querySelector('#today-cost').replaceChildren(costLabel(cost('today')));
+ document.querySelector('#today-total').textContent=compactTokens(today);document.querySelector('#today-exact').textContent=today>=1000?groupedTokens.format(today):'';document.querySelector('#today-cost').replaceChildren(costLabel(cost('today')));renderTodayWeek(rows,today);
  document.querySelector('#usage-periods').replaceChildren(...[['week','이번 주'],['month','이번 달']].map(([period,label])=>{const span=element('span');span.append(element('span',t(label)),document.createTextNode(' '),element('strong',compactTokens(total(period))),document.createTextNode(' '),costLabel(cost(period)));return span;}));
  const visible=[...primaryProviders.filter(id=>rows.some(([p])=>p===id)),...rows.filter(([id,row])=>!primaryProviders.includes(id)&&(row.month.total||row.week.total||row.extraRoot)).map(([id])=>id)];
  if(!visible.includes(selectedProvider))selectedProvider=visible[0];const controls=document.querySelector('#usage-providers');controls.hidden=visible.length<2;controls.replaceChildren(...visible.map(id=>{const chip=element('button',labels[id]);chip.type='button';chip.dataset.provider=id;chip.addEventListener('click',()=>{selectedProvider=id;selectedAccount=undefined;renderProvider(lastSnapshot.usage);});return chip;}));
@@ -68,16 +75,18 @@ function renderLimits(){
   if(results.length>1&&result.accountUsage){const row=element('li'),u=result.accountUsage;row.append(element('span',t('오늘')+' '+compactTokens(u.todayTokens)+' '),costLabel(u.todayCost),element('span',' · '+t('이번 달')+' '+compactTokens(u.monthTokens)+' '),costLabel(u.monthCost));list.append(row);}
   for(const bucket of result.windows){
    const view=Q.quotaPresentation(bucket,result.block,limitMode==='remaining',now,window.appPreferences?.warnThreshold,window.appPreferences?.criticalThreshold);
-   const row=element('li'),heading=element('div',undefined,'quota-heading');row.dataset.gauge=String(view.gauge);
-   heading.append(element('span',bucket.label.split(' · ').map(part=>t(part)).join(' · ')),element('strong',format.format(view.percent)+'%'));
-   const track=element('div',undefined,'quota-track'),meter=document.createElement('progress');meter.max=100;meter.value=Math.min(100,Math.max(0,view.percent));meter.setAttribute('aria-label',bucket.label);track.append(meter);
+   const row=element('li'),bar=element('div',undefined,'hp-bar'),badge=element('span','HP','hp-label');row.dataset.gauge=String(view.gauge);bar.dataset.level=Q.hpLevel(view.gauge);badge.setAttribute('aria-hidden','true');
+   // The HP bar always fills with the remaining share; only the number follows limitMode.
+   const track=element('span',undefined,'hp-track quota-track'),meter=document.createElement('progress');meter.max=100;meter.value=Math.min(100,Math.max(0,100-bucket.usedPercent));meter.setAttribute('aria-label',bucket.label);track.append(meter);
+   const shown=t(limitMode==='remaining'?'남음 {percent}%':'사용 {percent}%',{percent:format.format(view.percent)});meter.setAttribute('aria-valuetext',shown);
+   bar.append(badge,element('span',bucket.label.split(' · ').map(part=>t(part)).join(' · '),'hp-name'),track,element('strong',shown));
    if(view.marker!==null){
-    const marker=element('span',undefined,'quota-pace-marker');marker.style.left=(view.marker*100)+'%';marker.setAttribute('aria-hidden','true');track.append(marker);
+    const marker=element('span',undefined,'quota-pace-marker');marker.style.left=Q.displayPercent(view.pace*100,true)+'%';marker.setAttribute('aria-hidden','true');track.append(marker);
     let help=t('페이스 — 창 시간만큼 균등하게 썼다면 지금 {percent}입니다.',{percent:format.format(Q.displayPercent(view.pace*100,limitMode==='remaining'))+'%'});
     if(view.tier!==null){const names=['여유 많음','여유','페이스대로','조금 빠름','빠름','매우 빠름'];const delta=view.delta>0?t('페이스보다 {points}%p 더 씀',{points:view.delta}):view.delta<0?t('페이스보다 {n}%p 덜 씀',{n:-view.delta}):'';help=t(names[view.tier])+(delta?' · '+delta:'')+'\n'+help;}
     row.title=help;meter.setAttribute('aria-description',help);
    }
-   row.append(heading,track);
+   row.append(bar);
    if(bucket.resetsAt!==undefined){const minutes=Math.max(0,Math.ceil((bucket.resetsAt-now)/60000)),reset=element('small',t('초기화')+' · '+(minutes>=60?t('{hours}시간 {minutes}분',{hours:Math.floor(minutes/60),minutes:minutes%60}):t('{count}분',{count:minutes})));reset.title=new Date(bucket.resetsAt).toLocaleString(window.i18n.language);row.append(reset);}
    if(view.forecast&&result.tracked!==false){const time=new Date(view.forecast.at).toLocaleTimeString(window.i18n.language,{hour:'2-digit',minute:'2-digit'}),prediction=element('small',view.forecast.beforeReset?t('현재 속도면 {time} 한도 도달',{time}):t('현재 속도로는 리셋 전 한도 도달 없음'),'quota-forecast');prediction.dataset.warning=String(view.forecast.beforeReset);row.append(prediction);}
    list.append(row);

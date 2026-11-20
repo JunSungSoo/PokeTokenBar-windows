@@ -39,6 +39,8 @@ contextBridge.exposeInMainWorld('desktop', {
   onRefresh:handler=>ipcRenderer.on('desktop:refresh',()=>handler()),
   onOpenDex:handler=>ipcRenderer.on('desktop:open-dex',()=>handler()),
   quit: () => ipcRenderer.invoke('windows:quit'),
+  minimizeWindow: () => ipcRenderer.invoke('windows:minimize'),
+  closeWindow: () => ipcRenderer.invoke('windows:close'),
   openSettings: () => ipcRenderer.invoke('windows:open-settings'),
   settings: () => ipcRenderer.invoke('windows:settings'),
   login: enabled => ipcRenderer.invoke('windows:login', enabled),

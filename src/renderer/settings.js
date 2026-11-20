@@ -7,6 +7,35 @@
   let accounts=[];
   let loadedSessionAccount;
   const tr=text=>window.i18n.t(text);
+  const segmentedSettings=['theme','limitMode','animationQuality'];
+  const thumbSize=20;
+  // Fill ends under the thumb centre, so the track is inset by half a thumb on both sides.
+  function paintRange(input){
+    const ratio=(Number(input.value)-Number(input.min))/(Number(input.max)-Number(input.min));
+    input.style.setProperty('--p','calc('+thumbSize/2+'px + (100% - '+thumbSize+'px) * '+(Number.isFinite(ratio)?ratio:0)+')');
+  }
+  // Buttons are updated in place so keyboard focus survives a selection.
+  function syncSegmented(select){
+    const group=select.nextElementSibling;
+    group.setAttribute('aria-label',select.closest('label').firstChild.textContent.trim());
+    [...select.options].forEach((option,index)=>{
+      group.children[index].textContent=option.textContent;
+      group.children[index].setAttribute('aria-pressed',String(option.value===select.value));
+    });
+  }
+  function buildSegmented(select){
+    const group=document.createElement('div');
+    group.className='segmented';group.setAttribute('role','group');group.dataset.noTranslate='';
+    group.replaceChildren(...[...select.options].map(option=>{
+      const button=document.createElement('button');
+      button.type='button';
+      button.addEventListener('click',()=>{select.value=option.value;select.dispatchEvent(new Event('change'));});
+      return button;
+    }));
+    select.after(group);
+    select.addEventListener('change',()=>syncSegmented(select));
+    syncSegmented(select);
+  }
   function renderAccounts(){
     const tracked=get('settings-tracked-account'),session=get('session-account'),selected=session.value||'claude-default';
     tracked.replaceChildren(...[['automatic','자동 (마지막 사용)'],['highest','사용률 최고'],['defaultAccount','기본 계정'],...accounts.map(row=>[row.accountID,row.account??tr('기본 계정')])].map(([value,title])=>new Option(tr(title),value)));
@@ -43,6 +72,8 @@
       if (control.type === 'checkbox') control.checked = value;
       else control.value = String(value);
     }
+    for (const input of document.querySelectorAll('input[type=range]')) paintRange(input);
+    for (const name of segmentedSettings) syncSegmented(document.querySelector('[data-setting=' + name + ']'));
     get('pet-size-label').textContent = settings.petSize + 'px';
     for (const key of ['warnThreshold', 'criticalThreshold']) get(key + '-label').textContent = settings[key] + '%';
     for (const key of ['warnThreshold', 'criticalThreshold']) {
@@ -83,13 +114,25 @@
       get('pet-size-label').textContent = control.value + 'px';
     });
   }
+  for (const input of document.querySelectorAll('input[type=range]')) input.addEventListener('input', () => paintRange(input));
+  for (const name of segmentedSettings) buildSegmented(document.querySelector('[data-setting=' + name + ']'));
+  window.addEventListener('language-changed', () => { for (const name of segmentedSettings) syncSegmented(document.querySelector('[data-setting=' + name + ']')); });
 
+  let pendingDifficultySaves = 0, difficultyTimer = 0;
+  // Shows the saved difficulty on both sliders and their labels.
+  function paintDifficulty(economy) {
+    get('difficulty-growth').value = economy.growthDifficulty;
+    get('difficulty-shop').value = economy.shopDifficulty;
+    get('difficulty-growth-value').textContent = economy.growthDifficulty + '×';
+    get('difficulty-shop-value').textContent = economy.shopDifficulty + '×';
+    paintRange(get('difficulty-growth'));
+    paintRange(get('difficulty-shop'));
+  }
   function representative(state) {
     companion = state;
-    get('difficulty-growth').value = state.economy.growthDifficulty;
-    get('difficulty-shop').value = state.economy.shopDifficulty;
-    get('difficulty-growth-value').textContent = state.economy.growthDifficulty + '×';
-    get('difficulty-shop-value').textContent = state.economy.shopDifficulty + '×';
+    // Saved state must not rewind sliders the user is still changing.
+    const editingDifficulty = difficultyTimer || pendingDifficultySaves > 0 || ['difficulty-growth', 'difficulty-shop'].includes(document.activeElement?.id);
+    if (!editingDifficulty) paintDifficulty(state.economy);
     const select = get('settings-representative');
     const selected = state.economy.representative;
     const options = [new Option('현재 파트너 따라가기', '')];
@@ -112,15 +155,27 @@
       get('difficulty-' + kind + '-value').textContent = event.target.value + '×';
     });
   }
-  get('difficulty-save').addEventListener('click', async () => {
-    const button=get('difficulty-save'),growth=Number(get('difficulty-growth').value),shop=Number(get('difficulty-shop').value);button.disabled=true;
+  // Saves the current values of both difficulty sliders, one save at a time.
+  let difficultySaving = Promise.resolve();
+  async function saveDifficulty() {
+    const growth = Number(get('difficulty-growth').value), shop = Number(get('difficulty-shop').value);
     try {
-      await window.preferences.change({});
-      representative(await window.usage.changeCompanion({ kind: 'difficulty',
-        growth, shop }));
+      representative(await window.usage.changeCompanion({ kind: 'difficulty', growth, shop }));
       status.textContent = tr('저장됨');
-    } catch (error) { showError(error); }
-    finally {button.disabled=false;}
+    } catch (error) {
+      showError(error);
+      // A failed save puts the sliders back on the saved values unless a newer save is coming.
+      if (!difficultyTimer && pendingDifficultySaves === 1 && companion) paintDifficulty(companion.economy);
+    }
+  }
+  for (const kind of ['growth', 'shop']) get('difficulty-' + kind).addEventListener('change', () => {
+    clearTimeout(difficultyTimer);
+    // Waits until the slider settles so several arrow-key steps become one save.
+    difficultyTimer = setTimeout(() => {
+      difficultyTimer = 0;
+      pendingDifficultySaves++;
+      difficultySaving = difficultySaving.then(saveDifficulty).finally(() => { pendingDifficultySaves--; });
+    }, 400);
   });
 
   get('settings-representative').addEventListener('change', async event => {
@@ -144,6 +199,7 @@
           const label = document.createElement('label');
           const input = document.createElement('input');
           input.type = 'checkbox';
+          input.className = 'toggle';
           input.dataset.provider = id;
           input.checked = current?.providers.includes(id) ?? true;
           input.addEventListener('change', () => {

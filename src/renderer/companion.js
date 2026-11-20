@@ -142,6 +142,7 @@
     rarity.textContent = active ? rarityLabels[active.rarity ?? 'common'] : '';
     rarity.dataset.rarity = active?.rarity ?? 'common';
     get('companion-title').textContent = title + (active?.shiny ? ' ✨' : '');
+    get('partner-level').textContent = (active?.level ? 'Lv.' + active.level + ' · ' : '') + window.i18n.t('파트너');
     const profile = get('profile');
     profile.hidden = false;
     profile.replaceChildren();
@@ -284,16 +285,19 @@
     }
     return box;
   }
-  function card(item, meta) {
-    const article = element('article', undefined, 'surface item-card');
+  function coinIcon() {
+    const image = element('img'); image.src = 'assets/ui/coin.svg'; image.alt = '';
+    return image;
+  }
+  function card(item, owned = '') {
+    const article = element('article', undefined, 'item-card dex-row');
     const top = element('div', undefined, 'item-heading');
     const titles = element('div');
     const name = element('div', undefined, 'item-title-row');
     name.append(element('h3', item.name));
-    if (meta.startsWith('×') && item.sprite !== 'shiny-charm') name.append(element('span', meta, 'item-owned'));
-    titles.append(name, element('p', item.description));
+    if (owned && item.sprite !== 'shiny-charm') name.append(element('span', owned, 'item-owned'));
+    titles.append(name, element('p', item.description, 'item-desc'));
     top.append(itemIcon(item), titles); article.append(top);
-    if (meta.startsWith('가격')) article.append(element('p', meta, 'item-price'));
     return article;
   }
   function controls(article, actionLabel, max, hint, explain, submit, requiredChoice) {
@@ -303,8 +307,7 @@
     const minus = button('−', () => adjust(-1)); minus.setAttribute('aria-label', '수량 줄이기');
     const plus = button('+', () => adjust(1)); plus.setAttribute('aria-label', '수량 늘리기');
     picker.append(element('span','×'),quantity,minus,plus);
-    article.querySelector('.item-title-row').append(picker);
-    const price = article.querySelector('.item-price');
+    article.append(picker);
     const summary = element('p', hint, 'item-hint');
     const preview = element('p', undefined, 'item-preview');
     let confirming = false;
@@ -313,7 +316,7 @@
       if (explain.precious && confirming === true) { confirming = 'precious'; draw(); cancel.focus(); return; }
       void submit(Number(quantity.value));
     });
-    const cancel = button('취소', () => { confirming = false; draw(); primary.focus(); });
+    const cancel = button('취소', () => { confirming = false; draw(); primary.focus(); }, 'neutral');
     function adjust(delta) { quantity.value = String(Math.max(1,Math.min(max,Number(quantity.value)+delta))); confirming=false; draw(); }
     function draw() {
       primary.disabled = !max || !quantity.validity.valid || !Number(quantity.value) || (requiredChoice && !requiredChoice.value);
@@ -321,25 +324,36 @@
       picker.hidden = max < 2;
       minus.disabled = Number(quantity.value) <= 1; plus.disabled = Number(quantity.value) >= max;
       cancel.hidden = !confirming;
+      article.dataset.confirming = String(Boolean(confirming));
       primary.classList.toggle('primary',Boolean(confirming));
-      primary.textContent = confirming === 'precious' ? '놓아주고 구매 확정' : actionLabel + (confirming && Number(quantity.value)>1 ? ' ×'+quantity.value : '');
+      primary.classList.toggle('secondary',!confirming);
+      if (confirming) {
+        primary.removeAttribute('aria-label');
+        primary.textContent = confirming === 'precious' ? '놓아주고 구매 확정' : actionLabel + (Number(quantity.value)>1 ? ' ×'+quantity.value : '');
+      } else if (explain.unitPrice) {
+        const priceText = compactTokens((Number(quantity.value) || 1)*explain.unitPrice);
+        primary.replaceChildren(coinIcon(), priceText);
+        primary.setAttribute('aria-label', window.i18n.t(actionLabel) + ' · ' + priceText);
+      } else primary.textContent = actionLabel;
       const message = max ? explain(Number(quantity.value) || 1, confirming) : '';
-      if (price) { price.hidden=Boolean(confirming); price.textContent = window.i18n.t('가격')+' '+compactTokens(Number(quantity.value)*explain.unitPrice); }
-      preview.textContent = message; preview.hidden = !message || (price && !confirming);
+      preview.textContent = message; preview.hidden = !message || (explain.unitPrice && !confirming);
       summary.hidden = !hint;
     }
     quantity.addEventListener('input', () => { confirming=false; draw(); });
     requiredChoice?.addEventListener('change', () => { confirming=false; draw(); });
-    if (price) row.append(price);
     row.append(preview,primary,cancel); article.append(summary,row); draw();
   }
 
   function renderShop() {
     const { economy, active } = state;
     const wallet = get('shop-wallet');
-    wallet.replaceChildren(element('p', '사용 가능한 토큰', 'eyebrow'),
-      element('strong', compactTokens(economy.wallet), 'wallet-total'),
-      element('p', '사용한 토큰으로 아이템을 살 수 있어요.'));
+    const amount = element('div', undefined, 'wallet-amount');
+    amount.append(coinIcon(), element('strong', compactTokens(economy.wallet), 'wallet-total'));
+    const balance = element('div', undefined, 'wallet-balance');
+    balance.append(element('p', '내 토큰 포인트', 'eyebrow'), amount);
+    const bagLink = button('가방 보기', () => openTab('bag', true), 'neutral');
+    bagLink.id = 'shop-open-bag';
+    wallet.replaceChildren(balance, bagLink);
     if (!products) return;
     const bought = key => key === 'shinyCharm' && Boolean(economy.inventory[key]);
     const priced = Object.fromEntries(Object.entries(products).map(([key, product]) =>
@@ -350,14 +364,18 @@
       const owned = economy.inventory[key] ?? 0;
       const affordable = Math.floor(economy.wallet / item.price);
       const max = bought(key) || (egg && !active) ? 0 : egg || key === 'shinyCharm' ? Math.min(1, affordable) : affordable;
-      const article = card(item, '가격 ' + compactTokens(item.price));
+      const article = card(item);
       article.dataset.product = key;
       if (owned && !egg && key !== 'shinyCharm') article.querySelector('.item-title-row h3').after(element('span', window.i18n.t('보유 ×{n}', {n:owned}), 'item-owned'));
       if (egg && key !== 'egg') { const badge=element('span',rarityLabels[key==='eggRare'?'rare':'uncommon'],'rarity-badge'); badge.dataset.rarity=key==='eggRare'?'rare':'uncommon'; article.querySelector('.item-title-row h3').after(badge); }
       if (egg && active) article.querySelector('.item-heading').after(element('p','놓아준 포켓몬도 도감에 남고, 같은 확률로 다시 만날 수 있어요. 키운 진행도만 사라져요.','egg-release-note'));
-      if (bought(key)) { article.querySelector('.item-price').remove(); article.append(element('p','✓ '+window.i18n.t('보유 중'),'passive-owned')); return article; }
-      const hint = bought(key) ? '보유 중 · 재구매할 수 없습니다.' : egg && !active ? '지금 품고 있는 알이 부화하면 살 수 있어요.'
-        : !affordable ? '토큰이 부족해요' : '';
+      if (bought(key)) { article.append(element('p','✓ '+window.i18n.t('보유 중'),'passive-owned')); return article; }
+      const hint = egg && !active ? '지금 품고 있는 알이 부화하면 살 수 있어요.' : '';
+      if (!affordable) {
+        const shortage = article.querySelector('.item-desc');
+        shortage.textContent = window.i18n.t('{count}포인트 더 필요해요', { count: compactTokens(item.price - economy.wallet) });
+        shortage.classList.add('item-shortage');
+      }
       const explain = (count, confirming) => {
         const total = compactTokens(count * item.price);
         if (confirming === 'precious') return window.i18n.t(active?.shiny?'⚠️ 이로치 포켓몬이에요! 정말 놓아줄까요?':'⚠️ 전설 포켓몬이에요! 정말 놓아줄까요?');
@@ -365,7 +383,7 @@
         return confirming ? window.i18n.t('{name} 구매할까요?',{name:window.i18n.t(item.name) + (count>1 ? ' ×'+count : '')}) : '가격 '+total;
       };
       explain.precious = egg && (active?.shiny || active?.rarity === 'legendary');
-      explain.keepDisabled = egg && !active;
+      explain.keepDisabled = true;
       explain.unitPrice = item.price;
       controls(article, '구매', max, hint, explain, quantity =>
         change({ kind: 'buy', product: key, quantity, activeID: active?.id }, item.name + ' 구매 완료'));
@@ -398,8 +416,8 @@
       if (key === 'redMaple') {
         const available = captures.filter(row => row.releasedAt === undefined && row.ivs);
         const row = element('div',undefined,'item-actions');
-        row.append(element('p',available.length?'각 스탯의 별을 1~32로 랜덤 재설정':'사용 가능한 졸업 개체가 없습니다.','item-price'));
-        const open=button('사용',()=>{void window.usage.openMaple().catch(error=>notice(error.message,true));});open.disabled=!available.length;row.append(open);article.append(row);return article;
+        article.append(element('p',available.length?'각 스탯의 별을 1~32로 랜덤 재설정':'사용 가능한 졸업 개체가 없습니다.','item-hint'));
+        const open=button('사용',()=>{void window.usage.openMaple().catch(error=>notice(error.message,true));},'secondary');open.disabled=!available.length;row.append(open);article.append(row);return article;
       }
       const hint = max ? '' : key === 'redMaple' ? '사용 가능한 졸업 개체가 없습니다.'
         : '현재 파트너에게 사용할 수 없습니다.';
@@ -429,6 +447,7 @@
   const speciesName = species => window.speciesNames?.[species.number]?.[window.i18n.language] ?? species.name;
   const formLabel=(form,number)=>number===201 ? ({exclamation:'!',question:'?'}[form] ?? form.toUpperCase()) : number===493 ? window.typeNames?.[form]?.[window.i18n.language]??form : window.formNames?.[number]?.[form]?.[window.i18n.language]??window.formNames?.[number]?.[form]?.en??(!form||form==='normal'?window.i18n.t('기본 폼'):form.replaceAll('-', ' ').replace(/\b[a-z]/g,char=>char.toUpperCase()));
   const pokemonNumber = number => '#' + String(number).padStart(3, '0');
+  const dexCellNumber = number => 'No.' + String(number).padStart(3, '0');
   const date = timestamp => timestamp ? new Date(timestamp).toLocaleDateString(window.i18n.language) : '';
   const appearanceOf = (row, number) => {
     const { spriteID, animated } = row.species.find(entry => entry.number === number);
@@ -549,6 +568,8 @@
     const region = get('dex-region').value;
     const shiny = get('dex-shiny').checked;
     const sort = get('dex-sort').value;
+    // Marks the filter button while a filter hidden in the closed panel is narrowing the list.
+    get('dex-filter-toggle').classList.toggle('has-filter', Boolean(rarity || region || shiny));
     const match = species => (!region || regionOf(species.number) === region) &&
       (!query || matchesName(species,query));
     const matches = all.filter(row => (!rarity || (row.rarity ?? 'common') === rarity) && (!shiny || row.shiny));
@@ -566,7 +587,12 @@
       return sort === 'oldest' ? time(a) - time(b) : sort === 'number' ? a.species.at(-1).number - b.species.at(-1).number : time(b) - time(a);
     });
     const summary = get('dex-summary');
-    const count = element('p', log ? '포획 기록 ' + logs.length + '개' : '도감 ' + allSpecies.length + ' / 649종', 'eyebrow');
+    const progress = element('div', undefined, 'dex-progress');
+    const discovered = element('p', undefined, 'dex-progress-main');
+    discovered.append(element('span', '발견한 포켓몬', 'dex-progress-label'), element('strong', String(allSpecies.length), 'dex-progress-count'), element('span', ' / 649', 'dex-progress-total'));
+    const caught = element('p', undefined, 'dex-progress-sub');
+    caught.append(element('span', '잡은 포켓몬', 'dex-progress-label'), element('strong', String(all.length), 'dex-progress-caught'));
+    progress.append(discovered, caught);
     const rarityCounts = element('div',undefined,'rarity-tallies');
     for (const key of ['legendary','rare','uncommon','common']) {
       const count = log ? all.filter(row=>(row.rarity ?? 'common')===key).length : allSpecies.filter(species=>all.some(row=>(row.rarity ?? 'common')===key && row.species.some(entry=>entry.number===species.number))).length;
@@ -595,8 +621,9 @@
     if (unown.size === 28) medals.push('안농 28종');
     if (allSpecies.filter(species => species.number <= 649).length === 649) medals.push('전국 도감 완성');
     if ([...shinySpecies].filter(id => id <= 649).length === 649) medals.push('전국 이로치 완성');
-    summary.replaceChildren(count,rarityCounts,badges);
-    if (medals.length) summary.append(element('p', '🏅 ' + medals.join(' · ')));
+    summary.replaceChildren(progress);
+    if (medals.length) summary.append(element('p', '🏅 ' + medals.join(' · '), 'dex-medals'));
+    get('dex-filter-chips').replaceChildren(rarityCounts,badges);
     const dex = get('dex');
     const history = get('captures');
     dex.hidden = log;
@@ -618,9 +645,9 @@
       const forms=window.formCatalog[species.number];
       const formCount=forms?new Set(all.flatMap(capture=>capture.species.filter(stage=>stage.number===species.number).map(stage=>stage.form ?? forms[0]))).size:undefined;
       const iconAppearance=forms?{...appearanceOf(row,species.number),...{form:forms[0],spriteID:undefined,animated:undefined,shiny:false}}:appearanceOf(row,species.number);
-      entry.append(element('span', pokemonNumber(species.number)+(state.economy.representative?.speciesID===species.number?' ★':''), 'eyebrow'), sprite(species,iconAppearance),
-        element('strong', speciesName(species)+(forms?' '+formCount+'/'+forms.length:'')));
-      if (all.some(capture=>capture.shiny && capture.species.some(stage=>stage.number===species.number))) entry.append(element('span','✨','dex-shiny-marker'));
+      const name = element('strong', speciesName(species)+(forms?' '+formCount+'/'+forms.length:''));
+      if (all.some(capture=>capture.shiny && capture.species.some(stage=>stage.number===species.number))) name.append(element('span','','dex-shiny-marker dex-sparkle'));
+      entry.append(element('span', dexCellNumber(species.number)+(state.economy.representative?.speciesID===species.number?' ★':''), 'eyebrow px'), sprite(species,iconAppearance), name);
       if(all.some(capture=>capture.championAchievedAt!==undefined&&capture.species.at(-1)?.number===species.number))entry.append(element('span',window.i18n.t('챌린지 챔피언'),'champion-badge'));
       if (state.current?.number===species.number) entry.append(element('span','육성 중','dex-raising'));
       cell.append(entry);
@@ -690,6 +717,13 @@
     for (const id of ['dex-search', 'dex-rarity', 'dex-region']) get(id).value = '';
     get('dex-shiny').checked = false;
     collectionMode(log);
+  });
+  const filterToggle = get('dex-filter-toggle'), filterPanel = get('dex-filter-panel');
+  const setFilterPanel = open => { filterPanel.hidden = !open; filterToggle.setAttribute('aria-expanded', open); };
+  filterToggle.addEventListener('click', () => setFilterPanel(filterPanel.hidden));
+  get('collection-list').addEventListener('keydown', event => {
+    if (event.key !== 'Escape' || filterPanel.hidden) return;
+    event.stopPropagation();setFilterPanel(false);filterToggle.focus();
   });
   collectionMode(false);
   document.body.dataset.tab='home';

@@ -4,7 +4,7 @@ import {readFile,mkdtemp,writeFile,rm} from 'node:fs/promises';
 import {join} from 'node:path';
 import {tmpdir} from 'node:os';
 import {hasMacReference,readMacSource,macReferenceRef} from './mac-reference.mjs';
-import {paceFraction,paceTier,gaugeTier,roundedPaceDelta,forecastDepletion,forecast,activeBlock,accountOwner,accountBlocks,quotaPresentation} from '../dist/shared/quota-presentation.js';
+import {paceFraction,paceTier,gaugeTier,roundedPaceDelta,forecastDepletion,forecast,activeBlock,accountOwner,accountBlocks,quotaPresentation,hpLevel} from '../dist/shared/quota-presentation.js';
 import {parseLimits} from '../dist/main/usage/limits.js';
 import {withAccountBlocks} from '../dist/main/usage/claude-accounts.js';
 import {nationalDex} from '../dist/main/companion/national-dex.js';
@@ -24,6 +24,11 @@ test('pace window, rounding, gauge and remaining marker match Mac boundary sampl
  assert.equal(quotaPresentation(window,undefined,false,now).marker,.75);
  assert.equal(quotaPresentation(window,undefined,true,now).marker,.25);
  assert.equal(quotaPresentation(window,undefined,true,now).percent,60);
+});
+
+test('hpLevel maps gauge tiers to ok/warn/bad and follows gaugeTier thresholds',()=>{
+ for(const [gauge,level] of [[0,'ok'],[2,'ok'],[3,'warn'],[4,'warn'],[5,'bad']])assert.equal(hpLevel(gauge),level);
+ for(const [used,level] of [[79,'ok'],[80,'warn'],[94,'warn'],[95,'bad']])assert.equal(hpLevel(gaugeTier(used,null,80,95)),level);
 });
 
 test('depletion uses official percent and only stable burns; reset equality is safe',()=>{

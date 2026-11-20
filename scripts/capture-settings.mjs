@@ -39,11 +39,11 @@ async function run() {
       await evaluate('window.scrollTo(0,document.documentElement.scrollHeight)');
       await new Promise(resolve=>setTimeout(resolve,180));
       const bounds=await evaluate(`(() => {
-        const button=document.querySelector('#difficulty-save'),footer=button.closest('footer'),about=document.querySelector('[aria-labelledby="about-settings"]');
-        const b=button.getBoundingClientRect(),a=about.getBoundingClientRect(),f=footer.getBoundingClientRect();
-        return {last:footer===document.querySelector('main').lastElementChild,belowAbout:b.top>=a.bottom,visible:b.top>=0&&b.bottom<=innerHeight,rightAligned:Math.abs(b.right-f.right)<2,noOverflow:document.documentElement.scrollWidth<=innerWidth,bottomMargin:Math.round(innerHeight-b.bottom)};
+        const button=document.querySelector('#settings-current-version'),footer=button.closest('footer'),about=document.querySelector('[aria-labelledby="about-settings"]');
+        const b=button.getBoundingClientRect(),a=about.getBoundingClientRect();
+        return {last:footer===document.querySelector('main').lastElementChild,belowAbout:b.top>=a.bottom,visible:b.top>=0&&b.bottom<=innerHeight,noOverflow:document.documentElement.scrollWidth<=innerWidth,bottomMargin:Math.round(innerHeight-b.bottom)};
       })()`);
-      assert.equal(bounds.last,true);assert.equal(bounds.belowAbout,true);assert.equal(bounds.visible,true);assert.equal(bounds.rightAligned,true);assert.equal(bounds.noOverflow,true);
+      assert.equal(bounds.last,true);assert.equal(bounds.belowAbout,true);assert.equal(bounds.visible,true);assert.equal(bounds.noOverflow,true);
       await writeFile(resolve('output/design-preview/settings-bottom-'+width+'.png'),(await window.webContents.capturePage()).toPNG());
       console.log('PASS '+width+'px: '+JSON.stringify(bounds));
     }
