@@ -11,6 +11,7 @@ export interface Battler {
   hp: number;
   maxHP: number;
   status: string;
+  gender?: 'M' | 'F' | '';
   shiny?: boolean; form?: string | null; mega?: boolean; item?: string; ability?: string;
   stats?: Record<string,number>; boosts?: Record<string,number>; effectiveSpeed?: number; speedStage?: number;
   effects?: unknown[];
@@ -78,7 +79,7 @@ export interface BattleAPI {
   closeWindow(): Promise<void>;
   auxiliary(kind:'field'|'stats',visible?:boolean): Promise<void>;
   assets(): Promise<string>;
-  audio(patch?: {music?:number;effects?:number;enabled?:boolean}): Promise<{music:number;effects:number;enabled:boolean}>;
+  audio(patch?: {music?:number;effects?:number;enabled?:boolean;typeHints?:boolean}): Promise<{music:number;effects:number;enabled:boolean;typeHints?:boolean}>;
   context(): Promise<import('./settings.js').AppSettings>;
   onContext(handler:(context:import('./settings.js').AppSettings)=>void):void;
   onState(handler:(view:ChallengeView)=>void):void;

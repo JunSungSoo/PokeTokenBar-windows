@@ -66,7 +66,7 @@ export function registerBattleIPC(companion: CompanionStore, mainWindow: () => B
   app.on('before-quit',event=>{if(quitting||!windows.main&&!lan.active()){lan.shutdown();assets.close();return;}event.preventDefault();if(checkingQuit)return;checkingQuit=true;void confirmExit().then(async ok=>{if(ok){await store.finishWrites();await lan.finishWrites();quitting=true;windows.allowClose=true;lan.shutdown();assets.close();app.quit();}}).catch(error=>console.error('Battle exit failed:',error)).finally(()=>{checkingQuit=false;});});
   const audioPath=join(app.getPath('userData'),'battle-presentation-v1.json');
   let audioQueue:Promise<unknown>=Promise.resolve();
-  let audio: {music:number;effects:number;enabled:boolean}|undefined;
+  let audio: {music:number;effects:number;enabled:boolean;typeHints?:boolean}|undefined;
   let entering=false;
   function handle(channel: string, callback: (...values: unknown[]) => unknown): void {
     ipcMain.handle('battle:' + channel, (event, ...values) => {
@@ -96,10 +96,10 @@ export function registerBattleIPC(companion: CompanionStore, mainWindow: () => B
   handle('context',()=>preferences.get());handle('assets',()=>assets.start());
   handle('auxiliary',async (kind,visible)=>{if(kind!=='field' && kind!=='stats')throw new Error('Invalid battle panel');if(visible!==undefined&&typeof visible!=='boolean')throw new Error('Invalid panel visibility');await windows.auxiliary(kind,visible);if(visible===false)return;if(windows.kind==='lan')windows.lan(await lan.state());else{const state=await store.resume('singles',true);if(state)windows.broadcast(state);}});
   handle('audio',patch=>{const operation=audioQueue.then(async()=>{
-    if(!audio){try{const saved=JSON.parse(await readFile(audioPath,'utf8'));if(![saved.music,saved.effects].every(n=>typeof n==='number'&&n>=0&&n<=1)||typeof saved.enabled!=='boolean')throw Error();audio=saved;}catch{audio={music:.35,effects:.35,enabled:true};}}
-    if(patch!==undefined){const row=object(patch);if(!row || Object.keys(row).some(key=>!['music','effects','enabled'].includes(key)) ||
+    if(!audio){try{const saved=JSON.parse(await readFile(audioPath,'utf8'));if(![saved.music,saved.effects].every(n=>typeof n==='number'&&n>=0&&n<=1)||typeof saved.enabled!=='boolean'||saved.typeHints!==undefined&&typeof saved.typeHints!=='boolean')throw Error();audio=saved;}catch{audio={music:.35,effects:.35,enabled:true};}}
+    if(patch!==undefined){const row=object(patch);if(!row || Object.keys(row).some(key=>!['music','effects','enabled','typeHints'].includes(key)) ||
       ['music','effects'].some(key=>row[key]!==undefined && (typeof row[key]!=='number'||!Number.isFinite(row[key])||Number(row[key])<0||Number(row[key])>1)) ||
-      (row.enabled!==undefined && typeof row.enabled!=='boolean'))throw new Error('Invalid battle audio');
+      (row.enabled!==undefined && typeof row.enabled!=='boolean') || (row.typeHints!==undefined && typeof row.typeHints!=='boolean'))throw new Error('Invalid battle audio');
       audio={...audio,...row} as typeof audio;await writeSaveAtomically(audioPath,JSON.stringify(audio));}
     return audio;
   });audioQueue=operation.catch(()=>{});return operation;});

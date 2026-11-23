@@ -287,7 +287,7 @@ class OwnedBattle {
       return {id:p.set.ptbID, speciesID:appearance.species.num, name:appearance.species.name,
       level:p.level, shiny:!!appearance.set.shiny, form:currentForm(appearance), active:p.side.active.includes(p), fainted:p.fainted || p.hp === 0,
       hp:own ? p.hp : Math.ceil(p.hp / p.maxhp * 100), maxHP:own ? p.maxhp : 100,
-      status:p.status || '', stats:own ? {hp:p.maxhp,...p.storedStats} : undefined,
+      status:p.status || '', gender:appearance.gender || '', stats:own ? {hp:p.maxhp,...p.storedStats} : undefined,
       cpuRecoveryThreshold:own ? p.set.ptbCPURecoveryThreshold:undefined,
       ...(this.profile==='challenge' && b.gameType==='doubles' ? {
         position:p.position+1,

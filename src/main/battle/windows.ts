@@ -15,7 +15,7 @@ export class BattleWindows {
     if(this.main && !this.main.isDestroyed()){if(this.kind!==kind)throw new Error('열려 있는 배틀 창을 먼저 닫아 주세요.');this.reveal(this.main);return;}
     this.kind=kind;
     const work=screen.getPrimaryDisplay().workArea;
-    const window=new BrowserWindow({width:Math.min(660,work.width),height:Math.min(840,work.height-20),useContentSize:true,minWidth:Math.min(660,work.width),minHeight:440,show:false,autoHideMenuBar:true,title:'PokeTokenBar · '+(kind==='lan'?'배틀':'챌린지')+' · 싱글',
+    const window=new BrowserWindow({width:Math.min(660,work.width),height:Math.min(870,work.height-20),useContentSize:true,minWidth:Math.min(660,work.width),minHeight:440,show:false,autoHideMenuBar:true,title:'PokeTokenBar · '+(kind==='lan'?'배틀':'챌린지')+' · 싱글',
       webPreferences:{preload:fileURLToPath(new URL('../usage-preload.cjs',import.meta.url)),sandbox:true,contextIsolation:true,nodeIntegration:false,backgroundThrottling:false,autoplayPolicy:'no-user-gesture-required'}});
     this.main=window;this.changed?.();let checking=false,allowed=false;window.on('close',event=>{if(!allowed&&!this.allowClose&&this.canClose){event.preventDefault();if(checking)return;checking=true;void this.canClose().then(ok=>{allowed=ok;if(ok&&!window.isDestroyed())window.close();}).catch(error=>console.error('Battle close failed:',error)).finally(()=>{checking=false;});}});this.protect(window);window.on('closed',()=>{this.main=undefined;for(const extra of this.extra.values())extra.destroy();this.extra.clear();this.changed?.();});
     try{await window.loadFile(fileURLToPath(new URL('../../renderer/battle.html',import.meta.url)),{query:{kind}});this.reveal(window);}catch(error){window.destroy();throw error;}

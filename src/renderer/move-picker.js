@@ -118,7 +118,9 @@
   document.addEventListener('keydown',event=>{if(event.key==='Escape'){closeMenu();hideTip();}},true);
   document.addEventListener('scroll',event=>{if(!menu?.contains(event.target) && !tip?.contains(event.target))reposition();},true);
   window.addEventListener('resize',reposition);
-  for(const event of ['blur','language-changed','app-tab-changed'])window.addEventListener(event,()=>{closeMenu();hideTip();});
+  for(const event of ['language-changed','app-tab-changed'])window.addEventListener(event,()=>{closeMenu();hideTip();});
+  // The battle animation iframes grab focus when Phaser boots; that is not the user leaving the window.
+  window.addEventListener('blur',()=>setTimeout(()=>{if(document.activeElement?.matches('iframe.battle-effect-frame'))return;closeMenu();hideTip();}));
   new MutationObserver(()=>{if(owner && !visible(owner))closeMenu();if(hoverOwner && !visible(hoverOwner))hideTip();}).observe(document.documentElement,{subtree:true,childList:true,attributes:true,attributeFilter:['hidden','disabled']});
   window.moveUI={picker,bindTooltip,refresh,close:()=>{closeMenu();hideTip();}};
 })();

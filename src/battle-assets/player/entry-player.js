@@ -21,8 +21,10 @@ export class EntryAnimation {
    if(t>=250)this.outgoing.setVisible(false);
   }
   const s=(t-this.delay)*1.25,p=this.incoming;
+  // Own Pokémon stand at the bottom edge, so the ball lands at body centre instead of 16px above the feet.
+  const lift=p.own?Math.max(16,(p.base?.height??0)/2):16;
   if(s>=0&&s<650){
-   const x=p.x-6,start=x+(p.own?-64:12),y=p.y-16;
+   const x=p.x-6,start=x+(p.own?-64:12),y=p.y-lift;
    this.ball.setVisible(true).setX(start+(x-start)*Math.min(1,s/650));
    const startY=y-(p.own?52:42),peakY=y-(p.own?62:52);
    this.ball.setY(s<=150?startY+(peakY-startY)*(1-(1-s/150)**3):peakY+(y-peakY)*((s-150)/500)**3);
@@ -40,7 +42,7 @@ export class EntryAnimation {
     if(!particle){particle=this.add('entry-particles','0.png');this.particles[i]=particle;}
     if(age>=575){particle.setVisible(false);continue;}
     const a=(i+1)*45*Math.PI/180,r=48*age/575;
-    particle.setPosition(p.x+r*Math.cos(a),p.y-16+r*Math.sin(a));
+    particle.setPosition(p.x+r*Math.cos(a),p.y-lift+r*Math.sin(a));
     particle.setFrame(((i+4+Math.floor(age*16/1000))%4)+'.png');
     particle.setAlpha(age<500?1:1-sine((age-500)/75));
    }
