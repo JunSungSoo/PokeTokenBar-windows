@@ -69,26 +69,26 @@
   </div></section>
   <section aria-labelledby="system-settings"><h2 id="system-settings">자동 실행·업데이트</h2>
     <div class="surface settings-group"><label>업데이트 알림<input type="checkbox" class="toggle" data-setting="updateNotifications"></label></div>
-    <div class="surface settings-update"><p><span>설치된 버전</span> <strong id="settings-update-version" data-no-translate>1.0.0</strong></p><button id="desktop-update" type="button">업데이트 확인</button><button id="desktop-update-skip" hidden type="button">이 버전 건너뛰기</button><button id="desktop-update-page" hidden type="button">업데이트하지 못했습니다. 다운로드 페이지 열기</button><p id="desktop-update-status" role="status"></p></div><div class="surface">
+    <div class="surface settings-update"><p><span>설치된 버전</span> <strong id="settings-update-version" data-no-translate>1.0.0</strong></p><button class="neutral" id="desktop-update" type="button">업데이트 확인</button><button class="neutral" id="desktop-update-skip" hidden type="button">이 버전 건너뛰기</button><button class="neutral" id="desktop-update-page" hidden type="button">업데이트하지 못했습니다. 다운로드 페이지 열기</button><p id="desktop-update-status" role="status"></p></div><div class="surface">
       <details id="desktop-settings" hidden>
         <summary>Windows 설정</summary>
         <p>설치된 버전 <span id="desktop-version"></span></p>
         <label class="settings-row">로그인할 때 자동 실행<input type="checkbox" class="toggle" id="desktop-login"></label>
         <p id="desktop-login-status" role="status"></p>
-        <button id="desktop-pet" type="button">플로팅 펫 표시/숨기기</button>
+        <button class="neutral" id="desktop-pet" type="button">플로팅 펫 표시/숨기기</button>
       </details>
   <p id="desktop-development" hidden>자동 실행과 업데이트는 설치된 Windows 앱에서 사용할 수 있습니다.</p>
   </div></section>
   <section aria-labelledby="save-settings"><h2 id="save-settings">리포트(저장)</h2><div class="surface">
-    <button id="settings-backup" type="button">Windows 저장 내보내기</button>
-    <button id="settings-export-mac" type="button">Mac 호환 저장 내보내기</button>
-    <button id="settings-snapshot" type="button">스냅샷 만들기</button>
-    <button id="settings-data-folder" type="button">저장 폴더 열기</button><p id="backup-status" role="status"></p>
+    <button class="neutral" id="settings-backup" type="button">Windows 저장 내보내기</button>
+    <button class="neutral" id="settings-export-mac" type="button">Mac 호환 저장 내보내기</button>
+    <button class="neutral" id="settings-snapshot" type="button">스냅샷 만들기</button>
+    <button class="neutral" id="settings-data-folder" type="button">저장 폴더 열기</button><p id="backup-status" role="status"></p>
       <details>
         <summary>저장 가져오기·복원</summary>
         <label>파일 형식<select id="import-format"><option value="windows">Windows 백업</option><option value="mac">Mac poketokenbar.save v2</option></select></label>
         <p>가져오기 전에 현재 육성 상태와 비교할 수 있습니다.</p>
-        <button id="select-save" type="button">저장 파일 선택</button>
+        <button class="neutral" id="select-save" type="button">저장 파일 선택</button>
         <p id="import-status" role="status"></p>
         <section id="import-preview" aria-label="가져오기 미리보기" hidden>
           <p id="import-source"></p>
@@ -97,8 +97,8 @@
             <dt>가져올 저장</dt><dd id="import-incoming"></dd>
           </dl>
           <p>가져오면 Windows 육성 기록을 교체합니다. 기존 저장이 있으면 교체 전에 백업합니다.</p>
-          <button id="cancel-import" type="button">취소</button>
-          <button id="confirm-import" type="button">Windows 저장 교체</button>
+          <button class="neutral" id="cancel-import" type="button">취소</button>
+          <button class="neutral" id="confirm-import" type="button">Windows 저장 교체</button>
         </section>
       </details>
   </div></section>
@@ -110,19 +110,19 @@
       <details>
         <summary>계정·로그인 정보</summary>
         <p>Windows에 설치된 도구의 로그인 정보를 읽어 공식 한도를 조회합니다.</p>
-        <button id="settings-refresh-login" type="button">로그인 정보 다시 읽기</button>
+        <button class="neutral" id="settings-refresh-login" type="button">로그인 정보 다시 읽기</button>
         <p id="settings-login-status" role="status"></p>
         <h3>추가 Claude Code 계정</h3>
         <p class="settings-hint">계정별 .credentials.json 파일이 있는 폴더를 선택하세요.</p>
-        <button id="settings-add-account" type="button">계정 폴더 추가</button>
+        <button class="neutral" id="settings-add-account" type="button">계정 폴더 추가</button>
         <ul id="settings-accounts"></ul>
         <label>추적 계정<select id="settings-tracked-account"></select></label>
         <h3>claude.ai 세션 키</h3>
         <label>계정<select id="session-account"></select></label>
         <input id="session-key" type="password" autocomplete="off" aria-label="claude.ai 세션 키" placeholder="sk-ant-…">
         <p class="settings-hint">세션 키는 운영체제 암호화로 저장합니다. 브라우저 로그아웃으로 무효화할 수 있습니다.</p>
-        <button id="session-save" type="button">저장</button><button id="session-clear" type="button">제거</button>
-        <button id="session-organizations" type="button">조직 불러오기</button>
+        <button class="neutral" id="session-save" type="button">저장</button><button class="neutral" id="session-clear" type="button">제거</button>
+        <button class="neutral" id="session-organizations" type="button">조직 불러오기</button>
         <label>조직<select id="session-organization"></select></label>
         <p id="session-status" role="status"></p>
       </details>
@@ -132,13 +132,13 @@
         <div class="folder">
           <label for="provider">제공자</label>
           <select id="provider"></select>
-          <button id="choose-root" type="button" disabled>선택</button>
-          <button id="reset-root" type="button" disabled>해제</button>
+          <button class="neutral" id="choose-root" type="button" disabled>선택</button>
+          <button class="neutral" id="reset-root" type="button" disabled>해제</button>
         </div>
-        <p id="root-path"></p><label>추가 로그 폴더<textarea id="scan-roots" rows="3" spellcheck="false" placeholder="C:\logs\*&#10;D:\archive"></textarea></label><p id="scan-count" role="status"></p><button id="scan-save" type="button">저장</button>
+        <p id="root-path"></p><label>추가 로그 폴더<textarea id="scan-roots" rows="3" spellcheck="false" placeholder="C:\logs\*&#10;D:\archive"></textarea></label><p id="scan-count" role="status"></p><button class="neutral" id="scan-save" type="button">저장</button>
       </details>
   </div></section>
-  <section aria-labelledby="about-settings"><h2 id="about-settings">정보</h2><div class="surface"><p>PokeTokenBar Windows <span id="settings-version"></span></p><button data-support="report">문제점 알리기</button><button data-support="log">로그 파일 보기</button><button data-support="github">GitHub</button><button data-support="website">웹사이트</button><button data-support="sponsor">후원</button><p id="support-status" role="status"></p></div></section>
+  <section aria-labelledby="about-settings"><h2 id="about-settings">정보</h2><div class="surface"><p>PokeTokenBar Windows <span id="settings-version"></span></p><button class="neutral" data-support="report">문제점 알리기</button><button class="neutral" data-support="log">로그 파일 보기</button><button class="neutral" data-support="github">GitHub</button><button class="neutral" data-support="website">웹사이트</button><button class="neutral" data-support="sponsor">후원</button><p id="support-status" role="status"></p></div></section>
   </div>
   <footer class="settings-actions">
     <span class="settings-footer-version" data-no-translate>PokeTokenBar Windows · <strong id="settings-current-version">v1.0.0</strong></span>

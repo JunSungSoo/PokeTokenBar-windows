@@ -402,14 +402,20 @@
     }));
   }
 
+  // Builds the game-dialog box used for empty-state messages.
+  function emptyMessage(...lines) {
+    const box = element('div', undefined, 'textbox');
+    box.append(...lines.map(line => element('p', line)));
+    return box;
+  }
   function renderBag() {
     if (!products) return;
     const { economy, active, captures } = state;
     const owned = window.companionUI.itemOrder.map(key => [key,economy.inventory[key] ?? 0]).filter(([, count]) => count > 0);
     const list = get('bag-items');
     if (!owned.length) {
-      const empty = element('div', undefined, 'surface empty-state');
-      empty.append(sprite({ number: 143 }, {}, true), element('h2', '아직 가방이 비어있어요!'),
+      const empty = element('div', undefined, 'empty-state');
+      empty.append(sprite({ number: 143 }, {}, true), emptyMessage('아직 가방이 비어있어요!'),
         button('상점으로 이동', () => openTab('shop', true), 'primary'));
       list.replaceChildren(empty);
       return;
@@ -701,8 +707,8 @@
     empty.hidden=!noResults;
     if (noResults) {
       empty.className='empty-state';
-      if (!all.length) empty.append(sprite({number:25,name:'Pikachu'}, {}, true),element('h2','아직 잡은 포켓몬이 없어요!'),element('p','토큰을 써서 첫 포켓몬을 부화시켜 보세요.'));
-      else empty.append(element('span','⌕','search-empty-icon'),element('p','검색 조건에 맞는 포켓몬이 없습니다.'),button('필터 초기화',()=>get('dex-reset').click()));
+      if (!all.length) empty.append(sprite({number:25,name:'Pikachu'}, {}, true),emptyMessage('아직 잡은 포켓몬이 없어요!','토큰을 써서 첫 포켓몬을 부화시켜 보세요.'));
+      else empty.append(Object.assign(element('span',undefined,'search-empty-icon'),{ariaHidden:'true'}),emptyMessage('검색 조건에 맞는 포켓몬이 없습니다.'),button('필터 초기화',()=>get('dex-reset').click()));
     }
     get('dex-summary').hidden=!all.length;get('collection-list').classList.toggle('collection-empty',!all.length);
     get('dex-shiny-toggle').setAttribute('aria-pressed',shiny);

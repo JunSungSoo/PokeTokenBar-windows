@@ -27,7 +27,7 @@
       label.append(art,info,control);
       input.addEventListener('change',()=>{selectedID=row.id;showResult('');syncApply();});return label;
     }));
-    if(!rows.length)target.append(text('p','사용 가능한 졸업 개체가 없습니다.'));
+    if(!rows.length)target.append(text('p','사용 가능한 졸업 개체가 없습니다.','textbox'));
     if(focusedID)target.querySelector('input[value="'+CSS.escape(focusedID)+'"]')?.focus();
     syncApply();
   }

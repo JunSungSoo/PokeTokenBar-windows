@@ -85,6 +85,7 @@
       name.textContent = root;
       const remove = document.createElement('button');
       remove.type = 'button';
+      remove.className = 'neutral';
       remove.textContent = '제거';
       remove.addEventListener('click', () => update({ claudeRoots: current.claudeRoots.filter(value => value !== root) }));
       item.append(name, remove);
@@ -240,6 +241,7 @@
       label.textContent = new Date(snapshot.createdAt).toLocaleString() + ' · ' + snapshot.label;
       const restore = document.createElement('button');
       restore.type = 'button';
+      restore.className = 'neutral';
       restore.textContent = '미리보기·복원';
       restore.addEventListener('click', async () => {
         try {

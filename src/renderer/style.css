@@ -299,7 +299,7 @@ button:disabled { opacity: .58; cursor: default; }
 .primary:not(:disabled) { background: var(--accent); color: var(--accent-text); border-color: var(--accent); }
 .primary:hover:not(:disabled) { background: var(--selected); color: var(--accent); }
 .empty-state { padding: 28px 10px; text-align: center; }
-.empty-state h2 { margin: 10px 0; }
+.empty-state .textbox { width: 100%; margin: 10px 0; text-align: left; }
 #companion-message { padding: 8px; border: 1px solid var(--line); border-radius: 6px; background: var(--selected); }
 #companion-message.error { color: light-dark(#9b2424, #ffb6b0); }
 
@@ -681,7 +681,7 @@ main, .partner > *, .item-heading > *, .folder > *, .settings-group > label > * 
 #dex-empty { flex: 1; min-height: 0; }
 #dex-empty.empty-state { display: flex; flex-direction: column; align-items: center; justify-content: center; }
 #dex-empty .pokemon-art { width: 96px; height: 96px; }
-.search-empty-icon { font-size: 24px; color: var(--muted); }
+.search-empty-icon { display: block; width: 24px; height: 24px; background: var(--muted); mask: url("assets/ui/search.svg") center / contain no-repeat; }
 #partner-art { overflow: hidden; border-radius: 12px; }
 .home-feedback { position: absolute; top: 0; left: 0; right: 0; text-align: center; z-index: 2; pointer-events: none; font-size: 11px; font-weight: 700; color: var(--growth-fill); }
 @media (prefers-reduced-motion: no-preference) {
