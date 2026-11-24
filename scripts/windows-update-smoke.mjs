@@ -59,6 +59,7 @@ async function processesAt(executable, stop = false) {
 
 const startupEntry = () => powershell("(Get-ItemProperty -LiteralPath 'HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Run' -Name $env:POKE_NAME -ErrorAction SilentlyContinue).$env:POKE_NAME", { POKE_NAME: startupName });
 const protocolCommand = () => powershell("$key = Get-Item -LiteralPath 'HKCU:\\Software\\Classes\\poketokenbar\\shell\\open\\command' -ErrorAction SilentlyContinue; if ($key) { $key.GetValue('') }");
+const desktopShortcut = join(await powershell("[Environment]::GetFolderPath('DesktopDirectory')"), basename(installerShortcut));
 // WScript.Shell turns non-ANSI path characters into '?', so shortcuts go through Electron's Unicode shell API.
 const shortcutHelper = fileURLToPath(new URL('./shortcut-link.cjs', import.meta.url));
 // Electron can crash while shutting down on CI; the printed RESULT line is what matters.
@@ -251,6 +252,9 @@ try {
   // Scenario 1: installed 1.0.n → update button → signed 1.0.n+1 replaces it and restarts.
   await runInstaller(join(baseDir, base.file), false);
   await access(uninstaller);
+  for (const shortcut of [desktopShortcut, installerShortcut]) {
+    assert.equal((await shortcutTarget(shortcut)).toLowerCase(), installed.toLowerCase(), 'fresh installation shortcut: ' + shortcut);
+  }
   await mkdir(data, { recursive: true });
   const original = Buffer.from(JSON.stringify({
     version: 1, baseline: 1, ledger: {}, raised: 2_400_000,
@@ -267,7 +271,7 @@ try {
   await click('desktop-pet');
   await petVisible(session.port);
   await until('pet preference saved', async () => JSON.parse(await readFile(settingsFile, 'utf8')).petEnabled === true);
-  await assertLaunchRegistrations(installed, [installerShortcut]);
+  await assertLaunchRegistrations(installed, [desktopShortcut, installerShortcut]);
 
   const battles = new Map();
   // Practice challenges open in preparation; only singles can begin through the CPU prepare command.
@@ -303,6 +307,9 @@ try {
   assert.ok(downloads.has('latest.yml') && downloads.has('latest.yml.sig'));
   const expected = { saveHash: await sha256File(save), settings: JSON.parse(await readFile(settingsFile, 'utf8')), battles };
   assert.deepEqual(await readFile(save), original);
+  // Reproduce upgrading from installations where either shortcut was never created or was removed.
+  await rm(desktopShortcut);
+  await rm(installerShortcut);
   // Do not await IPC here: a successful installation closes the renderer.
   await evaluate("setTimeout(() => document.querySelector('#desktop-update').click(), 250); true");
   await until('installed app exited for the update', () => session.child.exitCode !== null, 180000);
@@ -310,7 +317,7 @@ try {
   assert.ok(downloads.has(update.file));
   await until('updated executable version', async () => (await executableVersion(installed)).startsWith(update.version), 120000);
   console.log('Updated app process IDs:', await until('updated app relaunched', () => processesAt(installed), 60000));
-  await until('launch registrations kept on the new executable', async () => { await assertLaunchRegistrations(installed, [installerShortcut]); return true; });
+  await until('missing shortcuts restored for the updated executable', async () => { await assertLaunchRegistrations(installed, [desktopShortcut, installerShortcut]); return true; });
   assert.equal(await sha256File(save), expected.saveHash);
   await verifyUpdatedInstall(expected);
   console.log('PASS: signed in-app update ' + base.version + ' → ' + update.version + ' kept saves, settings, pet, login item, shortcut and protocol');
@@ -320,6 +327,12 @@ try {
   const uninstalling = spawn(uninstaller, ['/S'], { stdio: 'ignore' });
   await new Promise((resolve, reject) => { uninstalling.once('error', reject); uninstalling.once('exit', resolve); });
   await until('installed build removed', async () => { try { await access(installed); return false; } catch { return true; } }, 120000);
+  await until('desktop and Start menu shortcuts removed', async () => {
+    for (const shortcut of [desktopShortcut, installerShortcut]) {
+      await assert.rejects(access(shortcut), { code: 'ENOENT' }, 'uninstall removes shortcut: ' + shortcut);
+    }
+    return true;
+  });
   await rm(installDir, { recursive: true, force: true, maxRetries: 5, retryDelay: 500 });
   await cp(join(baseDir, 'win-unpacked'), zipFolder, { recursive: true });
   session = await launchWithSettings(unpacked);
@@ -338,7 +351,7 @@ try {
   await until('ZIP build handed off', async () => !(await processesAt(unpacked)), 120000);
   await until('installed app took over', () => processesAt(installed), 60000);
   await until('launch registrations moved to the installed executable', async () => {
-    await assertLaunchRegistrations(installed, [zipShortcut, installerShortcut]);
+    await assertLaunchRegistrations(installed, [desktopShortcut, zipShortcut, installerShortcut]);
     return true;
   }, 60000);
   assert.equal(await sha256File(save), zipExpected.saveHash);

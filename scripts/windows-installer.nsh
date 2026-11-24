@@ -1,3 +1,21 @@
+!macro customInstall
+  # electron-builder preserves existing shortcuts on --updated, including their absence.
+  ${if} ${isUpdated}
+  ${andIf} $keepShortcuts == "true"
+    StrCpy $keepShortcuts "false"
+    ${ifNot} ${FileExists} "$newStartMenuLink"
+      !insertmacro addStartMenuLink $keepShortcuts
+      ${if} ${FileExists} "$newStartMenuLink"
+        StrCpy $launchLink "$newStartMenuLink"
+      ${endIf}
+    ${endIf}
+    ${ifNot} ${FileExists} "$newDesktopLink"
+      !insertmacro addDesktopLink $keepShortcuts
+    ${endIf}
+    StrCpy $keepShortcuts "true"
+  ${endIf}
+!macroend
+
 !macro customUnInstall
   ${ifNot} ${isUpdated}
     DeleteRegValue HKCU "Software\Microsoft\Windows\CurrentVersion\Run" "com.poketokenbar.windows"
