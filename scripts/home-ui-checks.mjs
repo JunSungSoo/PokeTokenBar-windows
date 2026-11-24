@@ -41,7 +41,19 @@ export async function checkHomeUI(window,preferences,snapshot,capture=async()=>{
   await preferences.change({language,activityVisualization:'bars'});await until('document.documentElement.lang==='+JSON.stringify(language));
   for(const width of [440,490]){
    window.setContentSize(width,665);await new Promise(r=>setTimeout(r,35));
-   assert.ok(Math.abs(await js("parseFloat(getComputedStyle(document.querySelector('#growth')).height)")-8)<.02);assert.equal(await js("getComputedStyle(document.querySelector('#pane-home .companion')).backgroundColor"),'rgba(0, 0, 0, 0)');
+   const homeSizes=await js(`(()=>{
+    const gauge=getComputedStyle(document.querySelector('#growth'));
+    const frame=getComputedStyle(document.querySelector('#partner-art'));
+    const sprite=getComputedStyle(document.querySelector('#partner-art .pokemon-art'));
+    return { gaugeHeight:parseFloat(gauge.height), border:parseFloat(gauge.borderTopWidth),
+      borderStyle:gauge.borderTopStyle, frame:[frame.width,frame.height], sprite:[sprite.width,sprite.height] };
+   })()`);
+   assert.ok(Math.abs(homeSizes.gaugeHeight-8)<.02);
+   assert.ok(homeSizes.border>0&&homeSizes.border<=1);
+   assert.equal(homeSizes.borderStyle,'solid');
+   assert.deepEqual(homeSizes.frame,['92px','92px']);
+   assert.deepEqual(homeSizes.sprite,['76px','76px']);
+   assert.equal(await js("getComputedStyle(document.querySelector('#pane-home .companion')).backgroundColor"),'rgba(0, 0, 0, 0)');
    assert.equal(await js("document.querySelectorAll('.trend-day').length"),14);assert.equal(await js("document.querySelectorAll('.trend-legend span').length"),1);
    const homeBounds=await js("[...document.querySelectorAll('#pane-home button,#provider-usage,#usage-providers,#today-total,#today-exact')].filter(e=>e.getClientRects().length).filter(e=>{const r=e.getBoundingClientRect();return r.left<0||r.right>innerWidth+1}).map(e=>e.id||e.className)");assert.deepEqual(homeBounds,[],language+' home '+width);
    await js("document.querySelector('#usage-details').click()");await until("!document.querySelector('#recap-screen').hidden");assert.equal(await js("document.querySelector('#pane-home').hidden"),true);
@@ -63,15 +75,35 @@ export async function checkHomeUI(window,preferences,snapshot,capture=async()=>{
  await preferences.change({limitMode:'used'});window.webContents.send('usage:limits-updated',[{provider:'claude',account:'A',status:'available',windows:[{label:'5시간',usedPercent:42,resetsAt:Date.now()+3600000}]},{provider:'claude',account:'B',status:'available',windows:[{label:'주간',usedPercent:87}]}]);await js("document.querySelector('[data-provider=claude]').click()");await until("document.querySelectorAll('#limit-accounts button').length===2");assert.equal(await js("document.querySelector('#limit-rows progress').value"),58);await js("document.querySelectorAll('#limit-accounts button')[1].click()");assert.equal(await js("document.querySelector('#limit-rows progress').value"),13);
  // Quota rows keep their full-width track and soft pace marker in both themes and every locale.
  const quotaNow=Date.now();window.webContents.send('usage:limits-updated',[{provider:'codex',status:'available',windows:[{label:'codex · 5시간',usedPercent:7,spanSeconds:18000,resetsAt:quotaNow+6180000},{label:'codex · 주간',usedPercent:1,spanSeconds:604800,resetsAt:quotaNow+593000000}]}]);await js("document.querySelector('[data-provider=codex]').click()");
+ const quotaGeometry=`(()=>{
+   const failures=[];
+   for(const bar of document.querySelectorAll('#limit-rows .hp-bar')){
+    const track=bar.querySelector('.quota-track'),progress=bar.querySelector('progress'),marker=bar.querySelector('.quota-pace-marker');
+    const outer=track.getBoundingClientRect(),inner=progress.getBoundingClientRect(),line=marker.getBoundingClientRect(),style=getComputedStyle(track);
+    if(outer.left<0||outer.right>innerWidth+1)failures.push('track bounds');
+    if(line.left<inner.left-.1||line.right>inner.right+.1||line.top<inner.top-.1||line.bottom>inner.bottom+.1)failures.push('marker outside gauge');
+    if(bar.querySelector('.hp-name').getBoundingClientRect().bottom>outer.top+.1)failures.push('label overlaps track');
+    if(style.borderTopStyle!=='solid'||parseFloat(style.borderTopWidth)<=0||parseFloat(style.borderTopWidth)>1)failures.push('thin gauge border');
+    if(getComputedStyle(marker).backgroundColor==='rgb(36, 43, 50)')failures.push('black marker');
+   }
+   return failures;
+  })()`;
  for(const language of ['ko','en','ja','es','fr','pt','de','ru'])for(const theme of ['light','dark']){
   await preferences.change({language,theme,limitMode:'used'});await until('window.appPreferences.language==='+JSON.stringify(language)+' && window.appPreferences.theme==='+JSON.stringify(theme));
   for(const width of [440,490]){window.setContentSize(width,665);await until('innerWidth==='+width);await js("document.querySelector('.official-limits').scrollIntoView({block:'center'});new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)))");
-   const failures=await js(`(()=>{const failures=[];for(const bar of document.querySelectorAll('#limit-rows .hp-bar')){const track=bar.querySelector('.hp-track'),progress=bar.querySelector('progress'),marker=bar.querySelector('.quota-pace-marker'),name=bar.querySelector('.hp-name'),r=track.getBoundingClientRect(),m=marker.getBoundingClientRect(),p=getComputedStyle(progress);if(r.left<0||r.right>innerWidth+1||m.left<r.left-.1||m.right>r.right+.1)failures.push('bounds');if(name.getBoundingClientRect().bottom>r.top+.1)failures.push('label overlaps track');if(p.borderTopColor==='rgb(43, 50, 64)'||parseFloat(p.borderTopWidth)>1)failures.push('heavy border');if(getComputedStyle(marker).backgroundColor==='rgb(36, 43, 50)')failures.push('black marker');}return failures;})()`);assert.deepEqual(failures,[],language+' '+theme+' quota '+width);
+   assert.deepEqual(await js(quotaGeometry),[],language+' '+theme+' quota '+width);
    assert.deepEqual(await js("[...document.querySelectorAll('#limit-rows progress')].map(p=>p.value)"),[93,99]);
    if(language==='ko'&&width===490&&process.env.POKE_UI_SCREENSHOTS){await mkdir(process.env.POKE_UI_SCREENSHOTS,{recursive:true});const rect=await js("(()=>{const r=document.querySelector('.official-limits').getBoundingClientRect();return{x:Math.floor(r.x),y:Math.floor(r.y),width:Math.ceil(r.width),height:Math.ceil(r.height)}})()");await writeFile(join(process.env.POKE_UI_SCREENSHOTS,'quota-'+theme+'.png'),(await window.webContents.capturePage(rect)).toPNG());}
   }
   await preferences.change({limitMode:'remaining'});await until("document.querySelector('#limit-rows .hp-bar strong').textContent===window.i18n.t('남음 {percent}%',{percent:'93'})");assert.equal(await js("document.querySelector('#limit-rows progress').value"),93);
  }
+ const endpointNow=Date.now();
+ window.webContents.send('usage:limits-updated',[{provider:'codex',status:'available',windows:[
+  {label:'codex · 5시간',usedPercent:22,spanSeconds:18000,resetsAt:endpointNow+17999900},
+  {label:'codex · 주간',usedPercent:23,spanSeconds:604800,resetsAt:endpointNow+5000}
+ ]}]);
+ await until("[...document.querySelectorAll('#limit-rows progress')].map(p=>p.value).join() === '78,77'");
+ assert.deepEqual(await js(quotaGeometry),[],'markers near each end of the track');
  await preferences.change({language:'ko',theme:'light',limitMode:'used'});window.setContentSize(490,665);
  console.log('PASS: quota light/dark styling, 8 locales, 440/490px containment, full-width tracks and used/remaining labels.');
  // Tracked-provider changes cannot retain an old provider detail; all-disabled remains a valid empty home.

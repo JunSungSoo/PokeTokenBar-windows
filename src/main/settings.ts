@@ -4,6 +4,7 @@ import { join } from 'node:path';
 import { app, dialog, ipcMain, nativeTheme, shell, type BrowserWindow } from 'electron';
 import { providers, type Provider } from '../shared/usage.js';
 import type { AppSettings } from '../shared/settings.js';
+import { profileIcon } from '../shared/player-profile.js';
 import { writeSaveAtomically } from './companion/store.js';
 import { object } from './usage/jsonl.js';
 
@@ -14,7 +15,7 @@ export class SettingsStore {
     activityVisualization:'bars',theme: 'light', animated: true, back: false, refreshSeconds: 300, trend: '14', limitMode: 'used',
     providers: [...providers], petEnabled: false, petSize: 96, companionNotifications: true,
     limitNotifications: true, warnThreshold: 80, criticalThreshold: 95, updateNotifications: true,
-    trayTokens: true, trayCost: false, trayGrowth: false, trayLimits: true, tradeNickname: '', claudeRoots: [],claudeTrackedAccount:'automatic',
+    trayTokens: true, trayCost: false, trayGrowth: false, trayLimits: true, tradeNickname: '', profileIcon: 0, claudeRoots: [],claudeTrackedAccount:'automatic',
   };
   private listeners: ((settings: AppSettings) => void)[] = [];
 
@@ -67,6 +68,7 @@ export class SettingsStore {
           path.length > 0 && path.length <= 1024) && new Set(value).size === value.length,
         claudeTrackedAccount:typeof value==='string'&&['automatic','highest','defaultAccount'].includes(value)||typeof value==='string'&&/^claude-[a-z0-9-]{1,80}$/.test(value),
         tradeNickname: typeof value === 'string' && value.trim().length <= 40,
+        profileIcon: value === 0 || profileIcon(value) !== undefined,
       };
       if (!Object.hasOwn(checks, key) || !checks[key as keyof typeof checks]) throw new Error('지원하지 않는 설정 값입니다.');
     }

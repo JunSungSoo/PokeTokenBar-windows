@@ -8,6 +8,35 @@
   let loadedSessionAccount;
   const tr=text=>window.i18n.t(text);
   const segmentedSettings=['theme','limitMode','animationQuality'];
+  const profileIcons = get('profile-icons');
+  const profileChoices = [];
+  for (let icon = 0; icon <= window.profileConfig.profileIconCount; icon++) {
+    const choice = document.createElement('label');
+    const input = document.createElement('input');
+    input.type = 'radio';
+    input.name = 'profile-icon';
+    input.value = String(icon);
+    input.disabled = true;
+    const image = window.playerProfile.avatar(icon);
+    image.loading = 'lazy';
+    input.addEventListener('change', () => void update({ profileIcon: icon }));
+    choice.append(input, image);
+    profileIcons.append(choice);
+    profileChoices.push({ choice, input });
+  }
+  function labelProfileIcons() {
+    for (const [icon, { choice, input }] of profileChoices.entries()) {
+      const names = window.speciesNames[icon];
+      const label = names?.[window.i18n.language] ?? names?.en ?? tr('기본 아이콘');
+      choice.title = label;
+      input.setAttribute('aria-label', label);
+    }
+  }
+  labelProfileIcons();
+  window.addEventListener('language-changed', labelProfileIcons);
+  get('profile-nickname').addEventListener('keydown', event => {
+    if (event.key === 'Enter' && !event.isComposing) event.target.blur();
+  });
   const thumbSize=20;
   // Fill ends under the thumb centre, so the track is inset by half a thumb on both sides.
   function paintRange(input){
@@ -66,6 +95,14 @@
   function render(settings) {
     current = settings;
     renderAccounts();
+    const icon = settings.profileIcon || 0;
+    const preview = get('profile-preview');
+    if (preview.dataset.icon !== String(icon)) {
+      preview.replaceChildren(window.playerProfile.avatar(icon));
+      preview.dataset.icon = String(icon);
+    }
+    profileChoices[icon].input.checked = true;
+    for (const { input } of profileChoices) input.disabled = false;
     for (const control of document.querySelectorAll('[data-setting]')) {
       if (control.type === 'text' && document.activeElement === control) continue;
       const value = settings[control.dataset.setting];
@@ -106,7 +143,7 @@
   }
 
   for (const control of document.querySelectorAll('[data-setting]')) {
-    control.addEventListener(control.type === 'text' ? 'input' : 'change', () => {
+    control.addEventListener('change', () => {
       const value = control.type === 'checkbox' ? control.checked
         : control.type === 'range' || control.dataset.setting === 'refreshSeconds' ? Number(control.value) : control.value;
       void update({ [control.dataset.setting]: value });

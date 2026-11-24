@@ -3,7 +3,7 @@
 export class EntryAnimation {
  constructor({scene,field,incoming,outgoing,add,playSound,reducedMotion=false}) {
   Object.assign(this,{scene,field,incoming,outgoing,add,playSound,reducedMotion});
-  this.elapsed=0;this.particles=[];this.released=false;this.recalled=false;this.cried=false;
+  this.elapsed=0;this.particles=[];this.thrown=false;this.released=false;this.recalled=false;this.cried=false;
   this.recall=!!outgoing;this.phase=this.recall?'recall':'throw';this.delay=this.recall?1000:0;
   this.sparkleStart=this.delay+1900/1.25;this.sparkled=false;this.sparkle=null;
   this.cryStart=this.delay+900/1.25;
@@ -23,8 +23,13 @@ export class EntryAnimation {
   const s=(t-this.delay)*1.25,p=this.incoming;
   // Own Pokémon stand at the bottom edge, so the ball lands at body centre instead of 16px above the feet.
   const lift=p.own?Math.max(16,(p.base?.height??0)/2):16;
+  if(!p.own&&s>=0&&!this.thrown){
+   this.thrown=true;
+   this.playSound('entry-throw',this.delay);
+  }
   if(s>=0&&s<650){
-   const x=p.x-6,start=x+(p.own?-64:12),y=p.y-lift;
+   const x=p.x-6,y=p.y-lift;
+   const start=p.own?x-64:Math.max(x,Math.min(x+80,this.scene.scale.width/this.field.scaleX-12));
    this.ball.setVisible(true).setX(start+(x-start)*Math.min(1,s/650));
    const startY=y-(p.own?52:42),peakY=y-(p.own?62:52);
    this.ball.setY(s<=150?startY+(peakY-startY)*(1-(1-s/150)**3):peakY+(y-peakY)*((s-150)/500)**3);

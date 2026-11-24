@@ -168,11 +168,21 @@ input:focus-visible, select:focus-visible, button:focus-visible, summary:focus-v
 .settings-content { flex: 1; min-height: 0; overflow-y: auto; margin: 0 8px; padding: 0; background: var(--card); border-radius: 18px 18px 0 0; scroll-padding-block: 16px; }
 .settings-window .settings-actions { flex: none; display: flex; justify-content: space-between; align-items: center; gap: 16px; margin: 0 8px 8px; padding: 12px 20px; border-top: 1px solid var(--line); border-radius: 0 0 18px 18px; background: var(--card); }
 .settings-footer-version { min-width: 0; color: var(--muted); font-size: 11px; overflow-wrap: anywhere; }
-.settings-intro { padding: 22px 20px 10px; }
-.settings-title { margin: 0; font-size: 24px; font-weight: 800; line-height: 1.25; color: var(--ink); }
-.settings-subtitle { margin: 2px 0 0; font-size: 13px; color: var(--sub); }
 .settings-window section { margin: 0; }
 .settings-window section + section { border-top: 10px solid var(--screen); }
+.settings-profile { display: flex; align-items: center; gap: 16px; padding: 12px 20px; }
+#profile-preview { display: grid; place-items: center; flex: none; width: 76px; height: 76px; border-radius: 14px; border: 1px solid var(--line); background: var(--screen); }
+#profile-preview .profile-avatar { width: 60px; height: 60px; }
+.settings-profile label { display: grid; min-width: 0; gap: 6px; flex: 1; }
+.settings-profile input { width: 100%; min-width: 0; }
+.profile-picker { margin: 0 20px 12px; }
+.settings-window .profile-picker > summary { cursor: pointer; display: list-item; min-height: auto; padding: 8px 0; }
+#profile-icons { display: grid; grid-template-columns: repeat(auto-fill, minmax(46px, 1fr)); gap: 8px; max-height: 260px; padding: 4px; overflow: auto; }
+#profile-icons label { position: relative; display: grid; place-items: center; min-height: 46px; border: 1px solid var(--line); border-radius: 8px; background: var(--screen); cursor: pointer; }
+#profile-icons input { position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; opacity: 0; cursor: inherit; }
+#profile-icons label:hover, #profile-icons label:has(:checked) { border-color: var(--accent); background: var(--selected); }
+#profile-icons label:has(:focus-visible) { outline: 2px solid var(--accent); outline-offset: 2px; }
+.settings-support-buttons { display: flex; flex-wrap: wrap; gap: 8px; }
 .settings-window h2 { margin: 0; padding: 16px 20px 4px; font-size: 13px; font-weight: 700; color: var(--sub); }
 .settings-content .surface { margin: 0; padding: 4px 20px 8px; border: 0; border-radius: 0; background: transparent; box-shadow: none; }
 .settings-content .surface + .surface { margin-top: 0; }
@@ -272,8 +282,14 @@ input[type="range"].ball-range:disabled { opacity: .5; cursor: default; }
 #pane-home .official-limits h3 { margin: 0 0 5px; color: var(--muted); font-size: 11px; }
 #pane-home .official-limits h3::before { content: none; }
 #pane-home #limit-rows li { background: transparent; border: 0; padding: 3px 0; }
-.quota-track { position: relative; display: flex; align-items: center; min-height: 12px; }
-.quota-pace-marker { position: absolute; top: 0; bottom: 0; width: 2px; transform: translateX(-50%); background: light-dark(#242b32,#fff); pointer-events: none; }
+.quota-track {
+  position: relative; display: flex; height: 9px; margin-block: 1.5px;
+  overflow: hidden; border: var(--gauge-outline); border-radius: 999px;
+}
+.quota-pace-marker {
+  position: absolute; inset-block: 0; width: 2px; transform: translateX(-50%);
+  border-radius: 2px; background: var(--quota-marker); pointer-events: none;
+}
 .quota-forecast { display: block; color: var(--muted); overflow-wrap: anywhere; }
 .quota-forecast[data-warning="true"] { color: light-dark(#a85f13,#efac60); }
 .detail-form-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(72px,1fr));gap:6px;margin:8px 0}.detail-form{padding:6px;display:grid;justify-items:center;min-width:0;white-space:normal}.detail-form .pokemon-art{width:48px;height:48px}.detail-form:disabled{opacity:.3}.detail-form[aria-pressed="true"]{outline:2px solid var(--accent)}.detail-form span{max-width:100%;overflow-wrap:anywhere;font-size:11px}.pokemon-mega-dialog{width:min(620px,calc(100vw - 32px));max-height:calc(100vh - 32px);overflow:auto;border:1px solid var(--line);border-radius:12px;background:var(--surface);color:var(--text);padding:16px;box-sizing:border-box}.pokemon-mega-dialog::backdrop{background:#0008}.mega-information{margin-bottom:10px}.mega-information>img{image-rendering:pixelated}
@@ -393,10 +409,10 @@ body.showing-recap .app-tabs { display: none; }
 .hp-name { flex: none; min-width: 56px; font-weight: 600; }
 .hp-track { flex: 1; min-width: 0; display: flex; }
 .hp-track progress, .exp-bar {
-  appearance: none; -webkit-appearance: none; border: 0; overflow: hidden; vertical-align: middle;
+  appearance: none; -webkit-appearance: none; overflow: hidden; vertical-align: middle;
 }
 .hp-track progress {
-  width: 100%; height: 9px; box-sizing: border-box; border: 2px solid #2B3240; border-radius: 999px;
+  width: 100%; height: 100%; border: 0; border-radius: 999px;
   background: #fff; --fill: var(--hp-ok);
 }
 .hp-bar[data-level="ok"] progress { --fill: var(--hp-ok); }
@@ -515,9 +531,22 @@ input[type="range"].ball-range::-webkit-slider-thumb {
 }
 .settings-window .dex-shell-header { background: var(--dex); }
 
-/* 홈: 파트너 카드 → 대화창 → 오늘 토큰 → 한도, 그 아래 진화·상세는 기존 순서 */
+/* 홈의 프로필과 파트너 카드 */
 #pane-home { display: flex; flex-direction: column; gap: 10px; }
 #pane-home > * { flex: none; margin: 0; }
+#home-player-profile {
+  display: flex; align-items: center; gap: 10px; width: 100%; min-height: 46px; padding: 5px 12px;
+  border: 1px solid light-dark(#F0B7A6, #8E5545); border-radius: 12px;
+  background: var(--dex-soft); color: var(--ink); text-align: left;
+}
+#home-player-profile:hover { background: var(--selected); }
+#home-player-profile:focus-visible { outline: 2px solid var(--dex); outline-offset: 2px; }
+#home-profile-avatar .profile-avatar { width: 32px; height: 32px; }
+.home-profile-details { display: grid; min-width: 0; line-height: 1.25; }
+.home-profile-details small, .home-profile-chevron { color: light-dark(#8A2B19, #FFC2AE); }
+.home-profile-details small { font-size: 11px; }
+.home-profile-details strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 14px; }
+.home-profile-chevron { flex: none; margin-inline-start: auto; font-size: 20px; line-height: 1; }
 #pane-home .companion { display: flex; flex-direction: column; gap: 10px; padding: 0; }
 #pane-home .partner.dex-panel { align-items: center; gap: 14px; margin: 0; }
 #pane-home .partner #partner-art {
@@ -532,7 +561,10 @@ input[type="range"].ball-range::-webkit-slider-thumb {
 #pane-home .partner-title h2 { font-size: 20px; font-weight: 800; letter-spacing: -.4px; color: var(--ink); }
 #pane-home .partner-title .type-badges { margin: 0; }
 #pane-home #profile { margin: 2px 0 0; font-size: 11px; }
-#pane-home #growth.exp-bar { width: 100%; height: 8px; margin-top: 8px; background: var(--line); }
+#pane-home #growth.exp-bar {
+  box-sizing: border-box; width: 100%; height: 8px; margin-top: 8px;
+  background: var(--line);
+}
 #pane-home #growth.exp-bar::-webkit-progress-bar { background: var(--line); }
 #pane-home #growth.exp-bar::-webkit-progress-value { background: var(--exp); }
 #pane-home .exp-caption { gap: 8px; align-items: baseline; }
@@ -565,8 +597,7 @@ input[type="range"].ball-range::-webkit-slider-thumb {
 #limit-rows .hp-bar { display: grid; grid-template-columns: auto minmax(0,1fr) auto; gap: 7px 8px; }
 #limit-rows .hp-name { min-width: 0; max-width: none; font-size: 12px; font-weight: 500; overflow-wrap: anywhere; }
 #limit-rows .hp-bar strong { min-width: 0; white-space: nowrap; color: var(--sub); font-size: 12px; font-weight: 600; }
-#limit-rows .hp-track { grid-column: 1 / -1; position: relative; align-items: center; min-height: 12px; }
-#limit-rows .quota-pace-marker { top: 0; bottom: 0; border-radius: 2px; background: var(--quota-marker); }
+#limit-rows .quota-track { grid-column: 1 / -1; }
 #limit-rows small { margin-top: 4px; line-height: 1.45; }
 
 #pane-home .home-evolution-navigation:has(#evolution-line:empty) { display: none; }

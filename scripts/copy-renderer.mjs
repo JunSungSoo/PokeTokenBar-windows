@@ -13,6 +13,8 @@ await cp(
 );
 
 const { languages, messages } = await import('../dist/shared/localization.js');
+const { defaultProfileNickname, profileIconCount } = await import('../dist/shared/player-profile.js');
+await writeFile(new URL('../dist/renderer/profile-config.js', import.meta.url), 'window.profileConfig = ' + JSON.stringify({ defaultProfileNickname, profileIconCount }) + ';\n');
 await writeFile(new URL('../dist/renderer/locale-data.js', import.meta.url), 'window.localeCatalog = ' + JSON.stringify({ languages, messages:[...messages,...JSON.parse(await readFile(new URL('../src/battle-assets/data/messages.json',import.meta.url),'utf8'))] }) + ';\n');
 
 await cp(new URL('../src/companion-data/', import.meta.url), new URL('../dist/companion-data/', import.meta.url), { recursive: true });
@@ -38,6 +40,13 @@ await writeFile(new URL('../dist/renderer/form-names.js',import.meta.url),'windo
 const catalog=JSON.parse(await readFile(new URL('../src/companion-data/catalog.json',import.meta.url),'utf8'));
 const fairy=JSON.parse(await readFile(new URL('../src/companion-data/gen6-fairy.json',import.meta.url),'utf8'));
 const battleData={...catalog,moves:{...catalog.moves,...fairy.moves},types:{...catalog.types,...fairy.types}};
+const {battleDex}=await import('../dist/main/battle/engine.js');
+const rules=battleDex();
+const battleTypes=Object.keys(battleData.types).map(id=>rules.types.get(id));
+battleData.typeMatchups=Object.fromEntries(battleTypes.map(attack=>[attack.id,Object.fromEntries(
+  battleTypes.map(defense=>[defense.id,rules.getImmunity(attack.name,defense.name)
+    ? 2**rules.getEffectiveness(attack.name,defense.name) : 0])
+)]));
 battleData.formCatalog=formCatalog;
 battleData.megaSprites=await readdir(new URL('../src/battle-assets/player/mega-sprites/',import.meta.url));
 const {appearance}=await import('../dist/main/companion/forms.js');

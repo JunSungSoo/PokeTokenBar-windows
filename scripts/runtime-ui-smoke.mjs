@@ -103,6 +103,8 @@ try {
     return presentPokemonDetails(details, preferences.get().language === 'system' ? 'en' : preferences.get().language);
   });
   ipcMain.handle('windows:settings', () => ({ supported: false, version: '1.0.0' }));
+  let settingsOpens=0;
+  ipcMain.handle('windows:open-settings', () => { settingsOpens++; });
   ipcMain.handle('pet:hover',()=>({title:'Pikachu',body:'Today 100 tokens · 25%'}));
   ipcMain.handle('pet:read', () => ({ species: { number: 25, name: 'Pikachu' }, shiny: false }));
   ipcMain.handle('pet:activate', () => { controller.dismiss(); return 1; });
@@ -245,6 +247,17 @@ try {
   await check("document.querySelector('#update-banner .update-banner-skip').click()");await until("document.querySelector('#update-banner').hidden");assert.equal(preferences.get().skippedUpdateVersion,'9.9.9');
   await until("!document.querySelector('#desktop-update-skip').hidden",settings);await check("document.querySelector('#desktop-update-skip').click()",settings);await until("!document.querySelector('#update-banner').hidden");
   publishUpdate({state:'current',version:'1.0.0'});
+  assert.equal(await check("document.querySelector('.settings-content section:first-child').getAttribute('aria-labelledby')",settings),'profile-settings');
+  await check("document.querySelector('.profile-picker').open=true;document.querySelector('#profile-icons input[value=\"251\"]').click();",settings);
+  await until("document.querySelector('#profile-preview img')?.src.endsWith('/251.png') && document.querySelector('#profile-preview img').naturalWidth > 0",settings);
+  assert.equal(await check("document.querySelectorAll('#profile-icons input').length",settings),252);
+  await check("(()=>{const input=document.querySelector('#profile-nickname');input.value='Trainer';input.dispatchEvent(new Event('change'));})()",settings);
+  await until("window.appPreferences.tradeNickname==='Trainer' && window.appPreferences.profileIcon===251");
+  await until("document.querySelector('#home-profile-nickname')?.textContent==='Trainer' && document.querySelector('#home-profile-avatar img')?.src.endsWith('/251.png') && document.querySelector('#home-profile-avatar img').naturalWidth>0");
+  assert.equal(await check("document.querySelector('#pane-home').firstElementChild.id"),'home-player-profile');
+  await check("document.querySelector('#home-player-profile').click()");
+  assert.equal(settingsOpens,1);
+  await check("document.querySelector('.profile-picker').open=false",settings);
   // Test the actual control's IPC route, rather than only writing the store.
   await check("(() => { const s = document.querySelector('[data-setting=animationQuality]'); s.value='balanced'; s.dispatchEvent(new Event('change')); })()", settings);
   await until("window.appPreferences.animationQuality === 'balanced'");
@@ -280,6 +293,8 @@ try {
   const restored = new SettingsStore(join(directory, 'settings-v1.json')); await restored.load();
   assert.equal(restored.get().language, 'en'); assert.equal(restored.get().animationQuality, 'smooth');
   assert.throws(() => restored.change({ language: 'xx' }));
+  assert.equal(restored.get().tradeNickname,'Trainer');assert.equal(restored.get().profileIcon,251);
+  assert.throws(() => restored.change({ profileIcon:252 }));
   assert.throws(() => restored.change({ animationQuality: 'ultra' }));
   assert.equal(restored.get().statusChecks, false); assert.equal(restored.get().petAgentActivity, false);
   pet.webContents.send('pet:notice',{title:'Limit warning',body:'Fixture limit',priority:3});await until("document.querySelector('output').textContent.includes('Fixture limit')",pet);await check("document.querySelector('output').click()",pet);await until("document.querySelector('output').hidden",pet);
@@ -288,8 +303,22 @@ try {
   retryUntil=Date.now()+500;
   await check("(()=>{const box=document.createElement('span');box.className='pokemon-art';box.id='retry-fixture';const img=document.createElement('img');img.dataset.staticSrc='https://raw.githubusercontent.com/fallback.png';img.src='https://raw.githubusercontent.com/retry.gif';box.append(img);document.body.append(box);})()");
   await until("document.querySelector('#retry-fixture img').src.endsWith('/fallback.png')");await until("document.querySelector('#retry-fixture img').src.endsWith('/retry.gif') && document.querySelector('#retry-fixture img').classList.contains('sprite-decoded')");await check("document.querySelector('#retry-fixture').remove()");
+  assert.deepEqual(await check("[...document.querySelectorAll('[data-support]')].map(button=>button.dataset.support)",settings),['log','github']);
   await check("document.querySelector('[data-support=log]').click()",settings);assert.deepEqual(supportActions,['log']);
-  await check("document.querySelector('#tab-battle').click()");await until("document.querySelector('#battle-panel .battle-preset-controls')!==null");await check("document.querySelector('#battle-panel .battle-preset-controls button:last-child').click()");assert.equal(await check("Boolean(document.querySelector('.battle-presets-popup[open]'))"),true);await check("document.querySelector('.battle-presets-popup .battle-confirm-actions button').click();document.querySelector('#tab-collection').click()");
+  await check("document.querySelector('#tab-battle').click()");await until("document.querySelector('#battle-panel .battle-preset-controls')!==null");await check("document.querySelector('#battle-panel .battle-preset-controls button:last-child').click()");assert.equal(await check("Boolean(document.querySelector('.battle-presets-popup[open]'))"),true);await check("document.querySelector('.battle-presets-popup .battle-confirm-actions button').click()");
+  const lineupMembers = (ids, side) => ids.map(speciesID => ({id:side+speciesID,speciesID,level:100,shiny:false}));
+  const lobbyIdentity={nickname:'Trainer',code:'AAAAAAAA',nonce:'test'};
+  main.webContents.send('battle:lan-changed',{phase:'connected',identity:lobbyIdentity,codes:[],
+    registered:lineupMembers([9,6,3,149,130,65],'own'),opponentRoster:lineupMembers([74,139,3,95,76,142],'foe')});
+  await until("document.querySelectorAll('.battle-lan-panel button.battle-team-tile').length===6");
+  await check("document.querySelectorAll('.battle-lan-panel button.battle-team-tile')[0].click()");
+  assert.deepEqual(await check("[...document.querySelectorAll('.battle-lan-panel .battle-team-grid:last-of-type .battle-team-tile')].map(tile=>tile.dataset.lineupMatchup??null)"),['advantage',null,'disadvantage','advantage','advantage','advantage']);
+  await check("document.querySelectorAll('.battle-lan-panel button.battle-team-tile')[1].click()");
+  assert.deepEqual(await check("[...document.querySelectorAll('.battle-lan-panel [data-lineup-order]')].map(tile=>tile.dataset.lineupOrder)"),['1','2']);
+  assert.equal(await check("document.querySelector('.battle-lan-panel .battle-team-grid:last-of-type .battle-team-tile').dataset.lineupMatchup"),'disadvantage');
+  main.webContents.send('battle:lan-changed',{phase:'searching',identity:lobbyIdentity,codes:[],registered:[],opponentRoster:[]});
+  main.webContents.send('battle:lan-changed',{phase:'idle',identity:lobbyIdentity,codes:[],registered:[],opponentRoster:[]});
+  await check("document.querySelector('#tab-collection').click()");
   // Render capture chains and species metadata without touching the real companion save.
   await preferences.change({ language: 'ko' });
   const route = [{ number:1, name:'이상해씨', type:'풀' }, { number:2, name:'이상해풀', type:'풀' }, { number:3, name:'이상해꽃', type:'풀' }];
@@ -366,9 +395,11 @@ try {
         const stats=document.querySelector('.detail-stat-row progress'), home=document.querySelector('#growth');
         const statStyle=getComputedStyle(stats), homeStyle=getComputedStyle(home);
         return { sameColor:getComputedStyle(stats,'::-webkit-progress-value').backgroundColor === getComputedStyle(home,'::-webkit-progress-value').backgroundColor,
-          sameTrack:statStyle.backgroundColor === homeStyle.backgroundColor, radius:parseFloat(statStyle.borderRadius), appearance:statStyle.appearance };
+          sameTrack:statStyle.backgroundColor === homeStyle.backgroundColor, radius:parseFloat(statStyle.borderRadius), appearance:statStyle.appearance,
+          borders:[statStyle,homeStyle].map(style=>[parseFloat(style.borderTopWidth),style.borderTopStyle]) };
       })()`);
       assert.equal(meter.sameColor,true); assert.equal(meter.sameTrack,true); assert.ok(meter.radius>=7); assert.equal(meter.appearance,'none');
+      assert.ok(meter.borders.every(([width, style]) => width>0&&width<=1&&style==='solid'));
     }
   }
   await preferences.change({ language:'ko' });

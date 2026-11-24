@@ -77,7 +77,7 @@ export function registerUsageIPC(mainWindow: () => BrowserWindow | undefined, pe
   let battle:ReturnType<typeof registerBattleIPC>|undefined;
   const activity=()=>({trade:trade.blocksUpdate(),battle:battle?.isBusy()??false});
   const notifyActivity=()=>{const owner=mainWindow();if(owner&&!owner.isDestroyed())owner.webContents.send('usage:activity-gate',activity());};
-  const trade = registerTradeIPC(companion, mainWindow, state=>notifyCompanion(state,false),{canEnter:()=>!battle?.isBusy(),activityChanged:notifyActivity});
+  const trade = registerTradeIPC(companion, mainWindow, state=>notifyCompanion(state,false),preferences,{canEnter:()=>!battle?.isBusy(),activityChanged:notifyActivity});
   battle=registerBattleIPC(companion,mainWindow,preferences,undefined,notifyCompanion,{tradeActive:()=>trade.blocksUpdate(),activityChanged:notifyActivity});
   ipcMain.handle('companion:read', event => {
     authorized(event);

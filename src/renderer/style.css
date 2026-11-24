@@ -4,6 +4,7 @@
 :root {
   color-scheme: light dark;
   font-family: system-ui, sans-serif;
+  --gauge-outline: 1px solid light-dark(#A9B7C6, #5F7082);
 }
 
 body {
@@ -403,7 +404,7 @@ body { overflow-anchor: none; }
   display: block;
   appearance: none;
   height: 9.8px;
-  border: 0;
+  border: var(--gauge-outline);
   border-radius: 999px;
   overflow: hidden;
   background: var(--line);
@@ -573,7 +574,7 @@ button.log-card:hover .pokemon-art, button.dex-card:hover .pokemon-art { backgro
 .detail-value-pairs dd { margin: 0; overflow-wrap: anywhere; }
 .detail-stat-row { display: grid; grid-template-columns: 64px minmax(20px, 1fr) 30px; align-items: center; gap: 6px; font-size: 12px; margin-top: 5px; }
 .individual-stats .detail-stat-row { grid-template-columns: 64px minmax(20px, 1fr) 30px 46px; }
-.detail-stat-row progress { width: 100%; height: 7px; border: none; }
+.detail-stat-row progress { width: 100%; height: 7px; }
 .detail-stat-row strong { text-align: right; font-variant-numeric: tabular-nums; }
 .iv-grade { color: var(--muted); text-align: right; }
 .detail-move-list, .detail-abilities { list-style: none; padding: 0; margin: 0; }
@@ -707,6 +708,13 @@ body:not([data-tab="home"]) :is(#refresh, #refresh-age) { visibility: hidden; }
 .trade-panel { display: flex; flex-direction: column; gap: 12px; max-width: 100%; min-width: 0; }
 .trade-identity { display: block; margin: 0; padding-bottom: 12px; border-bottom: 1px solid var(--line); }
 .trade-identity h2, .trade-panel h3 { margin: 0 0 6px; }
+.profile-avatar { display: block; width: 36px; height: 36px; object-fit: contain; flex: none; }
+.profile-participants { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.profile-badge { display: flex; align-items: center; gap: 8px; min-width: 0; padding: 8px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); }
+.profile-badge > div { min-width: 0; }
+.profile-badge small { display: block; color: var(--muted); font-size: 11px; }
+.profile-badge strong { display: block; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+#trade-profiles { margin-top: 8px; }
 .trade-panel h3 { font-size: 14px; }
 .trade-panel p { margin: 4px 0; overflow-wrap: anywhere; }
 .trade-panel input { width: 100%; min-width: 0; }

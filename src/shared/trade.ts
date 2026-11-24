@@ -1,4 +1,5 @@
 import type { Rarity, Species } from './companion.js';
+import type { PlayerProfile } from './player-profile.js';
 
 export interface TradePreview {
   id: string;
@@ -18,6 +19,8 @@ export interface TradeState {
   phase: 'idle' | 'waiting' | 'connected' | 'committing' | 'complete' | 'closed';
   codes: string[];
   peer?: string;
+  localProfile?: PlayerProfile;
+  peerProfile?: PlayerProfile;
   mine?: string;
   theirs?: string;
   mineItem?: TradePreview;
@@ -31,8 +34,8 @@ export interface TradeState {
 export interface TradeAPI {
   state(): Promise<TradeState>;
   choices(): Promise<TradeChoice[]>;
-  host(nickname: string): Promise<void>;
-  connect(code: string, nickname: string): Promise<void>;
+  host(): Promise<void>;
+  connect(code: string): Promise<void>;
   offer(id: string): Promise<void>;
   withdraw(): Promise<void>;
   reject(): Promise<void>;

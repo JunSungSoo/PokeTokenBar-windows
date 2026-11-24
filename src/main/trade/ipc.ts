@@ -1,9 +1,10 @@
 import type { CompanionView } from '../../shared/companion.js';
 import { app, ipcMain, shell, type BrowserWindow } from 'electron';
 import type { CompanionStore } from '../companion/store.js';
+import type { SettingsStore } from '../settings.js';
 import { LanTrade } from './session.js';
 
-export function registerTradeIPC(companion: CompanionStore, mainWindow: () => BrowserWindow | undefined, notifyCompanion: (state: CompanionView) => void,options:{canEnter?:()=>boolean;activityChanged?:()=>void}={}): LanTrade {
+export function registerTradeIPC(companion: CompanionStore, mainWindow: () => BrowserWindow | undefined, notifyCompanion: (state: CompanionView) => void, preferences: SettingsStore, options:{canEnter?:()=>boolean;activityChanged?:()=>void}={}): LanTrade {
   const send = (channel: string, value: unknown) => {
     const window = mainWindow();
     if (window && !window.isDestroyed()) window.webContents.send(channel, value);
@@ -26,15 +27,16 @@ export function registerTradeIPC(companion: CompanionStore, mainWindow: () => Br
 
   handle('state', () => trade.state());
   handle('choices', () => trade.choices());
-  handle('host', nickname => {
+  handle('host', () => {
     if(options.canEnter&&!options.canEnter())throw new Error('진행 중인 배틀을 먼저 종료해 주세요.');
-    if (typeof nickname !== 'string') throw new Error('잘못된 별명입니다.');
-    return trade.host(nickname);
+    const { tradeNickname, profileIcon } = preferences.get();
+    return trade.host(tradeNickname, profileIcon);
   });
-  handle('connect', (code, nickname) => {
+  handle('connect', code => {
     if(options.canEnter&&!options.canEnter())throw new Error('진행 중인 배틀을 먼저 종료해 주세요.');
-    if (typeof code !== 'string' || typeof nickname !== 'string') throw new Error('잘못된 연결 코드입니다.');
-    return trade.connect(code, nickname);
+    if (typeof code !== 'string') throw new Error('잘못된 연결 코드입니다.');
+    const { tradeNickname, profileIcon } = preferences.get();
+    return trade.connect(code, tradeNickname, profileIcon);
   });
   handle('offer', id => {
     if (typeof id !== 'string') throw new Error('교환할 개체를 골라 주세요.');

@@ -1,9 +1,9 @@
-import{join}from'node:path';import{release}from'node:os';
+import{join}from'node:path';
 import {GitHubUpdateFeed} from './update/github-feed.js';
 import type {UpdateInstaller} from './update/installer.js';
 import type {SignedRelease} from './update/manifest.js';
 import {newerVersion} from '../shared/release-version.js';
-import {windowsReleasePage} from '../shared/github-release.js';
+import {windowsRepositoryPage,windowsReleasePage} from '../shared/github-release.js';
 import { resolveLanguage, translate } from '../shared/localization.js';
 import type { SettingsStore } from './settings.js';
 import { app, BrowserWindow, ipcMain, Notification, shell } from 'electron';
@@ -87,7 +87,15 @@ export function registerWindowsIPC(
     return togglePet();
   });
 
-  ipcMain.handle('windows:support',async(event,action:unknown)=>{authorize(event);if(action==='log'){shell.showItemInFolder(join(app.getPath('userData'),'logs','PokeTokenBar.log'));return;}const links:Record<string,string>={github:'https://github.com/chattymin/PokeTokenBar',website:'https://chattymin.github.io/PokeTokenBar/',sponsor:'https://github.com/sponsors/chattymin',report:'mailto:parkdongmin123@gmail.com?subject='+encodeURIComponent('PokeTokenBar Windows problem report')+'&body='+encodeURIComponent('Version: '+app.getVersion()+'\nOS: '+process.platform+' '+release()+'\n\nDescribe the problem:\n\nAttach PokeTokenBar.log if helpful.')};if(typeof action!=='string'||!links[action])throw new Error('Invalid support action');await shell.openExternal(links[action]);});
+  ipcMain.handle('windows:support', async (event, action: unknown) => {
+    authorize(event);
+    if (action === 'log') {
+      shell.showItemInFolder(join(app.getPath('userData'), 'logs', 'PokeTokenBar.log'));
+      return;
+    }
+    if (action !== 'github') throw new Error('Invalid support action');
+    await shell.openExternal(windowsRepositoryPage);
+  });
 
   let availableRelease:SignedRelease|undefined;
   let lastUpdate:UpdateStatus={state:'current',version:app.getVersion(),delivery};

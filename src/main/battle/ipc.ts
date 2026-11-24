@@ -41,8 +41,9 @@ function actionsOf(value: unknown): BattleAction[] {
 
 function equippedTeam(offers:OfferedItem[],input:unknown){const team=offers.map(ownedMember),candidates=team.map((p,index)=>({...p,battleDefaultItem:offers[index].item.battleDefaultItem})),defaults=assignHeldItems(team.map(p=>p.id),candidates,{},{},heldItems,formCatalog);return withItems(team.map(p=>({...p,item:defaults[p.id]})),input);}
 
-export function registerBattleIPC(companion: CompanionStore, mainWindow: () => BrowserWindow | undefined,preferences:SettingsStore,reveal?:(window:BrowserWindow)=>void,notify?:(value:CompanionView)=>void,options:{seed?:()=>number[];tradeActive?:()=>boolean;activityChanged?:()=>void}={}) {
-  const store = new ChallengeStore(app.getPath('userData'),options.seed);
+export function registerBattleIPC(companion: CompanionStore, mainWindow: () => BrowserWindow | undefined,preferences:SettingsStore,reveal?:(window:BrowserWindow)=>void,notify?:(value:CompanionView)=>void,options:{seed?:()=>number[];tradeActive?:()=>boolean;activityChanged?:()=>void;rewardTest?:boolean}={}) {
+  const rewardTest = !app.isPackaged && options.rewardTest === true;
+  const store = new ChallengeStore(app.getPath('userData'),options.seed,rewardTest);
   const windows=new BattleWindows(reveal),assets=new BattleAssets();
   windows.changed=options.activityChanged;
   const lan=new LanBattle(app.getPath('userData'),value=>{
@@ -61,7 +62,8 @@ export function registerBattleIPC(companion: CompanionStore, mainWindow: () => B
     return true;
   };
   windows.canClose=confirmExit;
-  preferences.subscribe(context=>windows.context(context));
+  const battleContext = () => ({...preferences.get(),...(rewardTest?{rewardTest}: {})});
+  preferences.subscribe(()=>windows.context(battleContext()));
   let quitting=false,checkingQuit=false;
   app.on('before-quit',event=>{if(quitting||!windows.main&&!lan.active()){lan.shutdown();assets.close();return;}event.preventDefault();if(checkingQuit)return;checkingQuit=true;void confirmExit().then(async ok=>{if(ok){await store.finishWrites();await lan.finishWrites();quitting=true;windows.allowClose=true;lan.shutdown();assets.close();app.quit();}}).catch(error=>console.error('Battle exit failed:',error)).finally(()=>{checkingQuit=false;});});
   const audioPath=join(app.getPath('userData'),'battle-presentation-v1.json');
@@ -84,8 +86,8 @@ export function registerBattleIPC(companion: CompanionStore, mainWindow: () => B
   handle('lan',async(command,value)=>{
     switch(command){
       case'state':return lan.state();case'history':return lan.history();
-      case'host':if(windows.main&&windows.kind==='challenge')throw new Error('챌린지 창을 먼저 닫아 주세요.');return lan.host(preferences.get().tradeNickname);
-      case'connect':if(windows.main&&windows.kind==='challenge')throw new Error('챌린지 창을 먼저 닫아 주세요.');if(typeof value!=='string')throw new Error('Invalid connection code');return lan.connect(value,preferences.get().tradeNickname);
+      case'host':{if(windows.main&&windows.kind==='challenge')throw new Error('챌린지 창을 먼저 닫아 주세요.');const {tradeNickname,profileIcon}=preferences.get();return lan.host(tradeNickname,profileIcon);}
+      case'connect':{if(windows.main&&windows.kind==='challenge')throw new Error('챌린지 창을 먼저 닫아 주세요.');if(typeof value!=='string')throw new Error('Invalid connection code');const {tradeNickname,profileIcon}=preferences.get();return lan.connect(value,tradeNickname,profileIcon);}
       case'register':{const row=object(value),ids=Array.isArray(value)?value:row?.ids;if(!Array.isArray(ids)||ids.length!==6||!ids.every(id=>typeof id==='string')||new Set(ids).size!==6)throw new Error('개체 6마리를 선택해 주세요.');const offers=await Promise.all(ids.map(id=>companion.tradeOffer(id)));return lan.register(equippedTeam(offers,row?.items));}
       case'ready':if(!Array.isArray(value)||!value.every(id=>typeof id==='string'))throw new Error('Invalid lineup');return lan.ready(value);
       case'unready':return lan.unready();case'surrender':return lan.surrender();case'cancel':return lan.cancel();
@@ -93,7 +95,7 @@ export function registerBattleIPC(companion: CompanionStore, mainWindow: () => B
       default:throw new Error('Invalid battle command');
     }
   });
-  handle('context',()=>preferences.get());handle('assets',()=>assets.start());
+  handle('context',battleContext);handle('assets',()=>assets.start());
   handle('auxiliary',async (kind,visible)=>{if(kind!=='field' && kind!=='stats')throw new Error('Invalid battle panel');if(visible!==undefined&&typeof visible!=='boolean')throw new Error('Invalid panel visibility');await windows.auxiliary(kind,visible);if(visible===false)return;if(windows.kind==='lan')windows.lan(await lan.state());else{const state=await store.resume('singles',true);if(state)windows.broadcast(state);}});
   handle('audio',patch=>{const operation=audioQueue.then(async()=>{
     if(!audio){try{const saved=JSON.parse(await readFile(audioPath,'utf8'));if(![saved.music,saved.effects].every(n=>typeof n==='number'&&n>=0&&n<=1)||typeof saved.enabled!=='boolean'||saved.typeHints!==undefined&&typeof saved.typeHints!=='boolean')throw Error();audio=saved;}catch{audio={music:.35,effects:.35,enabled:true};}}
@@ -127,6 +129,9 @@ export function registerBattleIPC(companion: CompanionStore, mainWindow: () => B
     const row=object(value)??{},id=typeof row.id==='string'?row.id:'',move=typeof row.moveIndex==='number'&&Number.isInteger(row.moveIndex)&&row.moveIndex>=0&&row.moveIndex<4?row.moveIndex:undefined;
     let result;
     switch(command){
+      case'test-victory':
+        if(!rewardTest || typeof row.checkpoint!=='string')throw new Error('테스트 승리를 사용할 수 없습니다.');
+        result=await store.surrender('singles',row.checkpoint);break;
       case'prepare':if(!Array.isArray(row.order)||!row.order.every(id=>typeof id==='string')||typeof row.begin!=='boolean')throw new Error('Invalid lineup');result=await store.prepare('singles',row.order,row.items,row.begin);break;
       case'purchase':result=await store.purchase('singles',row.item as ShopItem,id,move);break;
       case'reward':{const incoming=row.kind==='replace'&&typeof row.incoming==='string'?ownedMember(await companion.tradeOffer(row.incoming)):undefined;result=await store.reward('singles',String(row.kind),id,move,incoming);break;}

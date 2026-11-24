@@ -1,23 +1,47 @@
 (() => {
  const U=window.battleUI,{node,button,t,species}=U,panel=document.querySelector('#battle-panel');
+ const profiles=window.playerProfile;
+ function participantProfiles(){const local=state&&state.phase!=='idle'?state.identity:profiles.fromSettings(window.appPreferences);return profiles.participants(local,state?.opponent);}
  let state,candidates=[],selected=[],lineup=[],busy=false,loaded=false;const gear={};
  const image=p=>{const box=node('span',undefined,'pokemon-art'),img=node('img');img.alt='';const form=window.battleCatalog.forms?.[p.speciesID]?.[p.form];img.src='https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/'+(p.shiny?'shiny/':'')+(form?.spriteID??p.speciesID)+'.png';img.addEventListener('error',()=>img.remove());box.append(img);return box;};
  const status=node('p',undefined,'battle-small-note');status.setAttribute('role','status');
  async function action(command,value){if(busy)return;busy=true;try{if(command==='open')await window.battle.open(value);else state=await window.battle.lan(command,value);status.textContent='';}catch(error){status.textContent=error.message.replace(/^Error invoking remote method '[^']+': Error: /,'');}finally{busy=false;render();}}
- function teamGrid(roster,selectable=false){const grid=node('div',undefined,'battle-team-grid');for(const [position,p] of roster.entries()){const index=lineup.indexOf(p.id),tile=selectable?button('',()=>{index>=0?lineup.splice(index,1):lineup.push(p.id);render();},'battle-team-tile'):node('div',undefined,'battle-team-tile');tile.disabled=selectable&&(state.localReady||lineup.length>=3&&index<0);tile.append(selectable?U.teamArtwork(image(p),index===0):image(p),node('strong',species(p)),node('small',selectable?(index>=0?(index===0?'\u00a0':String(index+1)):'—'):'Lv. '+p.level));if(selectable)tile.setAttribute('aria-pressed',String(index>=0));if(!selectable&&state.phase==='connected'&&!state.registered.length){const held=U.item(U.assignments(selected,candidates,gear)[p.id]),pick=button(held?U.localized(held.names):t('도구 없음'),()=>U.pickItem(p,U.assignments(selected,candidates,gear),selected,id=>{gear[p.id]=id;render();}));tile.append(pick);const order=node('div',undefined,'battle-roster-order');for(const delta of [-1,1]){const move=button(delta<0?'‹':'›',()=>{const target=position+delta;[selected[position],selected[target]]=[selected[target],selected[position]];render();});move.disabled=position+delta<0||position+delta>=roster.length;order.append(move);}order.insertBefore(node('span',String(position+1)),order.lastChild);tile.append(order);}grid.append(tile);}return grid;}
+ function teamGrid(roster,selectable=false,against){
+  const grid=node('div',undefined,'battle-team-grid');
+  for(const [position,p] of roster.entries()){
+   const index=lineup.indexOf(p.id),tile=selectable?button('',()=>{index>=0?lineup.splice(index,1):lineup.push(p.id);render();},'battle-team-tile'):node('div',undefined,'battle-team-tile');
+   tile.disabled=selectable&&(state.localReady||lineup.length>=3&&index<0);
+   tile.append(selectable?U.teamArtwork(image(p),index===0):image(p),node('strong',species(p)),node('small',selectable?(index>=0?(index===0?'\u00a0':String(index+1)):'—'):'Lv. '+p.level));
+   if(selectable){
+    tile.setAttribute('aria-pressed',String(index>=0));
+    if(index>=0)tile.dataset.lineupOrder=String(index+1);
+   }
+   U.markLineupMatchup(tile,against,p);
+   if(!selectable&&state.phase==='connected'&&!state.registered.length){
+    const held=U.item(U.assignments(selected,candidates,gear)[p.id]),pick=button(held?U.localized(held.names):t('도구 없음'),()=>U.pickItem(p,U.assignments(selected,candidates,gear),selected,id=>{gear[p.id]=id;render();}));
+    tile.append(pick);const order=node('div',undefined,'battle-roster-order');
+    for(const delta of [-1,1]){
+     const move=button(delta<0?'‹':'›',()=>{const target=position+delta;[selected[position],selected[target]]=[selected[target],selected[position]];render();});
+     move.disabled=position+delta<0||position+delta>=roster.length;order.append(move);
+    }
+    order.insertBefore(node('span',String(position+1)),order.lastChild);tile.append(order);
+   }
+   grid.append(tile);
+  }
+  return grid;
+ }
  function render(){if(!loaded)return;panel.replaceChildren();const controls=node('div',undefined,'battle-mode-picker');controls.append(button(t('싱글'),()=>{}));const doubles=button(t('더블'),()=>{});doubles.disabled=true;controls.append(doubles);panel.append(node('h2',t('배틀')),controls);
-  const lobby=node('div',undefined,'battle-lan-panel');
+  const lobby=node('div',undefined,'battle-lan-panel');lobby.append(participantProfiles());
   if(!state||state.phase==='idle'||state.phase==='searching'||state.phase==='connecting'){
    if(!state||state.phase==='idle')lobby.append(button(t('상대 찾기'),()=>void action('host'),'primary'));
    else{lobby.append(node('strong',t('연결 대기 중…')));for(const peer of state.peers??[])lobby.append(button(peer.nickname+' · '+peer.code,()=>void action('connect',peer.address),'primary'));for(const code of state.codes){const p=node('p',t('내 연결 코드')+': '+code);p.style.userSelect='text';lobby.append(p);}const label=node('label',t('연결 코드')),input=node('input');input.id='battle-connect-code';input.placeholder='192.168.0.2:12345';input.maxLength=21;input.addEventListener('keydown',event=>{if(event.key==='Enter')void action('connect',input.value);});label.append(input);lobby.append(node('p',t('수동으로 연결하기')),label,button(t('연결'),()=>void action('connect',input.value)),button(t('취소'),()=>void action('cancel')));}
   }else{
-   lobby.append(node('strong',t('연결된 상대')+': '+(state.opponent?.nickname??'…')));
    if(state.phase==='connected'){
     if(!state.registered.length){const scroll=node('div',undefined,'battle-lobby-scroll');scroll.append(node('h3',t('등록 팀')),node('p',t('서로 다른 종의 졸업 포켓몬 6마리를 선택하세요.')));
      scroll.append(U.presetControls(candidates,(ids,items)=>{selected=ids;Object.assign(gear,items);render();}));if(selected.length)scroll.append(teamGrid(selected.map(id=>candidates.find(p=>p.id===id)).filter(Boolean)));
      for(const p of candidates){const index=selected.indexOf(p.id),duplicate=selected.some(id=>id!==p.id&&candidates.find(row=>row.id===id)?.speciesID===p.speciesID);const pick=button('',()=>{index>=0?selected.splice(index,1):selected.push(p.id);render();},'battle-candidate');pick.dataset.id=p.id;pick.disabled=index<0&&(selected.length>=6||duplicate);pick.append(node('span',index>=0?'●':'○','order'),image(p),node('strong',species(p)),node('small','Lv. '+p.level));scroll.append(pick);}lobby.append(scroll,node('span',selected.length+'/6'));const register=button(t('팀 등록'),()=>void action('register',{ids:selected,items:U.assignments(selected,candidates,gear)}),'primary');register.disabled=selected.length!==6;lobby.append(register);
     }else if(!state.opponentRoster.length){lobby.append(teamGrid(state.registered),node('p',t('상대의 팀 등록을 기다리는 중…')));}
-    else{lobby.append(node('p',t('등록한 6마리 중 선발 3마리를 순서대로 선택하세요.')),node('h3',t('내 팀')),teamGrid(state.registered,true),node('h3',t('상대 팀')),teamGrid(state.opponentRoster));const ready=button(t(state.localReady?'준비 취소':'준비 완료'),()=>void action(state.localReady?'unready':'ready',[...lineup,...state.registered.map(p=>p.id).filter(id=>!lineup.includes(id))]),'primary');ready.disabled=!state.localReady&&lineup.length!==3;lobby.append(ready);if(state.remoteReady)lobby.append(node('p',t('상대 준비 완료')));}
+    else{lobby.append(node('p',t('등록한 6마리 중 선발 3마리를 순서대로 선택하세요.')),node('h3',t('내 팀')),teamGrid(state.registered,true),node('h3',t('상대 팀')),teamGrid(state.opponentRoster,false,state.registered.find(p=>p.id===lineup.at(-1))));const ready=button(t(state.localReady?'준비 취소':'준비 완료'),()=>void action(state.localReady?'unready':'ready',[...lineup,...state.registered.map(p=>p.id).filter(id=>!lineup.includes(id))]),'primary');ready.disabled=!state.localReady&&lineup.length!==3;lobby.append(ready);if(state.remoteReady)lobby.append(node('p',t('상대 준비 완료')));}
     lobby.append(button(t('취소'),()=>void action('cancel')));
    }else if(['preparing','playing','reconnecting'].includes(state.phase)){
     lobby.append(button(t('배틀 창 열기'),()=>void action('open','lan'),'primary'));
@@ -33,5 +57,6 @@
  }
  window.battle.onLan(value=>{if(value.phase==='searching'&&state?.phase!=='searching'){selected=[];lineup=[];for(const id of Object.keys(gear))delete gear[id];}state=value;if(loaded)render();});
  window.addEventListener('app-tab-changed',event=>{if(event.detail.current==='battle'){void(async()=>{try{[state,candidates]=await Promise.all([window.battle.lan('state'),window.battle.choices()]);loaded=true;render();}catch(error){loaded=true;render();status.textContent=error.message;}})();}});
+ window.addEventListener('preferences-changed',()=>panel.querySelector('.profile-participants')?.replaceWith(participantProfiles()));
  window.addEventListener('language-changed',render);
 })();

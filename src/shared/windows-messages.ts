@@ -1,5 +1,13 @@
 // Windows-specific wording and labels used by this app, in the same order as macMessages.
 export const windowsMessages: readonly (readonly string[])[] = [
+  ['테스트 승리','Test victory','勝利テスト','Probar victoria','Tester la victoire','Testar vitória','Sieg testen','Проверить победу'],
+  ['상성 유리','Favorable matchup','相性有利','Emparejamiento favorable','Type avantageux','Confronto favorável','Typvorteil','Преимущество по типу'],
+  ['상성 불리','Unfavorable matchup','相性不利','Emparejamiento desfavorable','Type désavantageux','Confronto desfavorável','Typnachteil','Недостаток по типу'],
+  ['내 프로필','My profile','自分のプロフィール','Mi perfil','Mon profil','Meu perfil','Mein Profil','Мой профиль'],
+  ['상대 프로필','Opponent profile','相手のプロフィール','Perfil del rival','Profil adverse','Perfil do oponente','Gegnerprofil','Профиль соперника'],
+  ['교환·배틀 닉네임','Trade and battle nickname','交換・バトルのニックネーム','Apodo para intercambios y combates','Pseudo pour les échanges et les combats','Apelido para trocas e batalhas','Spitzname für Tausch und Kampf','Имя для обменов и боёв'],
+  ['프로필 아이콘 선택','Choose profile icon','プロフィールアイコンを選ぶ','Elegir icono de perfil','Choisir une icône de profil','Escolher ícone de perfil','Profilsymbol auswählen','Выбрать значок профиля'],
+  ['기본 아이콘','Default icon','既定のアイコン','Icono predeterminado','Icône par défaut','Ícone padrão','Standardsymbol','Значок по умолчанию'],
   ['다운로드 페이지를 여는 중…','Opening download page…','ダウンロードページを開いています…','Abriendo la página de descarga…','Ouverture de la page de téléchargement…','Abrindo a página de download…','Downloadseite wird geöffnet…','Открываем страницу загрузки…'],
   ['ZIP 버전은 새 ZIP 파일로 업데이트해 주세요.','Update this ZIP build using a new ZIP file.','ZIP版は新しいZIPファイルで更新してください。','Actualiza esta versión con un nuevo ZIP.','Mettez à jour cette version avec un nouveau ZIP.','Atualize esta versão com um novo ZIP.','Diese ZIP-Version mit einer neuen ZIP-Datei aktualisieren.','Обновляйте эту версию новым ZIP-файлом.'],
   ['{name} · {percent}% 사용','{name} · {percent}% used','{name} · {percent}% 使用','{name} · {percent}% usado','{name} · {percent}% utilisé','{name} · {percent}% usado','{name} · {percent}% verbraucht','{name} · использовано {percent}%'],
@@ -535,7 +543,6 @@ export const windowsMessages: readonly (readonly string[])[] = [
   ["2마리 모두 고르면 확정할 수 있어요","Choose for both Pokémon to confirm","2匹とも選ぶと確定できます","Elige para ambos Pokémon para confirmar","Choisissez pour les deux Pokémon pour confirmer","Escolha para os dois Pokémon para confirmar","Wähle für beide Pokémon, um zu bestätigen","Выберите действия для обоих покемонов"],
   ["상대의 선택을 기다리는 중…","Waiting for your opponent…","相手の選択を待っています…","Esperando al rival…","En attente de l'adversaire…","Aguardando o oponente…","Warte auf den Gegner…","Ожидание соперника…"],
   ["전체 기록 보기","View full log","全記録を見る","Ver registro completo","Voir tout le journal","Ver registro completo","Gesamtes Protokoll","Весь журнал"],
-  ["이번 턴 기록","This turn","このターンの記録","Este turno","Ce tour","Este turno","Diese Runde","Этот ход"],
   ["돌아가기","Back","戻る","Volver","Retour","Voltar","Zurück","Назад"],
   ["능력치 보기","View stats","能力を見る","Ver estadísticas","Voir les stats","Ver atributos","Werte ansehen","Характеристики"],
   ["싸우는 중","In battle","戦闘中","En combate","Au combat","Em batalha","Im Kampf","В бою"],

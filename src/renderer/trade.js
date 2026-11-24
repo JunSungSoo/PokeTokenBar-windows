@@ -7,12 +7,16 @@
   // Shows a form in the current language, falling back to English and then the internal key.
   const formName = (form, number) => form ? window.formNames?.[number]?.[form]?.[window.i18n.language] ?? window.formNames?.[number]?.[form]?.en ?? form : '';
   let state, companion, working=false, options=[], choiceRequest=0, overwrite=false;
-  const choice=get('choice'), nickname=get('nickname');
+  const choice=get('choice');
+  const profiles=window.playerProfile;
+  function renderProfiles() {
+    get('profiles').replaceChildren(profiles.participants(
+      state?.localProfile ?? profiles.fromSettings(window.appPreferences), state?.peerProfile));
+  }
   function node(tag,text,className) { const element=document.createElement(tag);if(text!==undefined)element.textContent=text;if(className)element.className=className;return element; }
   function controls() {
     const connected=state?.phase==='connected', committing=state?.phase==='committing';
     get('host').disabled=get('connect').disabled=working || committing || connected || state?.phase==='waiting';
-    nickname.disabled=working || connected || committing || state?.phase==='waiting';
     get('code').disabled=working || connected || committing;
     get('close').disabled=working || committing || !state || state.phase==='idle';
     get('offer').disabled=working || !connected || state.accepted || !choice.value;
@@ -71,7 +75,7 @@
     get('connection').hidden=connected || value.phase==='committing';
     get('picker').hidden=!connected || reviewing;
     get('proposal').hidden=!reviewing && value.phase!=='committing' && value.phase!=='complete';
-    get('peer').textContent=value.peer?t('연결된 상대')+': '+value.peer:'';
+    renderProfiles();
     get('codes').replaceChildren(...value.codes.map(code=>{const line=node('p');line.append(node('span',t('내 연결 코드')+': '),node('code',code));return line;}));
     get('mine').replaceChildren(value.mineItem?preview(value.mineItem):node('p',t('교환할 대상 선택')));
     get('theirs').replaceChildren(value.theirItem?preview(value.theirItem):node('p',t('상대의 제안을 기다리는 중…')));
@@ -101,8 +105,8 @@
   function showError(error) { get('status').textContent=error.message.replace(/^Error invoking remote method '[^']+': Error: /,''); }
   async function run(callback) {if(working)return;working=true;controls();try{await callback();}catch(error){showError(error);}finally{working=false;controls();}}
   function action(id,callback){get(id).addEventListener('click',()=>{void run(callback);});}
-  action('host',()=>window.trade.host(nickname.value));
-  action('connect',()=>window.trade.connect(get('code').value,nickname.value));
+  action('host',()=>window.trade.host());
+  action('connect',()=>window.trade.connect(get('code').value));
   get('code').addEventListener('keydown',event=>{if(event.key==='Enter' && !get('connect').disabled)get('connect').click();});
   action('offer',()=>window.trade.offer(choice.value));
   action('accept',()=>window.trade.accept(overwrite));
@@ -110,9 +114,7 @@
   action('reject',()=>window.trade.reject());
   action('backup-open',()=>window.trade.revealBackup());
   action('close',async()=>{await window.trade.close();if(['closed','complete'].includes(state?.phase))render({phase:'idle',codes:[],accepted:false,canAccept:false,message:''});});
-  nickname.addEventListener('change',()=>{void window.preferences.change({tradeNickname:nickname.value}).catch(showError);});
-  void window.preferences.read().then(settings=>{if(!nickname.value)nickname.value=settings.tradeNickname;}).catch(showError);
-  window.preferences.onChange(settings=>{if(document.activeElement!==nickname && !working)nickname.value=settings.tradeNickname;});
+  window.addEventListener('preferences-changed',renderProfiles);
   window.usage.onCompanion(value=>{companion=value;renderWarning();controls();if(state?.phase==='connected')void loadChoices().catch(showError);});
   void window.usage.companion().then(value=>{companion=value;renderWarning();controls();}).catch(showError);
   window.addEventListener('language-changed',()=>{if(state)render(state);void loadChoices().catch(showError);});

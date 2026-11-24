@@ -10,6 +10,8 @@
     <link rel="stylesheet" href="theme.css">
   <script src="locale-data.js" defer></script>
   <script src="localization.js" defer></script>
+  <script src="profile-config.js" defer></script>
+  <script src="player-profile.js" defer></script>
   <script src="sprite-timing.js" defer></script>
   <script src="egg-fit.js" defer></script>
   <script src="sprite-player.js" defer></script>
@@ -51,6 +53,11 @@
       <aside id="update-banner" class="surface" hidden aria-live="polite"></aside>
       <p id="companion-message" role="status" hidden></p>
       <section role="tabpanel" id="pane-home" aria-labelledby="tab-home" tabindex="0">
+        <button id="home-player-profile" type="button" data-open-settings>
+          <span id="home-profile-avatar"></span>
+          <span class="home-profile-details"><small>내 프로필</small><strong id="home-profile-nickname" data-no-translate></strong></span>
+          <span class="home-profile-chevron" aria-hidden="true">›</span>
+        </button>
         <section class="companion" aria-labelledby="companion-title">
           <div class="partner dex-panel"><div id="partner-art"></div><div class="partner-info">
             <p id="partner-level" class="px partner-level">파트너</p>
@@ -145,11 +152,9 @@
       </section>
       <section role="tabpanel" id="pane-trade" aria-labelledby="tab-trade" tabindex="0" hidden>
       <section id="trade-panel" class="trade-panel">
-        <header class="trade-identity"><h2>교환</h2><p id="trade-peer"></p></header>
+        <header class="trade-identity"><h2>교환</h2><div id="trade-profiles"></div></header>
         <div id="trade-connection" class="trade-connection dex-panel">
           <p>같은 네트워크에서 한쪽이 방을 열고 다른 쪽이 연결 코드를 입력하세요.</p>
-          <label for="trade-nickname">내 교환 닉네임</label>
-          <input id="trade-nickname" maxlength="40" placeholder="PokeTokenBar Windows">
           <button id="trade-host" class="primary" type="button">방 열기</button>
           <div id="trade-codes" class="trade-codes"></div>
           <label for="trade-code">연결 코드</label>

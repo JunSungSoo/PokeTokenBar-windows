@@ -53,8 +53,8 @@ contextBridge.exposeInMainWorld('desktop', {
 contextBridge.exposeInMainWorld('trade', {
   state: () => ipcRenderer.invoke('trade:state'),
   choices: () => ipcRenderer.invoke('trade:choices'),
-  host: nickname => ipcRenderer.invoke('trade:host', nickname),
-  connect: (code, nickname) => ipcRenderer.invoke('trade:connect', code, nickname),
+  host: () => ipcRenderer.invoke('trade:host'),
+  connect: code => ipcRenderer.invoke('trade:connect', code),
   offer: id => ipcRenderer.invoke('trade:offer', id),
   withdraw: () => ipcRenderer.invoke('trade:withdraw'),
   reject: () => ipcRenderer.invoke('trade:reject'),

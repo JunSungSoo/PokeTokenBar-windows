@@ -30,6 +30,7 @@ export interface AppSettings {
   trayGrowth: boolean;
   trayLimits: boolean;
   tradeNickname: string;
+  profileIcon: number;
   claudeRoots: string[];
   claudeTrackedAccount?:string;
 }

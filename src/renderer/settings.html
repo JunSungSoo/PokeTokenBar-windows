@@ -9,6 +9,9 @@
   <link rel="stylesheet" href="theme.css">
   <script src="locale-data.js" defer></script>
   <script src="localization.js" defer></script>
+  <script src="profile-config.js" defer></script>
+  <script src="player-profile.js" defer></script>
+  <script src="species-names.js" defer></script>
   <script src="sprite-timing.js" defer></script>
   <script src="sprite-player.js" defer></script>
   <script src="token-format.js" defer></script>
@@ -28,7 +31,19 @@
   </div>
   <aside id="update-banner" class="surface" hidden aria-live="polite"></aside>
   <div class="settings-content">
-  <div class="settings-intro"><p class="settings-title">설정</p><p class="settings-subtitle">바꾸면 바로 저장돼요</p></div>
+  <section aria-labelledby="profile-settings">
+    <h2 id="profile-settings">내 프로필</h2>
+    <div class="settings-profile">
+      <div id="profile-preview"></div>
+      <label for="profile-nickname">교환·배틀 닉네임
+        <input id="profile-nickname" type="text" maxlength="40" data-setting="tradeNickname" placeholder="PokeTokenBar Windows">
+      </label>
+    </div>
+    <details class="profile-picker">
+      <summary>프로필 아이콘 선택</summary>
+      <div id="profile-icons" role="radiogroup" aria-label="프로필 아이콘 선택"></div>
+    </details>
+  </section>
   <section aria-labelledby="general-settings"><h2 id="general-settings">일반</h2><div class="surface settings-group">
     <label>언어<select data-setting="language"><option value="system">시스템 설정</option><option value="ko">한국어</option><option value="en">English</option><option value="ja">日本語</option><option value="es">Español</option><option value="fr">Français</option><option value="pt">Português</option><option value="de">Deutsch</option><option value="ru">Русский</option></select></label>
     <label>테마<select data-setting="theme" hidden><option value="system">시스템 설정</option><option value="light">라이트</option><option value="dark">다크</option></select></label>
@@ -45,9 +60,6 @@
     <label>상점 가격 배율<span><input id="difficulty-shop" type="range" class="ball-range" min="0.1" max="2" step="0.1" value="1"><output id="difficulty-shop-value">1×</output></span></label>
     <label>초심자 모드<input type="checkbox" class="toggle" data-setting="beginnerMode"></label>
   </div><p class="settings-hint">토큰 사용량으로 얻는 경험치와 상점 포인트가 5배가 됩니다. 상점 가격은 바뀌지 않습니다.</p></section>
-  <section aria-labelledby="trade-settings"><h2 id="trade-settings">교환</h2><div class="surface settings-group">
-    <label>교환 별명<input type="text" maxlength="40" data-setting="tradeNickname" placeholder="PokeTokenBar Windows"></label>
-  </div></section>
   <section aria-labelledby="tray-settings"><h2 id="tray-settings">알림 영역 요약</h2><div class="surface settings-group">
     <label>오늘 토큰<input type="checkbox" class="toggle" data-setting="trayTokens"></label>
     <label>오늘 비용<input type="checkbox" class="toggle" data-setting="trayCost"></label>
@@ -138,7 +150,7 @@
         <p id="root-path"></p><label>추가 로그 폴더<textarea id="scan-roots" rows="3" spellcheck="false" placeholder="C:\logs\*&#10;D:\archive"></textarea></label><p id="scan-count" role="status"></p><button class="neutral" id="scan-save" type="button">저장</button>
       </details>
   </div></section>
-  <section aria-labelledby="about-settings"><h2 id="about-settings">정보</h2><div class="surface"><p>PokeTokenBar Windows <span id="settings-version"></span></p><button class="neutral" data-support="report">문제점 알리기</button><button class="neutral" data-support="log">로그 파일 보기</button><button class="neutral" data-support="github">GitHub</button><button class="neutral" data-support="website">웹사이트</button><button class="neutral" data-support="sponsor">후원</button><p id="support-status" role="status"></p></div></section>
+  <section aria-labelledby="about-settings"><h2 id="about-settings">정보</h2><div class="surface"><p>PokeTokenBar Windows <span id="settings-version"></span></p><div class="settings-support-buttons"><button class="neutral" data-support="log">로그 파일 보기</button><button class="neutral" data-support="github">GitHub</button></div><p id="support-status" role="status"></p></div></section>
   </div>
   <footer class="settings-actions">
     <span class="settings-footer-version" data-no-translate>PokeTokenBar Windows · <strong id="settings-current-version">v1.0.0</strong></span>

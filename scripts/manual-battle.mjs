@@ -10,7 +10,7 @@ import {registerBattleIPC} from '../dist/main/battle/ipc.js';
 import {practiceTeam} from '../dist/main/battle/team.js';
 
 async function run(){
-const root=resolve('output/manual-battle',new Date().toISOString().replace(/[:.]/g,'-'));
+const root=resolve('output/manual-battle',new Date().toISOString().replace(/[:.]/g,'-')+'-'+process.pid);
 await mkdir(root,{recursive:true});
 app.setPath('userData',root);
 await app.whenReady();
@@ -25,7 +25,7 @@ await companion.replaceImport({raised:1000000000,progress:0,active:null,graduate
  macProfile:{instanceID:member.id,seed:'123456789',ivs:{hp:31,attack:31,defense:31,specialAttack:31,specialDefense:31,speed:31},level:100,growthTokens:100000000,gender:'male',abilitySlot:1,abilityName:member.ability,abilityIsHidden:false,moves:member.moves.map(name=>({name,learnedAtLevel:1}))}
 }))},now);
 await writeFile(join(root,'battle-presentation-v1.json'),JSON.stringify({music:.2,effects:.35,enabled:true}));
-const controller=registerBattleIPC(companion,()=>undefined,settings);
+const controller=registerBattleIPC(companion,()=>undefined,settings,undefined,undefined,{rewardTest:process.argv.includes('--test-battle-rewards')});
 await controller.store.start('singles',team,true,true);
 await controller.store.prepare('singles',team.map(member=>member.id),{},true);
 await controller.windows.open('challenge');

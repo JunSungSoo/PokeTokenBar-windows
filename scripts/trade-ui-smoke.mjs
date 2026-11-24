@@ -25,24 +25,28 @@ try{
   await left.replaceImport({raised:12000000000,progress:123,inventory:{rareCandy:4},active:mon('left-active',1),graduated:[{...mon('left-dex',6),graduatedAt:1234}]},Date.now());
   await right.replaceImport({raised:500,progress:100,active:mon('right-active',25),graduated:[]},Date.now());
   const original=await readFile(join(directory,'left.json'),'utf8');
-  const settings=new SettingsStore(join(directory,'settings.json'));await settings.load();await settings.change({language:'ko',animated:true});
+  const settings=new SettingsStore(join(directory,'settings.json'));await settings.load();await settings.change({language:'ko',animated:true,tradeNickname:'Trainer',profileIcon:25});
   registerSettingsIPC(settings,()=>[main],async()=>{});
   ipcMain.handle('companion:read',()=>left.read());
-  trade=registerTradeIPC(left,()=>main,value=>main.webContents.send('companion:updated',value));
+  trade=registerTradeIPC(left,()=>main,value=>main.webContents.send('companion:updated',value),settings);
   peer=new LanTrade(right,()=>{},()=>{});
   const source=await readFile('dist/renderer/index.html','utf8');
   const section=source.match(/<section id="trade-panel"[\s\S]*?(?=\s*<section role="tabpanel" id="pane-battle")/)[0];
   const asset=file=>pathToFileURL(resolve('dist/renderer',file)).href;
-  const scripts=['locale-data.js','localization.js','token-format.js','species-names.js','sprite-timing.js','sprite-player.js','preferences.js','trade.js'];
-  const html='<!doctype html><html><head><meta charset="utf-8"><link rel="stylesheet" href="'+asset('style.css')+'">'+scripts.map(file=>'<script defer src="'+asset(file)+'"></script>').join('')+'</head><body><main>'+section+'</main></body></html>';
+  const scripts=['locale-data.js','localization.js','profile-config.js','player-profile.js','token-format.js','species-names.js','sprite-timing.js','sprite-player.js','preferences.js','trade.js'];
+  const html='<!doctype html><html><head><meta charset="utf-8"><base href="'+asset('')+'/"><link rel="stylesheet" href="'+asset('style.css')+'">'+scripts.map(file=>'<script defer src="'+asset(file)+'"></script>').join('')+'</head><body><main>'+section+'</main></body></html>';
   const path=join(directory,'trade.html');await writeFile(path,html);
   main=new BrowserWindow({width:490,height:800,show:false,webPreferences:{preload:resolve('dist/main/usage-preload.cjs'),sandbox:true,contextIsolation:true,nodeIntegration:false}});
   main.webContents.on('console-message',event=>{if(event.level==='error')errors.push(event.message);});
   await main.loadFile(path);await until(()=>check("document.querySelector('#trade-panel').dataset.phase === 'idle'"));
   await check("document.querySelector('#trade-code').value='invalid';document.querySelector('#trade-connect').click()");
   await until(()=>check("document.querySelector('#trade-status').textContent.includes('IPv4')"));
-  async function connect(){await check("document.querySelector('#trade-host').click()");await until(()=>trade.state().codes.length>0);peer.connect('127.0.0.1:'+trade.state().codes[0].split(':')[1],'Peer');await until(()=>trade.state().phase==='connected');await until(()=>check("document.querySelectorAll('.trade-choice').length === 2"));}
+  async function connect(){await check("document.querySelector('#trade-host').click()");await until(()=>trade.state().codes.length>0);peer.connect('127.0.0.1:'+trade.state().codes[0].split(':')[1],'Peer',251);await until(()=>trade.state().phase==='connected');await until(()=>check("document.querySelectorAll('.trade-choice').length === 2"));}
   await connect();
+  assert.deepEqual(peer.state().peerProfile,{nickname:'Trainer',icon:25});
+  assert.deepEqual(await check("[...document.querySelectorAll('#trade-profiles .profile-badge strong')].map(name=>name.textContent)"),['Trainer','Peer']);
+  await until(()=>check("[...document.querySelectorAll('#trade-profiles img')].every(img=>img.complete && img.naturalWidth>0)"));
+  assert.deepEqual(await check("[...document.querySelectorAll('#trade-profiles img')].map(img=>img.getAttribute('src'))"),['assets/profile/25.png','assets/profile/251.png']);
   assert.equal(await check("document.querySelector('.trade-choice').dataset.id"),'left-active');
   // Party rows show the national number and the rarity badge.
   assert.equal(await check("/^#\\d{3}/.test(document.querySelector('.trade-choice.party-row small').textContent) && document.querySelector('.trade-choice .rarity-badge') !== null"),true);

@@ -3,7 +3,9 @@ import {writeFile,mkdir} from 'node:fs/promises';
 import {join} from 'node:path';
 export async function checkBattleSwitch(window,prefs,snap){
  const js=code=>window.webContents.executeJavaScript(code);
+ async function until(code){for(let i=0;i<1800;i++){if(await js(code))return;await new Promise(resolve=>setTimeout(resolve,30));}throw Error('Switch audit timeout: '+code);}
  await prefs.change({animated:true});
+ await until("window.appPreferences?.animated && document.querySelector('[data-position=own-0]') && document.querySelector('#battle-party-open')");
  await js(`(()=>{
   const old=document.querySelector('[data-position="own-0"]').dataset.sprite;
   window.switchAudit={old,prepared:false,finished:false};
@@ -16,17 +18,17 @@ export async function checkBattleSwitch(window,prefs,snap){
    if(audit.active&&method==='ptbFinish'){audit.after=document.querySelector('[data-position="own-0"]').dataset.sprite;audit.postVisible=this.field.classList.contains('effect-playing');audit.finished=true;audit.active=false;}
    return result;
   };
-  const picker=document.querySelector('#battle-switch-0');picker.value='2';picker.dispatchEvent(new Event('change',{bubbles:true}));
+  document.querySelector('#battle-party-open').click();
+  document.querySelector('#battle-switch-0 .battle-party-cell[data-value="2"]:enabled').click();
   document.querySelector('#battle-confirm').click();
  })()`);
- async function until(code){for(let i=0;i<1800;i++){if(await js(code))return;await new Promise(resolve=>setTimeout(resolve,30));}throw Error('Switch audit timeout: '+code);}
  await until('window.switchAudit.prepared');
  const before=await js('({old:window.switchAudit.old,before:window.switchAudit.before,visible:window.switchAudit.preVisible})');
  assert.equal(before.before,before.old,'incoming sprite must not appear while native entry assets prepare');assert.equal(before.visible,false,'native layer must stay hidden until its first frame');
  await snap('switch-before-entry');await js('window.switchAudit.release()');await until('window.switchAudit.finished');
  const after=await js('({old:window.switchAudit.old,after:window.switchAudit.after,visible:window.switchAudit.postVisible})');
  assert.notEqual(after.after,after.old,'DOM must contain the incoming sprite before native layers clear');assert.equal(after.visible,false);
- await until('!document.querySelector("#battle-confirm").disabled || !document.querySelector("#battle-move-0-1").disabled');
+ await until('document.querySelector("#battle-confirm:not(:disabled),#battle-move-0-1:not(:disabled)")');
  await snap('switch-after-entry');await prefs.change({animated:false});
  console.log('PASS: real switch keeps outgoing Pokémon during preparation, renders native entry before reveal, and atomically settles the incoming sprite.');
  if(process.env.POKE_UI_REAL_SPRITES==='1'){

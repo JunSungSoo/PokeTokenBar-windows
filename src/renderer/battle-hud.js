@@ -7,9 +7,17 @@
  const boostNames={atk:'공격',def:'방어',spa:'특수공격',spd:'특수방어',spe:'스피드',accuracy:'명중률',evasion:'회피율'};
  const typeKey=type=>String(type??'').toLowerCase();
 
- function vsBar({ownName,ownSub,foeName,foeSub}){
+ function vsBar({ownName,ownIcon,ownSub,foeName,foeIcon,foeAvatar,foeSub}){
   const bar=node('div',undefined,'battle-vs'),own=node('div',undefined,'battle-vs-side own'),foe=node('div',undefined,'battle-vs-side foe'),badge=node('span','VS','battle-vs-badge');
-  badge.setAttribute('aria-hidden','true');own.append(node('strong',ownName),node('small',ownSub));foe.append(node('strong',foeName),node('small',foeSub));bar.append(own,badge,foe);return bar;
+  for(const [side,name,sub,avatar] of [
+   [own,ownName,ownSub,window.playerProfile.avatar(ownIcon)],
+   [foe,foeName,foeSub,foeAvatar??window.playerProfile.avatar(foeIcon)]
+  ]){
+   const details=node('div'),heading=node('strong',name);
+   heading.dataset.noTranslate='';heading.title=name;
+   details.append(heading,node('small',sub));side.append(avatar,details);
+  }
+  badge.setAttribute('aria-hidden','true');bar.append(own,badge,foe);return bar;
  }
  function progressCells(encounter,count){
   const box=node('span',undefined,'battle-progress');box.setAttribute('role','img');box.setAttribute('aria-label',t('{count}연전 중 {n}번째',{count,n:encounter}));

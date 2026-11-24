@@ -3,6 +3,7 @@ import { randomInt, randomUUID } from 'node:crypto';
 import { createConnection, createServer, isIPv4, type Server, type Socket } from 'node:net';
 import { networkInterfaces } from 'node:os';
 import type { TradeState } from '../../shared/trade.js';
+import { playerProfile, profileIcon } from '../../shared/player-profile.js';
 import type { CompanionView } from '../../shared/companion.js';
 import type { CompanionStore } from '../companion/store.js';
 import { object, type Row } from '../usage/jsonl.js';
@@ -32,7 +33,6 @@ export class LanTrade {
   private buffer = Buffer.alloc(0);
   private session = randomUUID();
   private code = Array.from({ length: 8 }, () => alphabet[randomInt(alphabet.length)]).join('');
-  private nickname = '';
   private mine?: OfferedItem;
   private theirs?: OfferedItem;
   private peerAccepted = false;
@@ -60,12 +60,12 @@ export class LanTrade {
     this.changed(this.snapshot);
   }
 
-  private reset(nickname: string): void {
+  private reset(nickname: string, icon?: number): void {
     if (this.committing || this.preparing) throw new Error('교환 확정이 진행 중입니다.');
     this.close();
     this.session = randomUUID();
-    this.nickname = nickname.trim().slice(0, 40) || 'PokeTokenBar Windows';
-    this.snapshot = { phase: 'waiting', codes: [], accepted: false, canAccept: false, message: '연결 대기 중…' };
+    this.snapshot = { phase: 'waiting', codes: [], accepted: false, canAccept: false, message: '연결 대기 중…',
+      localProfile: playerProfile(nickname, icon) };
     this.mine = this.theirs = undefined;
     this.peerAccepted = this.localSaved = this.remoteSaved = false;
     this.buffer = Buffer.alloc(0);
@@ -73,8 +73,8 @@ export class LanTrade {
     this.show({});
   }
 
-  async host(nickname: string): Promise<void> {
-    this.reset(nickname);
+  async host(nickname: string, icon?: number): Promise<void> {
+    this.reset(nickname, icon);
     const server = createServer(socket => {
       const address = socket.remoteAddress ?? '';
       if (!localIPv4(address) || this.server !== server || this.socket) { socket.destroy(); return; }
@@ -99,12 +99,12 @@ export class LanTrade {
     this.show({ codes: [...new Set(addresses.length ? addresses : ['127.0.0.1'])].map(ip => ip + ':' + address.port) });
   }
 
-  connect(code: string, nickname: string): void {
+  connect(code: string, nickname: string, icon?: number): void {
     const [address, port, extra] = code.trim().split(':');
     if (extra !== undefined || !localIPv4(address) || !/^\d{1,5}$/.test(port ?? '') || +port < 1 || +port > 65535) {
       throw new Error('같은 LAN의 IPv4:포트 연결 코드를 입력해 주세요.');
     }
-    this.reset(nickname);
+    this.reset(nickname, icon);
     this.wire(createConnection({ host: address, port: +port, family: 4 }), false);
   }
 
@@ -114,7 +114,7 @@ export class LanTrade {
     socket.setTimeout(10000);
     const hello = () => {
       if (this.socket !== socket) return;
-      this.send({ hello: { nickname: this.nickname, code: this.code } });
+      this.send({ hello: { ...this.snapshot.localProfile, code: this.code } });
       this.show({ codes: [], message: '상대 앱을 확인하는 중…' });
     };
     socket.on('timeout', () => { if (this.socket === socket) this.close('연결 시간이 초과되었습니다.'); });
@@ -218,6 +218,7 @@ export class LanTrade {
       if (typeof payload.nickname !== 'string' || typeof payload.code !== 'string') throw new Error('잘못된 상대 정보');
       this.socket?.setTimeout(600000);
       this.show({ phase: 'connected', peer: payload.nickname.slice(0, 60) + ' (' + payload.code.slice(0, 24) + ')',
+        peerProfile: { nickname: payload.nickname.slice(0, 60), icon: profileIcon(payload.icon) },
         message: '보낼 포켓몬을 제안해 주세요.' });
       return;
     }

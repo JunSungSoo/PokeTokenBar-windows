@@ -20,7 +20,7 @@ interface Run {
   seed: number[];
   resources: Resource[];
   decisions: Decision[];
-  surrendered: boolean;
+  surrendered: boolean | 'opponent';
   progress?:ChallengeProgress;
 }
 interface Session { run: Run; engine: Engine }
@@ -41,7 +41,7 @@ function startEngine(run: Run): Engine {
     engine.choose(0, decision.id, decision.actions);
     engine.runCPU();
   }
-  if (run.surrendered) engine.surrender(0);
+  if (run.surrendered) engine.surrender(run.surrendered === 'opponent' ? 1 : 0);
   return engine;
 }
 
@@ -93,7 +93,8 @@ export class ChallengeStore {
   private queue: Promise<unknown> = Promise.resolve();
   private sessions = new Map<BattleMode, Session>();
 
-  constructor(private directory: string, private seed = () => Array.from({ length: 4 }, () => randomInt(65536))) {}
+  constructor(private directory: string, private seed = () => Array.from({ length: 4 }, () => randomInt(65536)),
+    private allowTestVictory = false) {}
 
   private serialize<T>(work: () => Promise<T>): Promise<T> {
     const operation = this.queue.then(work);
@@ -117,7 +118,8 @@ export class ChallengeStore {
       if (bytes.length > 2_000_000) throw new Error('Oversize checkpoint');
       const run = JSON.parse(bytes) as Run;
       if (run.version !== 1 || run.identity !== engineIdentity || run.mode !== mode ||
-        typeof run.id !== 'string' || typeof run.practice !== 'boolean' || typeof run.surrendered !== 'boolean' ||
+        typeof run.id !== 'string' || typeof run.practice !== 'boolean' ||
+        (typeof run.surrendered !== 'boolean' && !(this.allowTestVictory && run.practice && run.surrendered === 'opponent')) ||
         !Number.isInteger(run.encounter) || !encounters[mode][run.encounter] ||
         run.team.length !== 6 || run.resources.length !== 6 || run.seed.length !== 4 ||
         !run.seed.every(n => Number.isInteger(n) && n >= 0 && n < 65536) ||
@@ -247,13 +249,18 @@ export class ChallengeStore {
     });
   }
 
-  surrender(mode: BattleMode): Promise<ChallengeView> {
+  surrender(mode: BattleMode, testVictoryCheckpoint?: string): Promise<ChallengeView> {
     return this.serialize(async () => {
       const { run, engine } = await this.requireSession(mode);
-      if (view({ run, engine }).phase !== 'battling') throw new Error('진행 중인 배틀이 없습니다.');
+      const current = view({ run, engine });
+      if (current.phase !== 'battling') throw new Error('진행 중인 배틀이 없습니다.');
+      const testVictory = testVictoryCheckpoint !== undefined;
+      if (testVictory && (!this.allowTestVictory || !run.practice || current.checkpoint !== testVictoryCheckpoint)) {
+        throw new Error('현재 배틀에서 테스트 승리를 사용할 수 없습니다.');
+      }
       try {
-        engine.surrender(0);
-        return await this.commit({ engine, run: { ...run, surrendered: true } });
+        engine.surrender(testVictory ? 1 : 0);
+        return await this.commit({ engine, run: { ...run, surrendered: testVictory ? 'opponent' : true } });
       } catch (error) {
         this.sessions.delete(mode);
         throw error;

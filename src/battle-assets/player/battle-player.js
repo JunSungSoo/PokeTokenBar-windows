@@ -44,7 +44,7 @@ async function loadEntryAssets(payload){
   scene.textures.addAtlasJSONArray(key,images,data.textures);
  };
  await Promise.all([loadAtlas('entry-pb',manifest.entryAssets.ball),loadAtlas('entry-particles',manifest.entryAssets.particles),loadAtlas('entry-shiny',manifest.entryAssets.shiny),
-  ...[['entry-release',manifest.entryAssets.release],['entry-sparkle',manifest.entryAssets.sparkle],...cries.map(c=>[c.key,c.path])].map(async([key,path])=>{
+  ...[['entry-throw',manifest.entryAssets.throw],['entry-release',manifest.entryAssets.release],['entry-sparkle',manifest.entryAssets.sparkle],...cries.map(c=>[c.key,c.path])].map(async([key,path])=>{
    if(scene.cache.audio.exists(key))return;
    const response=await fetch(path);if(!response.ok)throw Error('Missing original entry sound '+path);
    const buffer=await scene.sound.context.decodeAudioData(await response.arrayBuffer());scene.cache.audio.add(key,buffer);

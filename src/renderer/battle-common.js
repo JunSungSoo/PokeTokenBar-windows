@@ -13,12 +13,40 @@
  const ailments={brn:'화상',par:'마비',psn:'독',tox:'맹독',slp:'잠듦',frz:'얼음'};
  const types=['normal','fire','water','electric','grass','ice','fighting','poison','ground','flying','psychic','bug','rock','ghost','dragon','dark','steel','fairy'];
  const arenas={normal:'plains',fire:'volcano',water:'lake',electric:'metropolis',grass:'forest',ice:'ice_cave',fighting:'dojo',poison:'forest',ground:'desert',flying:'mountain',psychic:'fairy_cave',bug:'forest',rock:'mountain',ghost:'cave',dragon:'mountain',dark:'cave',steel:'metropolis',fairy:'fairy_cave'};
- function arena(roster,id){if(id==='red')return'end';const counts={};for(const pokemon of roster)for(const type of data.speciesTypes[String(pokemon.speciesID)+(pokemon.form?':'+pokemon.form:'')] ?? data.speciesTypes[String(pokemon.speciesID)] ?? [])counts[key(type)]=(counts[key(type)]??0)+1;const selected=types.reduce((best,type)=>(counts[type]??0)>(counts[best]??0)?type:best,'normal');return arenas[selected];}
+ function speciesTypes(pokemon){
+  const id=String(pokemon.speciesID);
+  return data.speciesTypes[pokemon.form?id+':'+pokemon.form:id]??data.speciesTypes[id]??[];
+ }
+ function arena(roster,id){if(id==='red')return'end';const counts={};for(const pokemon of roster)for(const type of speciesTypes(pokemon))counts[key(type)]=(counts[key(type)]??0)+1;const selected=types.reduce((best,type)=>(counts[type]??0)>(counts[best]??0)?type:best,'normal');return arenas[selected];}
+ function markLineupMatchup(tile,selected,opponent){
+  if(!selected)return;
+  const own=speciesTypes(selected),foe=speciesTypes(opponent);
+  if(!own.length||!foe.length)return;
+  // Compare each side's strongest same-type attack, combining both defending types.
+  const strongest=(attack,defense)=>Math.max(...attack.map(type=>
+   defense.reduce((multiplier,target)=>multiplier*data.typeMatchups[type][target],1)));
+  const difference=strongest(own,foe)-strongest(foe,own);
+  if(difference===0)return;
+  tile.dataset.lineupMatchup=difference>0?'advantage':'disadvantage';
+  tile.title=t(difference>0?'상성 유리':'상성 불리');
+ }
  const trainerKey=id=>id==='ltsurge'?'lt_surge':String(id??'brock').replace(/[12]$/,'');
  const trainerName=(id,fallback)=>localized(data.trainers?.[trainerKey(id)],fallback)+(['koga2','bruno2','lance2'].includes(id)?' ('+t('2세대')+')':'');
  function moveText(m){const text=move(m.apiName ?? m.name);if(key(m.apiName??m.name)==='curse'&&m.targetScope)text.description=t(m.targetScope==='self'?'자신의 공격과 방어가 1단계 오르고 스피드가 1단계 내려갑니다. HP는 소모하지 않습니다.':'자신의 최대 HP의 절반을 소모해 대상을 저주합니다. 대상은 매 턴 종료 시 최대 HP의 1/4을 잃으며 교체하면 풀립니다.');return{...text,power:m.power??text.power,accuracy:m.accuracy??text.accuracy,pp:m.pp??text.pp,type:m.ignoresTypeMatchup?t('무속성'):localized(data.types[key(m.type)],m.type),category:m.category??text.category,targetScope:m.targetScope};}
  function disabledReason(m){if(m.pp===0||m.disableReason==='pp')return t('PP 부족');if(!m.disabled)return'';const reason=m.disableReason;if(!reason||reason==='unavailable')return t('사용 불가');if(reason==='choicelock')return t('구애 도구로 기술 고정');const bare=reason.split(': ').at(-1),held=item(bare),effect=held?localized(held.names):data.moves[key(bare)]?move(bare).name:data.abilities[key(bare)]||data.mega?.abilities?.[key(bare)]?ability(bare):t(ailments[key(bare)]??bare);return t('사용 불가')+' · '+effect;}
- function hpBar(pokemon){const progress=document.createElement('progress');progress.max=pokemon.maxHP;progress.value=pokemon.hp;progress.className='battle-hp';progress.dataset.zone=pokemon.hp*4<=pokemon.maxHP?'low':pokemon.hp*2<=pokemon.maxHP?'medium':'high';progress.setAttribute('aria-label',species(pokemon)+' HP');return progress;}
+ function updateHPBar(bar,{hp,maxHP}){
+  bar.style.setProperty('--hp-ratio',Math.max(0,Math.min(1,hp/Math.max(1,maxHP))));
+  bar.dataset.zone=hp*4<=maxHP?'low':hp*2<=maxHP?'medium':'high';
+  bar.setAttribute('aria-valuenow',String(hp));
+ }
+ function hpBar(pokemon){
+  const bar=node('span',undefined,'battle-hp');
+  bar.setAttribute('role','progressbar');
+  bar.setAttribute('aria-label',species(pokemon)+' HP');
+  bar.setAttribute('aria-valuemax',String(pokemon.maxHP));
+  updateHPBar(bar,pokemon);
+  return bar;
+ }
  function rememberedItems(){try{const value=JSON.parse(localStorage.getItem('battlePokemonHeldItems.v1')??'{}');return value&&typeof value==='object'&&!Array.isArray(value)?value:{};}catch{return{};}}
  function assignments(ids,candidates,overrides){return window.heldItemRules.assignHeldItems(ids,candidates,rememberedItems(),overrides,data.items.items,data.formCatalog);}
  function pickItem(p,gear,ids,onApply,{collectionDefault=false}={}){
@@ -66,6 +94,6 @@
  const trainerImages=new Map();
  function trainerSprite(id,base){const box=node('span',undefined,'battle-trainer-art'),canvas=node('canvas');box.append(canvas);const name=trainerKey(id);let image=trainerImages.get(name);if(!image){image=Promise.all([fetch(base+'trainers/'+name+'.json').then(r=>{if(!r.ok)throw Error();return r.json();}),new Promise((resolve,reject)=>{const image=new Image();image.crossOrigin='anonymous';image.onload=()=>resolve(image);image.onerror=reject;image.src=base+'trainers/'+name+'.png';})]);trainerImages.set(name,image);}void image.then(([atlas,image])=>{const index={clair:8,red:15,lance:8,bugsy:8}[name]??0,r=atlas.textures[0].frames[index].frame;canvas.width=r.w;canvas.height=r.h;canvas.getContext('2d').drawImage(image,r.x,r.y,r.w,r.h,0,0,r.w,r.h);}).catch(()=>{box.textContent='♟';});return box;
  }
- window.battleUI={disabledReason,teamArtwork,points:amount=>t('{amount}포인트',{amount}),assignments,rememberedItems,trainerSprite,presetControls,pickItem,key,t,localized,species,move,moveText,ability,item,node,button,ailments,arena,trainerKey,trainerName,hpBar,
+ window.battleUI={disabledReason,teamArtwork,markLineupMatchup,points:amount=>t('{amount}포인트',{amount}),assignments,rememberedItems,trainerSprite,presetControls,pickItem,key,t,localized,species,move,moveText,ability,item,node,button,ailments,arena,trainerKey,trainerName,hpBar,updateHPBar,
   layouts:{singles:{width:660,fieldHeight:351,top:45,rowGap:4,stageWidth:282,activeCount:1,battleSize:3},doubles:{width:680,fieldHeight:299,top:45,rowGap:4,stageWidth:189,activeCount:2,battleSize:4}}};
 })();

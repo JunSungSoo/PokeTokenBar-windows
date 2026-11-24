@@ -1,3 +1,10 @@
+import type { PlayerProfile } from './player-profile.js';
+
+export interface BattleIdentity extends PlayerProfile {
+  code: string;
+  nonce: string;
+}
+
 export type BattleMode = 'singles' | 'doubles';
 export type BattleAction = { kind: 'pass' } | { kind: 'switch'; index: number } |
   { kind: 'move'; index: number; target: number; mega?: boolean };
@@ -74,14 +81,16 @@ export interface ChallengeView {
   preview?:BattleRosterMember[];
   progress?:ChallengeProgressView;
 }
+export type BattleContext = import('./settings.js').AppSettings & { rewardTest?: boolean };
+
 export interface BattleAPI {
   open(kind?:'challenge'|'lan'): Promise<void>;
   closeWindow(): Promise<void>;
   auxiliary(kind:'field'|'stats',visible?:boolean): Promise<void>;
   assets(): Promise<string>;
   audio(patch?: {music?:number;effects?:number;enabled?:boolean;typeHints?:boolean}): Promise<{music:number;effects:number;enabled:boolean;typeHints?:boolean}>;
-  context(): Promise<import('./settings.js').AppSettings>;
-  onContext(handler:(context:import('./settings.js').AppSettings)=>void):void;
+  context(): Promise<BattleContext>;
+  onContext(handler:(context:BattleContext)=>void):void;
   onState(handler:(view:ChallengeView)=>void):void;
   lan(command:'state'|'host'|'connect'|'register'|'ready'|'unready'|'choose'|'surrender'|'cancel'|'history',value?:unknown):Promise<LanBattleState>;
   onLan(handler:(state:LanBattleState)=>void):void;
@@ -91,7 +100,7 @@ export interface BattleAPI {
   choose(mode: BattleMode, decisionID: string, actions: BattleAction[]): Promise<ChallengeView>;
   advance(mode: BattleMode, reward: BattleReward, checkpoint: string): Promise<ChallengeView>;
   surrender(mode: BattleMode): Promise<ChallengeView>;
-  cpu(command:'prepare'|'reward'|'purchase'|'next'|'claim',value?:unknown):Promise<ChallengeView>;
+  cpu(command:'prepare'|'reward'|'purchase'|'next'|'claim'|'test-victory',value?:unknown):Promise<ChallengeView>;
 }
 export interface ChallengeProgressView{
   points:number;resources:{id:string;hp:number;status:string;item:string;moves:{id:string;pp:number;maxPP:number}[]}[];
@@ -102,7 +111,7 @@ export interface ChallengeProgressView{
 export interface BattleRosterMember {id:string;speciesID:number;level:number;shiny:boolean;form?:string|null}
 export interface LanBattleState {
   phase:'idle'|'searching'|'connecting'|'connected'|'preparing'|'playing'|'reconnecting'|'ended';
-  identity:{nickname:string;code:string;nonce:string};opponent?:{nickname:string;code:string;nonce:string};
+  identity:BattleIdentity;opponent?:BattleIdentity;
   host:boolean;codes:string[];peers?:{code:string;nickname:string;address:string}[];registered:BattleRosterMember[];opponentRoster:BattleRosterMember[];
   localReady:boolean;remoteReady:boolean;submitted:boolean;frame?:BattleFrame;outcome?:'win'|'loss'|'draw'|'interrupted';
   deadline?:number;error?:string;history?:BattleRecord[];

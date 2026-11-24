@@ -76,6 +76,16 @@
     stage.style.top = y / fieldHeight * 100 + '%';
   }
 
+  function measureStage(field, own, slot, count) {
+    const anchor = document.createElement('div');
+    anchor.className = 'battle-stage';
+    place(anchor, own, slot, count);
+    field.querySelector('.battle-scene').append(anchor);
+    const bounds = anchor.getBoundingClientRect();
+    anchor.remove();
+    return bounds;
+  }
+
   // Keeps only this side's current stages in the scene in slot order, reusing elements that are already mounted.
   function replaceStages(root, own, stages) {
     const side = own ? 'own' : 'foe';
@@ -83,5 +93,5 @@
     root.append(...stages);
   }
 
-  window.battleArena = { scene, place, replaceStages };
+  window.battleArena = { scene, place, measureStage, replaceStages };
 })();

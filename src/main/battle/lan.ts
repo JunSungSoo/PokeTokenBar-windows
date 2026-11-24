@@ -8,9 +8,9 @@ import{BattleTransport,connectionAddress}from'./transport.js';
 import{OwnedBattle,REVISION,type Engine,type Member}from'./engine.js';
 import{eligible}from'./team.js';
 import{writeSaveAtomically}from'../companion/store.js';
-import type{BattleAction,BattleFrame,BattleRosterMember,LanBattleState,BattleRecord}from'../../shared/battle.js';
+import type{BattleAction,BattleFrame,BattleIdentity,BattleRosterMember,LanBattleState,BattleRecord}from'../../shared/battle.js';
+import{defaultProfileNickname,playerProfile,profileIcon}from'../../shared/player-profile.js';
 interface Decision{decisionID:string;actions:({kind:string;index:number;target:number;mega?:boolean})[];order:number[]}
-interface Identity{nickname:string;code:string;nonce:string}
 const uuid=()=>randomUUID().toUpperCase();
 function sorted(value:unknown):unknown{return Array.isArray(value)?value.map(sorted):value&&typeof value==='object'?Object.fromEntries(Object.entries(value).filter(([,v])=>v!==undefined).sort(([a],[b])=>a<b?-1:1).map(([key,v])=>[key,sorted(v)])):value;}
 export function battleDigest(decision:Decision,nonce:string,matchID:string){return createHash('sha256').update(matchID+':'+nonce+':').update(JSON.stringify(sorted(decision)).replaceAll('/',String.fromCharCode(92)+'/')).digest('hex');}
@@ -32,15 +32,15 @@ export class LanBattle{
  private sequence=0;private received=0;private matchID='';private commits=new Map<number,string>();private reveals=new Map<number,Decision>();private pending?:Decision;private nonce?:string;
  private timer?:ReturnType<typeof setTimeout>;private reconnectTimer?:ReturnType<typeof setTimeout>;private cleanup?:ReturnType<typeof setTimeout>;private startAt=0;private records:BattleRecord[]=[];private historyQueue:Promise<unknown>=Promise.resolve();
  private stateValue:LanBattleState;
- constructor(private directory:string,private changed:(state:LanBattleState)=>void,private milliseconds=60000){this.stateValue={phase:'idle',identity:{nickname:'PokeTokenBar Windows',code:'',nonce:uuid()},host:false,codes:[],registered:[],opponentRoster:[],localReady:false,remoteReady:false,submitted:false};}
+ constructor(private directory:string,private changed:(state:LanBattleState)=>void,private milliseconds=60000){this.stateValue={phase:'idle',identity:{nickname:defaultProfileNickname,code:'',nonce:uuid()},host:false,codes:[],registered:[],opponentRoster:[],localReady:false,remoteReady:false,submitted:false};}
  state():LanBattleState{return structuredClone(this.stateValue);}
  private show(patch:Partial<LanBattleState>={}){Object.assign(this.stateValue,patch);this.changed(this.state());}
  active(){return ['preparing','playing','reconnecting'].includes(this.stateValue.phase);}
- private async identity(nickname:string){let code:string;try{const data=JSON.parse(await readFile(join(this.directory,'battle-identity-v1.json'),'utf8'));if(typeof data.code!=='string'||!/^[A-HJ-NP-Z2-9]{8}$/.test(data.code))throw Error();code=data.code;}catch{const alphabet='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';code=Array.from({length:8},()=>alphabet[randomInt(alphabet.length)]).join('');await writeSaveAtomically(join(this.directory,'battle-identity-v1.json'),JSON.stringify({version:1,code}));}return{nickname:nickname.trim().slice(0,40)||'PokeTokenBar Windows',code,nonce:uuid()};}
+ private async identity(nickname:string,icon?:number):Promise<BattleIdentity>{let code:string;try{const data=JSON.parse(await readFile(join(this.directory,'battle-identity-v1.json'),'utf8'));if(typeof data.code!=='string'||!/^[A-HJ-NP-Z2-9]{8}$/.test(data.code))throw Error();code=data.code;}catch{const alphabet='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';code=Array.from({length:8},()=>alphabet[randomInt(alphabet.length)]).join('');await writeSaveAtomically(join(this.directory,'battle-identity-v1.json'),JSON.stringify({version:1,code}));}return{...playerProfile(nickname,icon),code,nonce:uuid()};}
  private makeLink(){const link=new BattleTransport(value=>{if(this.link===link)this.receive(value);},()=>{if(this.link===link)this.connected();},()=>{if(this.link===link)this.disconnected();});this.link=link;return link;}
- private async reset(nickname:string){if(this.active())throw Error('진행 중인 대전을 먼저 종료해 주세요.');this.shutdown(false);const identity=await this.identity(nickname);this.sequence=this.received=0;this.matchID='';this.registered=this.own=this.peerTeam=[];this.frames=[];this.engine=undefined;this.clearDecision();this.stateValue={phase:'searching',identity,host:false,codes:[],registered:[],opponentRoster:[],localReady:false,remoteReady:false,submitted:false};this.show();}
- async host(nickname:string){if(this.stateValue.phase!=='reconnecting')await this.reset(nickname);else this.link?.close();const link=this.makeLink();const codes=await link.listen();if(this.link===link){this.show({codes});if(this.stateValue.phase==='searching')this.discovery.start(this.stateValue.identity,Number(codes[0].split(':')[1]));}return this.state();}
- async connect(code:string,nickname:string){connectionAddress(code);if(this.stateValue.phase!=='reconnecting')await this.reset(nickname);const link=this.link ?? this.makeLink();if(!this.active())this.show({phase:'connecting'});try{link.connect(code);}catch(error){if(this.stateValue.phase!=='reconnecting')this.show({phase:'searching'});throw error;}return this.state();}
+ private async reset(nickname:string,icon?:number){if(this.active())throw Error('진행 중인 대전을 먼저 종료해 주세요.');this.shutdown(false);const identity=await this.identity(nickname,icon);this.sequence=this.received=0;this.matchID='';this.registered=this.own=this.peerTeam=[];this.frames=[];this.engine=undefined;this.clearDecision();this.stateValue={phase:'searching',identity,host:false,codes:[],registered:[],opponentRoster:[],localReady:false,remoteReady:false,submitted:false};this.show();}
+ async host(nickname:string,icon?:number){if(this.stateValue.phase!=='reconnecting')await this.reset(nickname,icon);else this.link?.close();const link=this.makeLink();const codes=await link.listen();if(this.link===link){this.show({codes});if(this.stateValue.phase==='searching')this.discovery.start(this.stateValue.identity,Number(codes[0].split(':')[1]));}return this.state();}
+ async connect(code:string,nickname:string,icon?:number){connectionAddress(code);if(this.stateValue.phase!=='reconnecting')await this.reset(nickname,icon);const link=this.link ?? this.makeLink();if(!this.active())this.show({phase:'connecting'});try{link.connect(code);}catch(error){if(this.stateValue.phase!=='reconnecting')this.show({phase:'searching'});throw error;}return this.state();}
  private send(kind:string,values:Record<string,unknown>={}){this.link?.send({version:1,revision:REVISION,sequence:++this.sequence,kind,...(this.matchID?{matchID:this.matchID}:{}),...values});}
  private connected(){this.discovery.stop();this.stateValue.peers=[];if(this.stateValue.phase==='reconnecting'){this.send('resume',{identity:this.stateValue.identity});return;}this.show({phase:'connected',codes:[],error:undefined});this.send('hello',{identity:this.stateValue.identity,mode:'singles'});}
  register(team:Member[]){if(this.stateValue.phase!=='connected'||!this.stateValue.opponent||this.registered.length||!validRoster(roster(team)))throw Error('서로 다른 최종 진화 포켓몬 6마리를 선택해 주세요.');this.registered=structuredClone(team);this.clearReady();this.show({registered:roster(team)});this.send('roster',{mode:'singles',roster:roster(team)});return this.state();}
@@ -52,9 +52,9 @@ export class LanBattle{
   if(!raw||typeof raw!=='object')throw Error('Invalid message');const message=raw as Record<string,any>;
   if(message.version!==1||message.revision!==REVISION)throw Error('배틀 버전이 일치하지 않습니다.');
   if(message.kind==='hello'){
-   const peer=message.identity as Identity;if(this.stateValue.phase!=='connected'||this.stateValue.opponent)return;
+   const peer=message.identity as BattleIdentity;if(this.stateValue.phase!=='connected'||this.stateValue.opponent)return;
    if(!Number.isSafeInteger(message.sequence)||message.sequence<1||message.mode!=='singles'||!peer||typeof peer.nickname!=='string'||peer.nickname.length>100||typeof peer.code!=='string'||!peer.code.length||peer.code.length>80||typeof peer.nonce!=='string'||!/^[0-9A-F-]{36}$/i.test(peer.nonce)||peer.nonce===this.stateValue.identity.nonce)throw Error('잘못된 대전 상대입니다.');
-   this.received=message.sequence;this.matchID=[peer.nonce,this.stateValue.identity.nonce].sort().join(':');const host=this.stateValue.identity.code+this.stateValue.identity.nonce<peer.code+peer.nonce;this.show({opponent:peer,host,error:undefined});return;
+   this.received=message.sequence;this.matchID=[peer.nonce,this.stateValue.identity.nonce].sort().join(':');const host=this.stateValue.identity.code+this.stateValue.identity.nonce<peer.code+peer.nonce;this.show({opponent:{nickname:peer.nickname,code:peer.code,nonce:peer.nonce,icon:profileIcon(peer.icon)},host,error:undefined});return;
   }
   if(!this.stateValue.opponent||message.matchID!==this.matchID||!Number.isSafeInteger(message.sequence)||message.sequence<=this.received)return;this.received=message.sequence;
   switch(message.kind){
@@ -75,7 +75,7 @@ export class LanBattle{
    case'error':this.clearDecision();this.show({submitted:false,error:String(message.reason??'Battle error').slice(0,500),...(this.stateValue.phase==='preparing'?{phase:'connected' as const}:{})});break;
    case'abort':if(this.active())this.finish(-1,'engineFailure');break;
    case'cancel':if(!this.active()){this.shutdown(false);this.show({phase:'idle',opponent:undefined,registered:[],opponentRoster:[]});}break;
-   case'resume':if(this.stateValue.phase==='reconnecting'&&JSON.stringify(sorted(message.identity))===JSON.stringify(sorted(this.stateValue.opponent))){clearTimeout(this.reconnectTimer);this.clearDecision();this.show({phase:'playing',submitted:false,error:undefined});if(this.stateValue.host)this.publish();}break;
+   case'resume':if(this.stateValue.phase==='reconnecting'&&message.identity?.code===this.stateValue.opponent.code&&message.identity?.nonce===this.stateValue.opponent.nonce&&message.identity?.nickname===this.stateValue.opponent.nickname&&profileIcon(message.identity?.icon)===this.stateValue.opponent.icon){clearTimeout(this.reconnectTimer);this.clearDecision();this.show({phase:'playing',submitted:false,error:undefined});if(this.stateValue.host)this.publish();}break;
   }
  }catch(error){this.show({error:error instanceof Error?error.message:'Invalid battle message'});if(this.active())this.engineError(error);}}
  choose(decisionID:string,actions:BattleAction[]){

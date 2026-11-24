@@ -16,7 +16,7 @@ export interface UpdateStatus {
 }
 
 export interface WindowsAPI {
-  support(action:'report'|'log'|'github'|'website'|'sponsor'):Promise<void>;
+  support(action:'log'|'github'):Promise<void>;
   onUpdate(handler:(state:UpdateStatus)=>void):void;
   updateState():Promise<UpdateStatus>;
   skipUpdate(restore?:boolean):Promise<UpdateStatus>;
