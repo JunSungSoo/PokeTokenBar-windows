@@ -249,6 +249,11 @@
         }
       }
       const provider = get('provider').value;
+      const chatExport = provider === 'claude-chat' || provider === 'chatgpt-chat';
+      const geminiExport = provider === 'gemini-takeout';
+      get('chat-export-hint').hidden = !chatExport;
+      get('gemini-export-hint').hidden = !geminiExport;
+      get('log-folder-hint').hidden = chatExport || geminiExport;
       const root = snapshot.usage[provider]?.extraRoot;
       get('root-path').textContent = root ?? '미설정';if(document.activeElement!==get('scan-roots'))get('scan-roots').value=root??'';
       get('choose-root').disabled = false;

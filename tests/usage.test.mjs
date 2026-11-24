@@ -63,7 +63,100 @@ test('last-hour totals span midnight, deduplicate entries and exclude future tim
   assert.equal(later.lastHour, 120);
 });
 
-test('all 16 providers aggregate shared fixtures and match the macOS reference when supplied', async t => {
+test('Gemini uses CLI session counts from GEMINI_CLI_HOME', async t => {
+  const home = await mkdtemp(join(tmpdir(), 'poketokenbar-gemini-cli-'));
+  const previousHome = process.env.GEMINI_CLI_HOME;
+  process.env.GEMINI_CLI_HOME = home;
+  t.after(async () => {
+    if (previousHome === undefined) delete process.env.GEMINI_CLI_HOME;
+    else process.env.GEMINI_CLI_HOME = previousHome;
+    await rm(home, { recursive: true, force: true });
+  });
+  const { defaultRoots } = await import('../dist/main/usage/scan.js');
+  const root = join(home, '.gemini', 'tmp');
+  assert.ok(defaultRoots('gemini').includes(root));
+  const now = new Date(referenceTime);
+  await writeLog(root, 'project/chats/session-1.jsonl', [{
+    id: 'turn', timestamp: now.toISOString(), tokens: { input: 10, output: 5, cached: 3, tool: 2, thoughts: 2 },
+  }], now);
+  await writeLog(root, 'MyActivity.json', [JSON.stringify([{
+    title: 'Prompted an unrelated record', time: now.toISOString(),
+  }])], now);
+  assert.deepEqual((await collectUsage('gemini', null, now, [root])).today, tally(9, 7, 0, 3));
+});
+
+test('regular Claude and ChatGPT chat exports contribute separate estimated usage', async t => {
+  const root = await mkdtemp(join(tmpdir(), 'poketokenbar-chat-exports-'));
+  t.after(() => rm(root, { recursive: true, force: true }));
+  const now = new Date('2026-06-18T02:00:00Z');
+  const modified = new Date('2025-06-18T02:00:00Z');
+  const time = '2026-06-18T01:45:00Z';
+  const human = { uuid: 'human', sender: 'human', created_at: time, text: '12345678' };
+  const assistant = {
+    uuid: 'answer', sender: 'assistant', created_at: time, text: 'abcdefgh',
+    content: [{ type: 'text', text: 'abcdefgh' }, { type: 'thinking', text: 'ignored' }],
+  };
+  const node = (id, role, parts, options = {}) => ({
+    id,
+    message: {
+      id, author: { role }, create_time: Date.parse(time) / 1000,
+      content: { content_type: 'multimodal_text', parts },
+      ...options,
+    },
+  });
+  const mapping = {
+    question: node('question', 'user', ['1234', { asset_pointer: 'image' }]),
+    first: node('first', 'assistant', ['abcdefgh'], { metadata: { model_slug: 'gpt-5' }, recipient: 'all' }),
+    retried: node('retried', 'assistant', ['ijkl'], { recipient: 'all' }),
+    hidden: node('hidden', 'assistant', ['ignored'], { metadata: { is_visually_hidden_from_conversation: true } }),
+    tool: node('tool', 'assistant', ['ignored'], { recipient: 'tool' }),
+    future: node('future', 'assistant', ['ignored'], { create_time: +now / 1000 + 60 }),
+  };
+  await writeLog(root, 'claude/conversations.json', [JSON.stringify([{ chat_messages: [human, assistant] }])], modified);
+  await writeLog(root, 'claude-copy/conversations-001.json', [JSON.stringify([{ chat_messages: [human] }])], now);
+  await writeLog(root, 'chatgpt/conversations-000.json', [JSON.stringify([{ mapping, current_node: 'retried' }])], modified);
+  await writeLog(root, 'chatgpt-copy/conversations-002.json', [JSON.stringify([{ mapping: { first: mapping.first } }])], now);
+
+  const claude = await collectUsage('claude-chat', root, now);
+  assert.deepEqual(claude.today, tally(2, 2, 0, 0));
+  assert.equal(claude.lastHour, 4);
+  assert.equal(claude.cost.today.unknown, true);
+  const chatgpt = await collectUsage('chatgpt-chat', root, now);
+  assert.deepEqual(chatgpt.today, tally(1, 3, 0, 0));
+  assert.deepEqual(chatgpt.month, chatgpt.today);
+  assert.equal(chatgpt.todayModels['gpt-5'], 2);
+  assert.equal(chatgpt.unreadable + claude.unreadable, 0);
+});
+
+test('Gemini Apps estimates Takeout messages separately from Gemini CLI', async t => {
+  const root = await mkdtemp(join(tmpdir(), 'poketokenbar-gemini-takeout-'));
+  t.after(() => rm(root, { recursive: true, force: true }));
+  const now = new Date('2026-06-18T02:00:00Z');
+  const oldFileDate = new Date('2025-06-17T02:00:00Z');
+  const turn = {
+    header: 'Gemini Apps', time: '2026-06-18T01:45:00Z', title: 'Prompted 안녕하세요',
+    safeHtmlItem: [{ html: '<p>1234&amp;abcd</p><script>ignored</script><style>ignored</style>' }],
+  };
+  await writeLog(root, 'MyActivity.json', [JSON.stringify([
+    turn,
+    { ...turn, header: 'Search', time: '2026-06-18T01:40:00Z' },
+    { ...turn, title: 'Visited Gemini', time: '2026-06-18T01:30:00Z' },
+    { ...turn, time: '2026-06-18T03:00:00Z' },
+  ])], oldFileDate);
+  await writeLog(root, 'MyActivity-2.json', [JSON.stringify([{ ...turn, safeHtmlItem: [] }])], now);
+  await writeLog(root, 'cli/chats/session-1.jsonl', [
+    { id: 'cli-turn', timestamp: now.toISOString(), tokens: { input: 10, output: 5 } },
+  ], now);
+  const estimate = await collectUsage('gemini-takeout', root, now);
+  const cli = await collectUsage('gemini', root, now, []);
+  assert.deepEqual(estimate.today, tally(4, 3, 0, 0));
+  assert.equal(estimate.lastHour, 7);
+  assert.equal(estimate.cost.today.unknown, true);
+  assert.equal(estimate.unreadable, 0);
+  assert.deepEqual(cli.today, tally(10, 5, 0, 0));
+});
+
+test('the 16 shared providers aggregate fixtures and match the macOS reference when supplied', async t => {
   const { providerFixtures } = await import('./provider-fixtures.mjs');
   const { execFileSync } = await import('node:child_process');
   const dir = await mkdtemp(join(tmpdir(), 'poketokenbar-parity-'));

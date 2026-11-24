@@ -4,11 +4,13 @@ import { homedir } from 'node:os';
 import { basename, dirname, join } from 'node:path';
 import { tokens, type Entry } from './entries.js';
 import { jsonl, object, parseRow, timestamp, token, type Row } from './jsonl.js';
+import { isChatExportProvider, readChatExport } from './chat-exports.js';
 
-export const localProviders = ['gemini', 'grok', 'pi', 'omp', 'omo', 'kimi', 'opencode', 'hermes', 'copilot', 'devin', 'aside', 'antigravity', 'cursor', 'kiro'] as const;
+export const localProviders = ['gemini', 'grok', 'pi', 'omp', 'omo', 'kimi', 'opencode', 'hermes', 'copilot', 'devin', 'aside', 'antigravity', 'cursor', 'kiro', 'claude-chat', 'chatgpt-chat', 'gemini-takeout'] as const;
 export type LocalProvider = typeof localProviders[number];
 
 const layouts: Record<LocalProvider, string[]> = {
+  'claude-chat': [], 'chatgpt-chat': [], 'gemini-takeout': [],
   gemini: ['.gemini/tmp'], grok: ['.grok/sessions'], pi: ['.pi/agent/sessions'],
   omp: ['.omp/agent/sessions'], omo: ['.omo/agent/sessions', '.senpi/agent/sessions'],
   kimi: ['.kimi-code/sessions'], opencode: ['.local/share/opencode'], hermes: ['.hermes'],
@@ -21,6 +23,7 @@ const layouts: Record<LocalProvider, string[]> = {
 export function localRoots(provider: LocalProvider): string[] {
   const env = process.env;
   const extra: Partial<Record<LocalProvider, (string | undefined)[]>> = {
+    gemini: [env.GEMINI_CLI_HOME && join(env.GEMINI_CLI_HOME, '.gemini', 'tmp')],
     pi: [env.PI_CODING_AGENT_SESSION_DIR, env.PI_CODING_AGENT_DIR && join(env.PI_CODING_AGENT_DIR, 'sessions')],
     omp: [env.OMP_CODING_AGENT_DIR && join(env.OMP_CODING_AGENT_DIR, 'sessions')],
     omo: [env.OMO_CODING_AGENT_DIR && join(env.OMO_CODING_AGENT_DIR, 'sessions'),
@@ -39,6 +42,9 @@ export function localRoots(provider: LocalProvider): string[] {
 export function accepts(provider: LocalProvider, path: string): boolean {
   const name = basename(path);
   switch (provider) {
+    case 'claude-chat':
+    case 'chatgpt-chat': return /^conversations(?:[-_]\d+)?\.json$/i.test(name);
+    case 'gemini-takeout': return /^My[ _-]?Activity(?:[-_]\d+)?\.json$/i.test(name);
     case 'gemini': return /\.jsonl?$/.test(name);
     case 'grok': return name === 'updates.jsonl';
     case 'kimi': return name === 'wire.jsonl';
@@ -164,6 +170,7 @@ async function gemini(path: string): Promise<Entry[]> {
 }
 
 export async function readLocalFile(provider: LocalProvider, path: string, since: number): Promise<Entry[]> {
+  if (isChatExportProvider(provider)) return readChatExport(provider, path, since);
   if (provider === 'gemini') return gemini(path);
   if (provider === 'kiro' && path.endsWith('.jsonl')) return (await import('./kiro.js')).readKiro(path);
   if (provider === 'grok') {

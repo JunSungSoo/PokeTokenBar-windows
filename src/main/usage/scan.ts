@@ -6,6 +6,7 @@ import type { Provider, ProviderUsage, UsageCost } from '../../shared/usage.js';
 import { deduplicateClaude, readClaudeFile } from './claude.js';
 import { probeCodexSession, readCodexFile, resolveCodex, type Rollout } from './codex.js';
 import { accepts, localRoots, readLocalFile } from './local-providers.js';
+import { isChatExportProvider } from './chat-exports.js';
 import { price } from './pricing.js';
 import { type Entry, tokens } from './entries.js';
 
@@ -185,15 +186,17 @@ export async function collectUsage(
   } else {
     const records: Entry[] = [];
     const dailyRecords: Entry[] = [];
+    const chatExport = isChatExportProvider(provider);
     for (const { path, modified } of found.files) {
-      const database = path.endsWith('.db') || path.endsWith('.vscdb') || path.endsWith('.sqlite3');
-      if (!database && modified < ranges.scanStart) continue;
+      const useEntryTime = chatExport || path.endsWith('.db') || path.endsWith('.vscdb') || path.endsWith('.sqlite3');
+      if (!useEntryTime && modified < ranges.scanStart) continue;
       try {
         const fileEntries = provider === 'claude' ? await readClaudeFile(path)
           : await readLocalFile(provider, path, ranges.scanStart);
         for (const entry of fileEntries) {
+          if (chatExport && entry.time > +now) continue;
           records.push(entry);
-          if (database || modified >= +ranges.today) dailyRecords.push(entry);
+          if (useEntryTime || modified >= +ranges.today) dailyRecords.push(entry);
         }
       } catch (error) {
         if (!isMissing(error)) unreadableFiles.add(path);

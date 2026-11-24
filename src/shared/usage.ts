@@ -4,6 +4,7 @@ import type { CompanionAction, CompanionView, SaveImportPreview, SaveImportResul
 
 export const providerLabels = {
   codex: 'Codex', claude: 'Claude Code', gemini: 'Gemini CLI', antigravity: 'Antigravity',
+  'claude-chat': 'Claude Chat (≈)', 'chatgpt-chat': 'ChatGPT (≈)', 'gemini-takeout': 'Gemini Apps (≈)',
   opencode: 'OpenCode', hermes: 'Hermes Agent', cursor: 'Cursor', grok: 'Grok Build CLI',
   copilot: 'Copilot CLI', kiro: 'Kiro CLI', pi: 'Pi Agent', omp: 'omp', omo: 'omo',
   aside: 'Aside', kimi: 'Kimi Code', devin: 'Devin CLI',
