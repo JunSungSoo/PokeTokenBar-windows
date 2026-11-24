@@ -7,7 +7,7 @@ import {petSurfaceSize}from'../shared/pet-presentation.js';
 import type { UsageSnapshot, LimitResult } from '../shared/usage.js';
 import { SettingsStore, registerSettingsIPC } from './settings.js';
 import { app, BrowserWindow, Menu, screen, Tray,dialog } from 'electron';
-import { mkdirSync } from 'node:fs';
+import { mkdirSync, readFileSync, watch } from 'node:fs';
 import { join } from 'node:path';
 import { windowsAppID } from '../shared/windows.js';
 import { loginArgument, registerWindowsIPC } from './windows.js';
@@ -272,6 +272,25 @@ async function startApplication(){
     if (preferences.get().petEnabled) await togglePet();
     for (const argument of process.argv) if (/^poketokenbar:/i.test(argument)) agentController.accept(argument);
     if (!isWindows || process.argv.includes('--show')) await showMainWindow();
+    const reloadFile = process.env.PTB_DEV_RELOAD_FILE;
+    if (!app.isPackaged && reloadFile) {
+      let timer: ReturnType<typeof setTimeout>;
+      const reloadWatcher = watch(reloadFile, () => {
+        clearTimeout(timer);
+        timer = setTimeout(() => {
+          try {
+            const command = readFileSync(reloadFile, 'utf8');
+            if (command === 'reload') {
+              for (const window of BrowserWindow.getAllWindows()) window.webContents.reloadIgnoringCache();
+            } else if (command === 'quit') {
+              void finishWrites().catch(reportError).finally(() => app.quit());
+            }
+          } catch (error) { reportError(error); }
+        }, 60);
+      });
+      reloadWatcher.on('error', reportError);
+      app.once('before-quit', () => { clearTimeout(timer); reloadWatcher.close(); });
+    }
     handoff?.setReady(prepareReplacement);
     initialized();
     diagnostics.write('Version owner ready',{version:app.getVersion(),pid:process.pid});

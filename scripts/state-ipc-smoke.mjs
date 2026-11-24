@@ -1,17 +1,27 @@
 // Exercise production usage IPC and OS-notification routing against an isolated home/save.
 import{app,BrowserWindow,ipcMain,Notification}from'electron';import assert from'node:assert/strict';import{mkdtemp,mkdir,writeFile,rm}from'node:fs/promises';import{tmpdir}from'node:os';import{join,resolve}from'node:path';
 import{SettingsStore,registerSettingsIPC}from'../dist/main/settings.js';import{registerUsageIPC}from'../dist/main/usage/ipc.js';import{CompanionStore}from'../dist/main/companion/store.js';
+import { chatExportProviders } from '../dist/shared/usage.js';
 async function run(){
 app.on('window-all-closed',()=>{});const root=await mkdtemp(join(tmpdir(),'ptb-state-ui-'));app.setPath('userData',root);process.env.USERPROFILE=root;process.env.CLAUDE_CONFIG_DIR='';let main,pet,finish;const notices=[],petNotices=[];const originalFetch=globalThis.fetch;const originalShow=Notification.prototype.show;Notification.prototype.show=function(){notices.push({title:this.title,body:this.body});};
 const timedUsage=process.env.POKE_TIMED_USAGE_SMOKE==='1';
 setTimeout(()=>{console.error('State IPC smoke deadline');app.exit(1);},timedUsage?85000:45000).unref();
 try{await app.whenReady();console.log('State fixture ready');
  const settingsPath=join(root,'settings.json');
- await writeFile(settingsPath,JSON.stringify({providers:['claude','gemini','gemini-takeout'],language:'en'}));
+ const fresh=new SettingsStore(join(root,'fresh-settings.json'));await fresh.load();
+ assert.ok(chatExportProviders.every(provider=>fresh.get().providers.includes(provider)));
+ const partialPath=join(root,'partial-settings.json');
+ await writeFile(partialPath,JSON.stringify({providers:['claude','gemini-takeout']}));
+ const partial=new SettingsStore(partialPath);await partial.load();
+ assert.deepEqual(partial.get().providers,['claude','gemini-takeout']);
+ await writeFile(settingsPath,JSON.stringify({providers:['claude','gemini'],language:'en'}));
  const prefs=new SettingsStore(settingsPath);await prefs.load();
- assert.deepEqual(prefs.get().providers,['claude','gemini','gemini-takeout']);
+ assert.deepEqual(prefs.get().providers,['claude','gemini',...chatExportProviders]);
  assert.equal(prefs.get().language,'en');
  await prefs.change({providers:['claude'],language:'en',statusChecks:false,refreshSeconds:0,updateNotifications:false,limitNotifications:false});
+ const reopened=new SettingsStore(settingsPath);await reopened.load();
+ assert.deepEqual(reopened.get().providers,['claude']);
+ console.log('PASS: chat providers default on for fresh and older settings; saved opt-outs survive restart.');
  console.log('Preferences ready');const store=new CompanionStore(join(root,'companion-v1.json'),()=>false);await store.replaceImport({raised:0,progress:4999999,active:null,graduated:[],pendingHatchID:1},Date.now());
  console.log('Save ready');finish=registerUsageIPC(()=>main,()=>pet,async()=>{},()=>undefined,prefs,()=>{},()=>{},()=>{});registerSettingsIPC(prefs,()=>[main],async()=>{await finish();await prefs.finishWrites();});
  console.log('IPC registered');main=new BrowserWindow({show:false,webPreferences:{preload:resolve('dist/main/usage-preload.cjs'),sandbox:true,contextIsolation:true,nodeIntegration:false}});await main.loadURL('data:text/html,<title>Isolated IPC fixture</title>');console.log('Page loaded');const js=code=>main.webContents.executeJavaScript(code);await js('window.usage.refresh()');console.log('Baseline refreshed');

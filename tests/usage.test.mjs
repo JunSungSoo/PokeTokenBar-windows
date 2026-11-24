@@ -116,16 +116,26 @@ test('regular Claude and ChatGPT chat exports contribute separate estimated usag
   await writeLog(root, 'claude-copy/conversations-001.json', [JSON.stringify([{ chat_messages: [human] }])], now);
   await writeLog(root, 'chatgpt/conversations-000.json', [JSON.stringify([{ mapping, current_node: 'retried' }])], modified);
   await writeLog(root, 'chatgpt-copy/conversations-002.json', [JSON.stringify([{ mapping: { first: mapping.first } }])], now);
+  await writeLog(root, 'claude/projects/session.jsonl', [{
+    type: 'assistant', timestamp: time, message: { id: 'claude-code-turn', usage: { input_tokens: 11, output_tokens: 7 } },
+  }], now);
+  await writeLog(root, 'codex/sessions/session.jsonl', [{
+    type: 'event_msg', timestamp: time, payload: { type: 'token_count', info: {
+      last_token_usage: { input_tokens: 13, output_tokens: 6 },
+    } },
+  }], now);
 
-  const claude = await collectUsage('claude-chat', root, now);
+  const claude = await collectUsage('claude-chat', root, now, []);
   assert.deepEqual(claude.today, tally(2, 2, 0, 0));
   assert.equal(claude.lastHour, 4);
   assert.equal(claude.cost.today.unknown, true);
-  const chatgpt = await collectUsage('chatgpt-chat', root, now);
+  const chatgpt = await collectUsage('chatgpt-chat', root, now, []);
   assert.deepEqual(chatgpt.today, tally(1, 3, 0, 0));
   assert.deepEqual(chatgpt.month, chatgpt.today);
   assert.equal(chatgpt.todayModels['gpt-5'], 2);
   assert.equal(chatgpt.unreadable + claude.unreadable, 0);
+  assert.equal((await collectUsage('claude', root, now, [])).today.total, 18);
+  assert.equal((await collectUsage('codex', root, now, [])).today.total, 19);
 });
 
 test('Gemini Apps estimates Takeout messages separately from Gemini CLI', async t => {
@@ -140,6 +150,7 @@ test('Gemini Apps estimates Takeout messages separately from Gemini CLI', async 
   await writeLog(root, 'MyActivity.json', [JSON.stringify([
     turn,
     { ...turn, header: 'Search', time: '2026-06-18T01:40:00Z' },
+    { ...turn, header: 'Gemini CLI', time: '2026-06-18T01:42:00Z' },
     { ...turn, title: 'Visited Gemini', time: '2026-06-18T01:30:00Z' },
     { ...turn, time: '2026-06-18T03:00:00Z' },
   ])], oldFileDate);

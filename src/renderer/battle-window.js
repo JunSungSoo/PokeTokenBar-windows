@@ -286,7 +286,33 @@
   if(p.buffs.length)body.append(node('p',p.buffs.map(b=>t(buffNames[b.kind])+' +1 · '+b.remaining+' '+t('배틀')).join(' / '),'battle-buffs'));
   if(view.phase==='intermission'){body.append(node('p','✓ '+t('보상이 적용되었습니다.')),rosterTiles(p.team,p.resources));const next=button(t('다음 배틀'),()=>void operation(async()=>{await show(await window.battle.cpu('next'),false);}),'primary');next.id='challenge-next';footer.append(next);}
   else{let kind='points',id=p.team[0].id,moveIndex=0,incoming;const reward=node('div'),milestone=view.encounter%3===0,enhanced=view.encounter>=16;const options=milestone?['allHeal','replace','buff','points']:['heal','pp','replace','buff','points'];const labels={allHeal:'팀 전체 HP·PP·상태 회복',heal:enhanced?'HP 전부 회복':'HP 35% 회복',pp:enhanced?'모든 기술 PP 회복':'기술 하나 PP +3',replace:'포켓몬 교체',buff:t(buffNames[p.roll])+' +1 · '+t('3배틀'),points:'+'+U.points(50)};
-   candidates=await window.battle.choices();function draw(){reward.replaceChildren(node('h3',t('보상 선택')));for(const option of options){const pick=button((kind===option?'● ':'○ ')+t(labels[option]),()=>{kind=option;draw();});pick.id='challenge-reward-'+option;reward.append(pick);}if(!['points','buff','allHeal'].includes(kind))reward.append(targetGrid(view,id,next=>{id=next;moveIndex=0;draw();}));else if(kind==='allHeal')reward.append(rosterTiles(p.team,p.resources));if(kind==='pp'&&!enhanced)reward.append(moveTargets(p.resources.find(r=>r.id===id),moveIndex,index=>{moveIndex=index;draw();}));if(kind==='replace'){for(const m of candidates.filter(m=>!p.team.some(row=>row.id===m.id||row.speciesID===m.speciesID)&&!p.retired.includes(m.id))){reward.append(button((incoming===m.id?'● ':'○ ')+species(m),()=>{incoming=m.id;draw();}));}}const apply=button(t('보상 적용'),()=>void operation(async()=>{await modernReward(await window.battle.cpu('reward',{kind,id,moveIndex,incoming}));}),'primary');apply.id='challenge-apply-reward';const r=p.resources.find(r=>r.id===id),m=p.team.find(m=>m.id===id);apply.disabled=kind==='replace'&&!incoming||kind==='heal'&&r.hp===m.stats.hp||kind==='pp'&&(enhanced?!r.moves.some(m=>m.pp<m.maxPP):!r.moves[moveIndex]||r.moves[moveIndex].pp===r.moves[moveIndex].maxPP);reward.append(apply);}draw();body.append(reward);}
+   candidates=await window.battle.choices();
+   function draw(){
+    const choices=node('div',undefined,'battle-reward-options');
+    for(const option of options){
+     const pick=button((kind===option?'● ':'○ ')+t(labels[option]),()=>{kind=option;draw();});
+     pick.id='challenge-reward-'+option;
+     pick.setAttribute('aria-pressed',String(kind===option));
+     choices.append(pick);
+    }
+    reward.replaceChildren(node('h3',t('보상 선택')),choices);
+    if(!['points','buff','allHeal'].includes(kind))reward.append(targetGrid(view,id,next=>{id=next;moveIndex=0;draw();}));
+    else if(kind==='allHeal')reward.append(rosterTiles(p.team,p.resources));
+    if(kind==='pp'&&!enhanced)reward.append(moveTargets(p.resources.find(r=>r.id===id),moveIndex,index=>{moveIndex=index;draw();}));
+    if(kind==='replace'){
+     for(const m of candidates.filter(m=>!p.team.some(row=>row.id===m.id||row.speciesID===m.speciesID)&&!p.retired.includes(m.id))){
+      reward.append(button((incoming===m.id?'● ':'○ ')+species(m),()=>{incoming=m.id;draw();}));
+     }
+    }
+    const apply=button(t('보상 적용'),()=>void operation(async()=>{await modernReward(await window.battle.cpu('reward',{kind,id,moveIndex,incoming}));}),'primary');
+    apply.id='challenge-apply-reward';
+    const r=p.resources.find(r=>r.id===id),m=p.team.find(m=>m.id===id);
+    apply.disabled=kind==='replace'&&!incoming||kind==='heal'&&r.hp===m.stats.hp||kind==='pp'&&(enhanced?!r.moves.some(m=>m.pp<m.maxPP):!r.moves[moveIndex]||r.moves[moveIndex].pp===r.moves[moveIndex].maxPP);
+    reward.append(apply);
+   }
+   draw();
+   body.append(reward);
+  }
   screen.replaceChildren(body);addClose();
  }
  // LAN publishes the final engine frame before it broadcasts the settled match outcome.

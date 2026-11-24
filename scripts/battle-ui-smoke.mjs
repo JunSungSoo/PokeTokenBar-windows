@@ -128,7 +128,28 @@ async function run(){dir=await mkdtemp(join(tmpdir(),'ptb-battle-ui-'));app.setP
   AudioBufferSourceNode.prototype.stop=function(...args){window.musicAudit.stops++;return stop.apply(this,args);};
  })()`);
  await click('.battle-prelude button');await until("document.querySelector('#challenge-shop-fullRecovery') && window.musicAudit.starts===1");
- await snap('cpu-reward-shop');await click('#challenge-shop-fullRecovery');await until("document.querySelector('#challenge-shop-buy')");
+ const rewardRows=await js(`[...document.querySelectorAll('.battle-reward-options button')].map(button=>{
+   const {x,top,bottom,width}=button.getBoundingClientRect();
+   return {x,top,bottom,width};
+ })`);
+ assert.equal(rewardRows.length,5);
+ assert.ok(rewardRows.every((row,index)=>row.x===rewardRows[0].x&&row.width===rewardRows[0].width&&
+   (!index||row.top>=rewardRows[index-1].bottom)),'each reward choice should occupy a separate row');
+ const rewardHeadingGap=await js(`(()=>{
+   const options=document.querySelector('.battle-reward-options');
+   return {
+     margin:getComputedStyle(options).marginBlockStart,
+     gap:options.firstElementChild.getBoundingClientRect().top-options.previousElementSibling.getBoundingClientRect().bottom
+   };
+ })()`);
+ assert.equal(rewardHeadingGap.margin,'10px');
+ assert.ok(rewardHeadingGap.gap>=9,'the reward heading should have space above the first option: '+rewardHeadingGap.gap);
+ await snap('cpu-reward-shop');
+ if(process.env.POKE_UI_SCREENSHOTS){
+   await js("document.querySelector('.battle-reward-options').scrollIntoView({block:'center'})");
+   await snap('challenge-reward-options');
+ }
+ await click('#challenge-shop-fullRecovery');await until("document.querySelector('#challenge-shop-buy')");
  await click('#challenge-shop-buy');await until("!document.querySelector('dialog')");
  await click('#challenge-reward-points');await click('#challenge-apply-reward');await until("document.querySelector('#challenge-next')");
  assert.equal((await controller.store.resume('singles',true)).progress.points,50);

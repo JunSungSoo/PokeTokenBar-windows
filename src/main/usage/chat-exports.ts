@@ -1,17 +1,17 @@
 import { createHash } from 'node:crypto';
 import { open } from 'node:fs/promises';
 import { parseFragment, type DefaultTreeAdapterTypes } from 'parse5';
-import type { Provider } from '../../shared/usage.js';
+import { chatExportProviders, type Provider } from '../../shared/usage.js';
 import { tokens, type Entry } from './entries.js';
 import { object, timestamp, type Row } from './jsonl.js';
 
-type ChatExportProvider = 'claude-chat' | 'chatgpt-chat' | 'gemini-takeout';
+type ChatExportProvider = typeof chatExportProviders[number];
 const maxArchiveBytes = 128 * 1024 * 1024;
 const cache = new Map<string, { size: number; modified: number; since: number; entries: Entry[] }>();
 const blockTags = new Set(['br', 'div', 'p', 'li', 'tr', 'td', 'th', 'pre', 'blockquote', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6']);
 
 export function isChatExportProvider(provider: Provider): provider is ChatExportProvider {
-  return provider === 'claude-chat' || provider === 'chatgpt-chat' || provider === 'gemini-takeout';
+  return chatExportProviders.some(id => id === provider);
 }
 
 function textParts(parts: unknown, extract: (part: unknown) => unknown): string {
@@ -84,7 +84,7 @@ function responseText(html: string): string {
 }
 
 function geminiEntry(row: Row, since: number): Entry | undefined {
-  if (typeof row.header === 'string' && !/\bgemini\b/i.test(row.header)) return;
+  if (typeof row.header === 'string' && !/^(?:gemini(?: apps)?|bard)$/i.test(row.header.trim())) return;
   const prefix = 'Prompted ';
   if (typeof row.title !== 'string' || !row.title.startsWith(prefix)) return;
   const time = timestamp(row.time);

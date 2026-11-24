@@ -12,6 +12,7 @@ export const providerLabels = {
 
 export type Provider = keyof typeof providerLabels;
 export const providers = Object.keys(providerLabels) as Provider[];
+export const chatExportProviders = ['claude-chat', 'chatgpt-chat', 'gemini-takeout'] as const satisfies readonly Provider[];
 
 export interface Tokens {
   input: number;

@@ -1,8 +1,8 @@
 import{systemPowerSaver}from'./system-state.js';
-import { readFile } from 'node:fs/promises';
+import { access, readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { app, dialog, ipcMain, nativeTheme, shell, type BrowserWindow } from 'electron';
-import { providers, type Provider } from '../shared/usage.js';
+import { chatExportProviders, providers, type Provider } from '../shared/usage.js';
 import type { AppSettings } from '../shared/settings.js';
 import { profileIcon } from '../shared/player-profile.js';
 import { writeSaveAtomically } from './companion/store.js';
@@ -10,6 +10,8 @@ import { object } from './usage/jsonl.js';
 
 export class SettingsStore {
   private queue: Promise<unknown> = Promise.resolve();
+  private chatDefaultsRecorded = false;
+  private readonly chatDefaultsPath: string;
   private value: AppSettings = {
     language: 'system', animationQuality: 'powerSaver', statusChecks: true, petAgentActivity: true, beginnerMode: false,
     activityVisualization:'bars',theme: 'light', animated: true, back: false, refreshSeconds: 300, trend: '14', limitMode: 'used',
@@ -19,18 +21,39 @@ export class SettingsStore {
   };
   private listeners: ((settings: AppSettings) => void)[] = [];
 
-  constructor(private path: string) {}
+  constructor(private path: string) {
+    this.chatDefaultsPath = path + '.chat-defaults-v1';
+  }
   get(): AppSettings { return structuredClone(this.value); }
   subscribe(listener: (settings: AppSettings) => void) { this.listeners.push(listener); }
 
   async load(): Promise<void> {
     try {
-      const patch: unknown = JSON.parse(await readFile(this.path, 'utf8'));
-      this.value = { ...this.value, ...this.validate(patch) };
+      const saved = this.validate(JSON.parse(await readFile(this.path, 'utf8')));
+      this.value = { ...this.value, ...saved };
+      this.chatDefaultsRecorded = await access(this.chatDefaultsPath).then(() => true, (error: NodeJS.ErrnoException) => {
+        if (error.code === 'ENOENT') return false;
+        throw error;
+      });
+      if (!this.chatDefaultsRecorded) {
+        const enabled = saved.providers;
+        // With a partial set of chat providers, the existing choices already include opt-outs.
+        if (enabled?.length && !chatExportProviders.some(provider => enabled.includes(provider))) {
+          this.value.providers = [...enabled, ...chatExportProviders];
+          await writeSaveAtomically(this.path, JSON.stringify(this.value));
+        }
+        await this.recordChatDefaults();
+      }
     } catch (error) {
       if ((error as NodeJS.ErrnoException).code !== 'ENOENT') throw error;
     }
     nativeTheme.themeSource = this.value.theme;
+  }
+
+  private async recordChatDefaults(): Promise<void> {
+    if (this.chatDefaultsRecorded) return;
+    await writeSaveAtomically(this.chatDefaultsPath, '1');
+    this.chatDefaultsRecorded = true;
   }
 
   private validate(raw: unknown): Partial<AppSettings> {
@@ -84,6 +107,7 @@ export class SettingsStore {
         else next.criticalThreshold = next.warnThreshold + 5;
       }
       next.tradeNickname = next.tradeNickname.trim();
+      await this.recordChatDefaults();
       await writeSaveAtomically(this.path, JSON.stringify(next));
       this.value = next;
       nativeTheme.themeSource = next.theme;
