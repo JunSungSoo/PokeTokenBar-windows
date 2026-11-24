@@ -20,7 +20,7 @@ test('Claude discovers both account folder patterns, default identity and dedupl
 });
 test('life-cycle notices distinguish evolution, graduation, hatch and Ditto without duplicates after restart/import',async t=>{
  const path=join(await dir(t),'events.json'),store=new CompanionStore(join(await dir(t),'save.json'),()=>false);let view=await store.read();const events=new CompanionEvents(path);assert.deepEqual(await events.observe(view),[]);
- await store.replaceImport({raised:0,progress:4999999,active:null,graduated:[],pendingHatchID:1},now);view=await store.update(new Map([['claude',[{id:'hatch',time:now+1,tokens:{total:1}}]]]),now+1);assert.equal((await events.observe(view))[0].title,'🥚 부화!');assert.deepEqual(await events.observe(view),[]);
+ await store.replaceImport({raised:0,progress:4999999,active:null,graduated:[],pendingHatchID:1},now);view=await store.update(new Map([['claude',[{id:'hatch',time:now+1,tokens:{total:1}}]]]),now+1);assert.equal((await events.observe(view))[0].title,view.active.shiny?'✨ 이로치 부화!':'🥚 부화!');assert.deepEqual(await events.observe(view),[]);
  const evolved=structuredClone(view);evolved.current={...view.current,number:2,name:'이상해풀'};assert.equal(companionChanges(view,evolved)[0].title,'✨ 진화!');
  const graduated=structuredClone(view);graduated.active=null;graduated.captures=[{...view.active,graduatedAt:now+2}];assert.equal(companionChanges(view,graduated)[0].title,'🎓 졸업!');
  const revealed={...view,dittoReveal:{id:'ditto',disguise:'이상해씨',shiny:false}};assert.ok(companionChanges(view,revealed).some(n=>n.title.includes('메타몽')));
@@ -36,7 +36,7 @@ test('multiple custom roots expand wildcards, deduplicate aliases and preview ex
 });
 
 test('one large usage update emits every committed hatch/evolution/graduation event exactly once',async t=>{
- const batches=[],store=new CompanionStore(join(await dir(t),'save.json'),()=>false,events=>batches.push(...events));await store.replaceImport({raised:0,progress:4999999,active:null,graduated:[],pendingHatchID:1},now);await store.update(new Map([['claude',[{id:'large',time:now+1,tokens:{total:10000000000}}]]]),now+1);assert.deepEqual(batches.map(n=>n.title),['🥚 부화!','✨ 진화!','✨ 진화!','🎓 졸업!']);await store.update(new Map([['claude',[{id:'large',time:now+1,tokens:{total:10000000000}}]]]),now+2);assert.equal(batches.length,4);
+ const batches=[],store=new CompanionStore(join(await dir(t),'save.json'),()=>false,events=>batches.push(...events));await store.replaceImport({raised:0,progress:4999999,active:null,graduated:[],pendingHatchID:1},now);const view=await store.update(new Map([['claude',[{id:'large',time:now+1,tokens:{total:10000000000}}]]]),now+1);assert.deepEqual(batches.map(n=>n.title),[view.captures[0].shiny?'✨ 이로치 부화!':'🥚 부화!','✨ 진화!','✨ 진화!','🎓 졸업!']);await store.update(new Map([['claude',[{id:'large',time:now+1,tokens:{total:10000000000}}]]]),now+2);assert.equal(batches.length,4);
 });
 
 import{execFileSync}from'node:child_process';
