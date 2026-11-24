@@ -10,6 +10,10 @@ async function run(){const dir=await mkdtemp(join(tmpdir(),'ptb-pet-ui-'));app.s
  let boundsWrites=0,repaints=0;const nativeBounds=pet.setBounds.bind(pet),invalidate=pet.webContents.invalidate.bind(pet.webContents);pet.setBounds=(...args)=>{boundsWrites++;return nativeBounds(...args);};pet.webContents.invalidate=()=>{repaints++;invalidate();};for(let i=0;i<5;i++)controller.sync();assert.equal(boundsWrites,0,'unchanged pet state must not reposition the transparent window');
  await until("document.querySelector('.egg-canvas')?.width>1");assert.equal(await js("document.querySelector('.handle')===null"),true);assert.ok(Math.abs(await js("document.querySelector('.egg').getBoundingClientRect().width")-96)<.01);await snap('egg-idle');if(process.platform==='win32'){const region=await inspectWindowRegion(pet);assert.ok(region.Kind>0);assert.equal(region.Top,false);assert.equal(region.Gutter,false);assert.equal(region.Pet,true);}
  await js("document.querySelector('.egg').dispatchEvent(new PointerEvent('pointerenter'))");await until("document.querySelector('output').dataset.kind==='hover'");if(process.platform==='win32'){assert.equal((await inspectWindowRegion(pet)).Top,true);}await js("document.querySelector('.egg').click()");await until("document.querySelector('output').textContent.includes('기도 1회')");assert.equal(await js("document.querySelectorAll('.prayer-particle').length"),1);await snap('egg-prayer');
+ await js("document.querySelector('.egg').dispatchEvent(new PointerEvent('pointerleave'));document.querySelector('output').dispatchEvent(new PointerEvent('pointerenter'))");
+ await new Promise(resolve=>setTimeout(resolve,220));
+ assert.equal(await js("document.querySelector('output').dataset.kind==='hover'"),true,'a hover notice stays open while the pointer enters the bubble');
+ await js("document.querySelector('.egg').dispatchEvent(new PointerEvent('pointerenter'))");
  for(let i=0;i<4;i++){controller.sync();pet.webContents.send('pet:updated',{species:null,shiny:false});}await prefs.change({theme:'dark'});await new Promise(r=>setTimeout(r,1400));assert.equal(await js("!document.querySelector('output').hidden&&document.querySelector('output').textContent.includes('기도 1회')"),true);assert.equal(await js("document.querySelectorAll('.prayer-particle').length"),0);await snap('egg-hover-dark');
  await js("document.querySelector('.egg').click();document.querySelector('.egg').click();document.querySelector('.egg').click()");await until("document.querySelector('output').textContent.includes('기도 4회')");await js("document.querySelector('.egg').dispatchEvent(new PointerEvent('pointerleave'))");await until("document.querySelector('output').hidden");assert.ok(Math.abs(pet.getBounds().height-(process.platform==='win32'?168:96))<=1);await prefs.change({theme:'light'});
  const store=new CompanionStore(join(dir,'companion-v1.json'),()=>false);await store.replaceImport({raised:1,progress:0,active:{id:'pet-charizard',family:-1,stage:0,route:[speciesFor(6)],hatchedAt:Date.now(),nature:'성실',shiny:false,repeat:false,level:50},graduated:[]},Date.now());pet.webContents.send('pet:updated',(await store.read()).pet);await until("document.querySelector('.egg.pokemon .sprite-canvas')?.width>1");await snap('pokemon-idle');
@@ -21,6 +25,38 @@ async function run(){const dir=await mkdtemp(join(tmpdir(),'ptb-pet-ui-'));app.s
  await prefs.change({animated:false});
  await until("document.querySelector('.egg.pokemon .egg-canvas')?.width>1 && document.querySelector('output').hidden");
  const area=screen.getPrimaryDisplay().workArea;
+ pet.setPosition(area.x+100,area.y+220);
+ const idleHeight=pet.getBounds().height;
+ const expandedOrigin=petOrigin(pet.getBounds(),96);
+ const label='Long agent label that wraps across more than one line';
+ const message='The floating pet should show every part of this notification, including words that used to be cut off by the old display limit. Message complete.';
+ controller.accept('poketokenbar://agent?state=waiting&label='+encodeURIComponent(label)+'&message='+encodeURIComponent(message));
+ await until(`(() => {
+  const bubble=document.querySelector('output'),title=bubble.querySelector('strong'),body=bubble.querySelector('.pet-bubble-copy > span');
+  return title?.textContent.startsWith(${JSON.stringify(label)}) && body?.textContent===${JSON.stringify(message)}
+   && title.getBoundingClientRect().height>14 && body.getBoundingClientRect().height>42
+   && bubble.getBoundingClientRect().top>=0 && bubble.scrollHeight<=bubble.clientHeight;
+ })()`);
+ assert.ok(pet.getBounds().height>idleHeight+12,'a long notice must grow past the ordinary surface');
+ assert.ok(Math.abs(petOrigin(pet.getBounds(),96).y-expandedOrigin.y)<=1,'the sprite must stay anchored as the notice grows');
+ controller.dismiss();
+ await until("document.querySelector('output').hidden");
+ for(let i=0;i<50&&Math.abs(pet.getBounds().height-idleHeight)>2;i++)await new Promise(resolve=>setTimeout(resolve,20));
+ assert.ok(Math.abs(pet.getBounds().height-idleHeight)<=2,`closing a long notice must restore the native surface (${idleHeight}px → ${pet.getBounds().height}px)`);
+
+ pet.setPosition(area.x+100,area.y);
+ const edgeMessage=message.repeat(12);
+ controller.accept('poketokenbar://agent?state=waiting&message='+encodeURIComponent(edgeMessage));
+ await until(`document.querySelector('.pet-bubble-copy > span')?.textContent===${JSON.stringify(edgeMessage)}`);
+ assert.equal(await js(`(() => {
+  const bubble=document.querySelector('output');
+  bubble.scrollTop=bubble.scrollHeight;
+  return bubble.scrollTop>0 && Math.abs(bubble.scrollHeight-bubble.clientHeight-bubble.scrollTop)<=1;
+ })()`),true,'screen-edge notices must let the user scroll to the final line');
+ controller.dismiss();
+ await until("document.querySelector('output').hidden");
+ console.log('PASS: long pet titles and messages wrap without truncation, expand with an anchored sprite, and scroll at the screen edge.');
+
  pet.setPosition(area.x+100,area.y+100);
  await new Promise(resolve=>setTimeout(resolve,250));
  const start=pet.getBounds();

@@ -156,7 +156,7 @@ async function togglePet(): Promise<boolean> {
   const window = createWindow({
     width, height,
     x: Math.round(Math.max(workArea.x,Math.min(position?.x??workArea.x+workArea.width-size-24,workArea.x+workArea.width-size))-(width-size)/2),
-    y: Math.max(workArea.y,Math.min(position?.y??workArea.y+workArea.height-size-24,workArea.y+workArea.height-size))-(height-size),
+    y: Math.max(workArea.y,Math.min(position?.y??workArea.y+workArea.height-size-24,workArea.y+workArea.height-size)-(height-size)),
     title: t('PokeTokenBar 플로팅 펫'),
     frame: false,
     transparent: true,

@@ -1,15 +1,10 @@
 import type { AgentEvent, AgentSummary, AgentState } from '../../shared/runtime.js';
 
-export function sanitizeAgentText(raw: string | null, maximum: number): string | undefined {
+export function sanitizeAgentText(raw: string | null): string | undefined {
   if (!raw) return;
-  let text = raw.replace(/\p{Cc}/gu, ' ').replace(/\p{Cf}/gu, scalar => scalar === '\u200d' ? scalar : '')
+  const text = raw.replace(/\p{Cc}/gu, ' ').replace(/\p{Cf}/gu, scalar => scalar === '\u200d' ? scalar : '')
     .split(/\s+/u).filter(Boolean).join(' ');
-  if (!text) return;
-  const scalars = [...text];
-  if (scalars.length > maximum * 4) text = scalars.slice(0, maximum * 4 - 1).join('').trimEnd() + '…';
-  const characters = [...new Intl.Segmenter(undefined, { granularity: 'grapheme' }).segment(text)].map(item => item.segment);
-  if (characters.length > maximum) text = characters.slice(0, maximum - 1).join('').trimEnd() + '…';
-  return text;
+  return text || undefined;
 }
 
 export function parseAgentURL(raw: string): AgentEvent | undefined {
@@ -20,8 +15,8 @@ export function parseAgentURL(raw: string): AgentEvent | undefined {
   const params = new URLSearchParams(url.search.slice(1).replace(/\+/g, '%2B'));
   const state = params.get('state')?.toLowerCase();
   if (!state || !['idle', 'working', 'waiting', 'done'].includes(state)) return;
-  return { state: state as AgentState, label: sanitizeAgentText(params.get('label'), 24),
-    ...(state === 'waiting' || state === 'done' ? { message: sanitizeAgentText(params.get('message'), 80) } : {}) };
+  return { state: state as AgentState, label: sanitizeAgentText(params.get('label')),
+    ...(state === 'waiting' || state === 'done' ? { message: sanitizeAgentText(params.get('message')) } : {}) };
 }
 
 interface Entry extends AgentEvent { sequence: number; deadline?: number }

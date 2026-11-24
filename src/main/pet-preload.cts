@@ -3,7 +3,7 @@ import type { CompanionView } from '../shared/companion.js';
 
 contextBridge.exposeInMainWorld('pet', {
   read: () => ipcRenderer.invoke('pet:read'),
-  layout:(visible:boolean)=>ipcRenderer.invoke('pet:layout',visible),
+  layout:(height:number)=>ipcRenderer.invoke('pet:layout',height),
   repaint:()=>ipcRenderer.invoke('pet:repaint'),
   drag:(phase:'start'|'move'|'end',point:{x:number;y:number})=>ipcRenderer.invoke('pet:drag',phase,point),
   hover:()=>ipcRenderer.invoke('pet:hover'),

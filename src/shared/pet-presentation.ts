@@ -7,9 +7,10 @@ export function spriteOpaqueTop(data:Uint8ClampedArray,width:number,height:numbe
  return (first(Math.floor(width*.35),Math.max(Math.floor(width*.35)+1,Math.floor(width*.65)))??first(0,width)??0)/height;
 }
 export function spriteVisibleTop(size:number,width:number,height:number,fractions:number[]){const fit=Math.min(size/width,size/height)*height,fraction=[...fractions].sort((a,b)=>a-b)[Math.floor(fractions.length/2)]??0;return(size-fit)/2+Math.max(0,Math.min(1,fraction))*fit;}
-export function petPanelSize(size:number,bubble:boolean){return{width:bubble?Math.max(size,180):size,height:size+(bubble?72:0)};}
-/** Keep the Windows composition surface stationary; native regions expose only the visible UI. */
-export function petSurfaceSize(size:number){return petPanelSize(size,true);}
+export const minimumPetBubbleSpace = 72;
+export function petPanelSize(size:number,bubble:boolean,bubbleSpace=minimumPetBubbleSpace){return{width:bubble?Math.max(size,180):size,height:size+(bubble?bubbleSpace:0)};}
+/** Reserve room for ordinary bubbles so showing one does not resize the Windows surface. */
+export function petSurfaceSize(size:number,bubbleSpace=minimumPetBubbleSpace){return petPanelSize(size,true,bubbleSpace);}
 export function petSurfaceShape(size:number,bubble:boolean,surface=petSurfaceSize(size)){const left=(surface.width-size)/2;return bubble?[{x:0,y:0,width:surface.width,height:surface.height}]:[{x:Math.floor(left),y:surface.height-size,width:Math.ceil(left+size)-Math.floor(left),height:size}];}
 export function petOrigin(bounds:{x:number;y:number;width:number;height:number},size:number){return{x:Math.round(bounds.x+(bounds.width-size)/2),y:bounds.y+bounds.height-size};}
 export function prayerHoverLine(count:number,t:(text:string,args?:Record<string,string|number>)=>string){if(count<=0)return '';return t(count===1?'기도 1회':'기도 {n}회',{n:count})+' · '+t(prayerQuips[Math.min(Math.floor(count/30),10)]!);}

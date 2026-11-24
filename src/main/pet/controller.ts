@@ -1,5 +1,5 @@
 import{systemPowerSaver}from'../system-state.js';
-import {petPanelSize,petOrigin,petSurfaceSize,petSurfaceShape} from '../../shared/pet-presentation.js';
+import {minimumPetBubbleSpace,petPanelSize,petOrigin,petSurfaceSize,petSurfaceShape} from '../../shared/pet-presentation.js';
 import { ipcMain, screen, type BrowserWindow } from 'electron';
 import type { SettingsStore } from '../settings.js';
 import { AgentTracker, parseAgentURL } from './agent-activity.js';
@@ -19,7 +19,7 @@ export class PetAgentController {
   private home?: Bounds;
   private away = false;
   private moving = false;
-  private reduceMotion = false;private noticeVisible=false;private positionTimer?:ReturnType<typeof setTimeout>;
+  private reduceMotion = false;private noticeSpace=0;private positionTimer?:ReturnType<typeof setTimeout>;
   private attached = new WeakSet<BrowserWindow>();
   private dragging?: { start: { x: number; y: number }; last: { x: number; y: number }; origin: { x: number; y: number } };
   private suppressDoneRun=false;
@@ -32,7 +32,11 @@ export class PetAgentController {
       const window = pet();
       if (!window || window.isDestroyed() || event.senderFrame !== window.webContents.mainFrame) throw new Error('Unexpected pet activity request');
     };
-    ipcMain.handle('pet:layout',(event,value:unknown)=>{authorize(event);if(typeof value!=='boolean')throw new Error('Invalid pet layout');if(this.noticeVisible!==value){this.noticeVisible=value;this.publish();}});
+    ipcMain.handle('pet:layout',(event,height:unknown)=>{
+      authorize(event);
+      if(typeof height!=='number'||!Number.isSafeInteger(height)||height<0)throw new Error('Invalid pet layout');
+      if(this.noticeSpace!==height){this.noticeSpace=height;this.publish();}
+    });
     ipcMain.handle('pet:repaint',event=>{authorize(event);this.repaint(pet()!);});
     ipcMain.handle('pet:drag',(event,phase:unknown,point:unknown)=>{
       authorize(event);
@@ -67,7 +71,7 @@ export class PetAgentController {
           window.setPosition(x, y);
           if (process.platform === 'win32') {
             const summary = this.tracker.summary();
-            this.applyWindowsShape(window, size, this.noticeVisible || Boolean(summary.waiting || summary.done));
+            this.applyWindowsShape(window, size, this.noticeSpace>0 || Boolean(summary.waiting || summary.done));
             // Position-only changes of the transparent HWND do not trigger the resize repaint.
             this.repaint(window);
           }
@@ -151,7 +155,7 @@ export class PetAgentController {
         y: Math.round(start.y + (target.y - start.y) * eased),
         width: target.width, height: target.height,
       });
-      if (fraction === 1) { clearInterval(this.animation); this.animation = undefined; this.moving = false; }
+      if (fraction === 1) { clearInterval(this.animation); this.animation = undefined; this.moving = false; this.publish(); }
     }, 60);
     this.animation.unref();
   }
@@ -187,7 +191,7 @@ export class PetAgentController {
         clearTimeout(this.expiry);
         clearTimeout(this.positionTimer);
         clearTimeout(this.repaintTimer);
-        this.noticeVisible=false;
+        this.noticeSpace=0;
         this.dragging = undefined;
         this.tracker.reset();
         this.home = undefined;
@@ -198,21 +202,23 @@ export class PetAgentController {
     if(!summary.done)this.suppressDoneRun=false;
     window.webContents.send('pet:agent-updated', summary);
     const size = this.settings.get().petSize;
-    const bubble = this.noticeVisible||Boolean(summary.waiting || summary.done);
-    // Resizing a transparent HWND on hover can retain subpixel compositor remnants.
-    // Windows keeps one surface; its native region hides the unused area and passes clicks through.
-    const dimensions = process.platform==='win32'?petSurfaceSize(size):petPanelSize(size,bubble);
     const bounds = window.getBounds();
+    const bubble = this.noticeSpace>0||Boolean(summary.waiting || summary.done);
+    const {workArea}=screen.getDisplayMatching(bounds);
+    const availableAbove=bounds.y+bounds.height-size-workArea.y;
+    // Stay anchored and use scrolling when the full notice exceeds the space above the pet.
+    // Ordinary bubbles use the existing Windows surface without a native resize.
+    const bubbleSpace=Math.max(minimumPetBubbleSpace,Math.min(this.noticeSpace,availableAbove));
+    const dimensions=process.platform==='win32'?petSurfaceSize(size,bubbleSpace):petPanelSize(size,bubble,bubbleSpace);
     const motion = this.settings.get().animated && !this.reduceMotion && !systemPowerSaver();
-    if (summary.done && motion && window.isVisible()&&!this.dragging&&!this.suppressDoneRun) {
-      if (!this.away) {
-        this.home = bounds;
-        this.away = true;
-        const cursor = screen.getCursorScreenPoint();
-        const destination = cursorDestination(cursor, dimensions, screen.getDisplayNearestPoint(cursor).workArea);
-        this.move(window, { ...destination, ...dimensions }, true);
-      }
-    } else if (this.away && this.home) {
+    const runToCursor=summary.done && motion && window.isVisible()&&!this.dragging&&!this.suppressDoneRun;
+    if (runToCursor && !this.away) {
+      this.home = bounds;
+      this.away = true;
+      const cursor = screen.getCursorScreenPoint();
+      const destination = cursorDestination(cursor, dimensions, screen.getDisplayNearestPoint(cursor).workArea);
+      this.move(window, { ...destination, ...dimensions }, true);
+    } else if (!runToCursor && this.away && this.home) {
       this.away = false;
       const origin = { x: this.home.x + (this.home.width - dimensions.width) / 2,
         y: this.home.y + this.home.height - dimensions.height };
@@ -224,7 +230,7 @@ export class PetAgentController {
       if(!requested||requested.width!==dimensions.width||requested.height!==dimensions.height){
         if(!requested&&Math.abs(bounds.width-dimensions.width)<=1&&Math.abs(bounds.height-dimensions.height)<=1)this.surfaceSizes.set(window,dimensions);
         else this.setBounds(window,{ x: Math.round(bounds.x + (bounds.width - dimensions.width) / 2),
-          y: bounds.y + bounds.height - dimensions.height, ...dimensions });
+          y: Math.max(workArea.y,bounds.y + bounds.height - dimensions.height), ...dimensions });
       }
     }
     if (process.platform === 'win32' && this.applyWindowsShape(window, size, bubble)) this.repaint(window);

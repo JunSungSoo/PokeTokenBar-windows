@@ -12,8 +12,7 @@ const plain = value => JSON.parse(JSON.stringify(value));
 const urls = [
   'poketokenbar://agent?state=working&label=Codex',
   'POKETOKENBAR://AGENT?state=WAITING&label=foo+bar&message=a+b%0Aready%20%20now%20%E2%80%AE',
-  'poketokenbar://agent?state=done&state=idle&message=' + encodeURIComponent('👩‍💻'.repeat(90)),
-  'poketokenbar://agent?state=waiting&label=' + 'a'.repeat(50) + '&message=' + encodeURIComponent('a' + '\u0301'.repeat(500)),
+  'poketokenbar://agent?state=done&state=idle&message=' + encodeURIComponent('👩‍💻'),
   'https://agent?state=done', 'poketokenbar://other?state=working', 'poketokenbar://agent?state=unknown',
   'poketokenbar://agent?state=waiting&message=%00%09%20',
 ];
@@ -52,10 +51,16 @@ test('agent parsing protects messages, preserves emoji and literal plus like Fou
   assert.equal(parseAgentURL(urls[1]).message, 'a+b ready now');
   assert.equal(parseAgentURL(urls[1]).label, 'foo+bar');
   assert.equal(parseAgentURL(urls[2]).state, 'done');
-  assert.equal([...new Intl.Segmenter().segment(parseAgentURL(urls[2]).message)].length, 80);
-  assert.ok([...parseAgentURL(urls[3]).message].length <= 320);
-  assert.equal(sanitizeAgentText('\n\u200b\t', 80), undefined);
-  assert.equal(parseAgentURL(urls[4]), undefined);
+  assert.equal(parseAgentURL(urls[2]).message, '👩‍💻');
+  assert.equal(sanitizeAgentText('\n\u200b\t'), undefined);
+  assert.equal(parseAgentURL(urls[3]), undefined);
+});
+test('long floating-pet labels and messages are kept in full', () => {
+  const label='a'.repeat(50);
+  const message='👩‍💻'.repeat(90)+'a'+'\u0301'.repeat(500);
+  const url='poketokenbar://agent?state=waiting&label='+label+'&message=';
+  assert.deepEqual(parseAgentURL(url+encodeURIComponent(message)), {state:'waiting',label,message});
+  assert.equal(parseAgentURL(url+'a'.repeat(65536)), undefined);
 });
 test('agent precedence, exact timeout boundaries, eviction and dismissal match Mac rules', () => {
   const result = runOperations();

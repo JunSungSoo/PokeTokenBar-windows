@@ -1,6 +1,9 @@
 const egg=document.querySelector('.egg'),bubble=document.querySelector('output'),P=window.petPresentation;
 const spriteBox=document.createElement('span'),particles=document.createElement('span');spriteBox.className='pet-sprite';particles.className='pet-particles';particles.setAttribute('aria-hidden','true');egg.append(spriteBox,particles);
-let subject,identity,notice,noticeTimer,heartsUntil=0,heartTimer,hovering=false,hoverInfo,hoverTimer,hoverGeneration=0,layoutVisible=false,agent={working:false,otherWaitingCount:0},pointer,suppressClick=false,dragFrame;
+let subject,identity,notice,noticeTimer,heartsUntil=0,heartTimer,hovering=false,hoverInfo,hoverTimer,hoverHideTimer,hoverGeneration=0,layoutHeight=0,agent={working:false,otherWaitingCount:0},pointer,suppressClick=false,dragFrame;
+const bubbleCopy=document.createElement('span'),bubbleTitle=document.createElement('strong'),bubbleBody=document.createElement('span');
+bubbleCopy.className='pet-bubble-copy';bubbleCopy.append(bubbleTitle,bubbleBody);
+let lastTitle,lastBody;
 const detector=new P.PettingDetector(),reducedMotion=matchMedia('(prefers-reduced-motion: reduce)');
 const motion=()=>window.appPreferences?.animated!==false&&!reducedMotion.matches&&!window.systemPowerSaver;
 const tr=(text,args)=>window.i18n.t(text,args);
@@ -8,10 +11,28 @@ let repaintFrame,closing=false;
 function repaint(){if(closing)return;cancelAnimationFrame(repaintFrame);repaintFrame=requestAnimationFrame(()=>{repaintFrame=requestAnimationFrame(()=>{if(!closing)void window.pet.repaint().catch(()=>{});});});}
 window.addEventListener('resize',repaint);
 window.addEventListener('pagehide',()=>{closing=true;cancelAnimationFrame(repaintFrame);});
-function layout(visible){if(layoutVisible!==visible){layoutVisible=visible;void window.pet.layout(visible).then(repaint).catch(()=>{});}}
+function layout(height){if(layoutHeight!==height){layoutHeight=height;void window.pet.layout(height).then(repaint).catch(()=>{});}}
+function fitTextBubble(){
+ if(closing||bubble.hidden||bubbleCopy.parentNode!==bubble)return;
+ const borders=bubble.offsetHeight-bubble.clientHeight;
+ layout(bubble.scrollHeight+borders+10);
+}
+new ResizeObserver(fitTextBubble).observe(bubbleCopy);
 function agentNote(){return window.appPreferences?.petAgentActivity===false?undefined:agent.done??agent.waiting;}
-function textNotice(value,kind){bubble.dataset.kind=kind;bubble.replaceChildren();if(value.title){const title=document.createElement('strong');title.textContent=value.title;bubble.append(title);}const text=document.createElement('span');text.textContent=value.body??'';bubble.append(text);bubble.hidden=false;layout(true);}
-function heart(){bubble.dataset.kind='heart';bubble.replaceChildren();const canvas=document.createElement('canvas');canvas.width=P.heartRows[0].length*2;canvas.height=P.heartRows.length*2;canvas.setAttribute('aria-label',tr('하트'));const context=canvas.getContext('2d');for(const[y,row]of P.heartRows.entries())for(const[x,cell]of [...row].entries())if(P.heartColors[cell]){context.fillStyle=P.heartColors[cell];context.fillRect(x*2,y*2,2,2);}bubble.append(canvas);bubble.hidden=false;layout(true);}
+function textNotice(value,kind){
+ const title=value.title??'',body=value.body??'';
+ if(bubble.dataset.kind!==kind||title!==lastTitle||body!==lastBody){
+  bubble.dataset.kind=kind;
+  lastTitle=title;lastBody=body;
+  bubbleTitle.textContent=title;bubbleTitle.hidden=!title;bubbleBody.textContent=body;
+  if(bubbleCopy.parentNode!==bubble)bubble.replaceChildren(bubbleCopy);
+  bubble.scrollTop=0;
+ }
+ bubble.tabIndex=0;
+ bubble.hidden=false;
+ fitTextBubble();
+}
+function heart(){bubble.dataset.kind='heart';bubble.removeAttribute('tabindex');bubble.replaceChildren();const canvas=document.createElement('canvas');canvas.width=P.heartRows[0].length*2;canvas.height=P.heartRows.length*2;canvas.setAttribute('aria-label',tr('하트'));const context=canvas.getContext('2d');for(const[y,row]of P.heartRows.entries())for(const[x,cell]of [...row].entries())if(P.heartColors[cell]){context.fillStyle=P.heartColors[cell];context.fillRect(x*2,y*2,2,2);}bubble.append(canvas);bubble.hidden=false;layout(32);}
 function render(){
  egg.classList.toggle('working',window.appPreferences?.petAgentActivity!==false&&agent.working&&motion());
  bubble.classList.toggle('working',egg.classList.contains('working'));const note=agentNote();if(notice&&notice.priority>=3){textNotice(notice,'alert');return;}
@@ -19,12 +40,21 @@ function render(){
  if(notice){textNotice(notice,'event');return;}
  if(heartsUntil>Date.now()){heart();return;}
  if(hovering&&hoverInfo){textNotice({body:hoverInfo.body},'hover');return;}
- bubble.hidden=true;bubble.replaceChildren();delete bubble.dataset.kind;layout(false);
+ bubble.hidden=true;bubble.replaceChildren();delete bubble.dataset.kind;layout(0);
 }
 function showNotice(value){if(notice&&notice.priority>value.priority)return;clearTimeout(noticeTimer);notice=value;noticeTimer=setTimeout(()=>{notice=undefined;render();},6000);render();}
 async function refreshHover(){const generation=++hoverGeneration;try{const info=await window.pet.hover();if(generation!==hoverGeneration||!hovering)return;hoverInfo=info;render();}catch{}}
-egg.addEventListener('pointerenter',()=>{if(pointer?.dragging)return;hovering=true;clearTimeout(hoverTimer);hoverTimer=setTimeout(()=>void refreshHover(),300);});
-egg.addEventListener('pointerleave',()=>{hovering=false;hoverInfo=undefined;hoverGeneration++;clearTimeout(hoverTimer);detector.reset();render();});
+function clearHover(){hovering=false;hoverInfo=undefined;render();}
+function leaveHover(){
+ clearTimeout(hoverTimer);clearTimeout(hoverHideTimer);hoverGeneration++;
+ // Allow the pointer to cross the gap above the sprite into the scrollable bubble.
+ if(bubble.dataset.kind==='hover')hoverHideTimer=setTimeout(clearHover,180);
+ else clearHover();
+}
+egg.addEventListener('pointerenter',()=>{if(pointer?.dragging)return;hovering=true;clearTimeout(hoverHideTimer);clearTimeout(hoverTimer);hoverTimer=setTimeout(()=>void refreshHover(),300);});
+egg.addEventListener('pointerleave',()=>{detector.reset();leaveHover();});
+bubble.addEventListener('pointerenter',()=>clearTimeout(hoverHideTimer));
+bubble.addEventListener('pointerleave',()=>{if(bubble.dataset.kind==='hover')leaveHover();});
 function drag(phase,point){void window.pet.drag(phase,point).catch(()=>{});}
 const screenPoint=event=>({x:event.screenX,y:event.screenY});
 egg.addEventListener('pointerdown',event=>{
@@ -42,7 +72,7 @@ egg.addEventListener('pointermove',event=>{
   if(!pointer.dragging&&Math.hypot(point.x-pointer.start.x,point.y-pointer.start.y)>4){
    pointer.dragging=true;suppressClick=true;
    drag('start',pointer.start);egg.classList.add('dragging');
-   hovering=false;hoverInfo=undefined;hoverGeneration++;clearTimeout(hoverTimer);render();
+   hovering=false;hoverInfo=undefined;hoverGeneration++;clearTimeout(hoverTimer);clearTimeout(hoverHideTimer);render();
   }
   if(pointer.dragging){cancelAnimationFrame(dragFrame);dragFrame=requestAnimationFrame(()=>drag('move',point));}
   return;
