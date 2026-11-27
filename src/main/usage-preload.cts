@@ -15,7 +15,7 @@ contextBridge.exposeInMainWorld('usage', {
   openMaple: () => ipcRenderer.invoke('companion:maple-open'),
   pokemonDetails: speciesID => ipcRenderer.invoke('companion:details', speciesID),
   setPokemonMove: change => ipcRenderer.invoke('companion:move', change),
-  previewImport: format => ipcRenderer.invoke('companion:import-preview', format),
+  previewImport: () => ipcRenderer.invoke('companion:import-preview'),
   previewSnapshot: id => ipcRenderer.invoke('companion:snapshot-preview', id),
   cancelImport: token => ipcRenderer.invoke('companion:import-cancel', token),
   confirmImport: token => ipcRenderer.invoke('companion:import-confirm', token),

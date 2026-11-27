@@ -36,7 +36,7 @@ selectSave.addEventListener('click', async () => {
   selectSave.disabled = true;
   importStatus.textContent = '';
   try {
-    const preview = await window.usage.previewImport(document.getElementById('import-format').value);
+    const preview = await window.usage.previewImport();
     showPreview(preview);
   } catch (error) { importError(error); }
   finally { selectSave.disabled = false; }

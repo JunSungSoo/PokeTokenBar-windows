@@ -4,7 +4,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import test from 'node:test';
 import { CompanionStore } from '../dist/main/companion/store.js';
-import { decodeMacSave, readMacSave } from '../dist/main/companion/mac-save.js';
+import { decodeMacSave, detectSaveFormat, readMacSave, SaveImportError } from '../dist/main/companion/mac-save.js';
 
 const fixture = new URL('./fixtures/poketokenbar-macos-v2.json', import.meta.url);
 const now = Date.parse('2026-11-10T03:00:00Z');
@@ -163,4 +163,12 @@ test('import merges Mac and Windows candy receipts without paying the same windo
   assert.equal(await reopened.grantCandies([{ ...local, used: 100 },
     { key: 'claude.fiveHour', weekly: false, used: 100, epoch }]), null);
   assert.equal((await reopened.read()).economy.inventory.rareCandy, 4);
+});
+
+test('save files are recognised by their format field, not by a user-picked type', async () => {
+  const encode = value => new TextEncoder().encode(typeof value === 'string' ? value : JSON.stringify(value));
+  assert.equal(detectSaveFormat(await readFile(fixture)), 'mac');
+  assert.equal(detectSaveFormat(encode({ format: 'poketokenbar.windows.backup', version: 1, files: {} })), 'windows');
+  assert.throws(() => detectSaveFormat(encode({ format: 'something-else' })), SaveImportError);
+  assert.throws(() => detectSaveFormat(encode('not json')), SaveImportError);
 });

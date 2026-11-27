@@ -26,7 +26,7 @@ import { randomUUID } from 'node:crypto';
 import { providers, providerLabels, type Provider, type UsageSnapshot } from '../../shared/usage.js';
 import { collectUsage,matchingScanFiles } from './scan.js';
 import type { SaveImportPreview } from '../../shared/companion.js';
-import { readMacSave, SaveImportError } from '../companion/mac-save.js';
+import { decodeMacSave, detectSaveFormat, readSaveBytes, SaveImportError } from '../companion/mac-save.js';
 import { CompanionStore, type ImportedProgress } from '../companion/store.js';
 import type { Entry } from './entries.js';
 import { registerTradeIPC } from '../trade/ipc.js';
@@ -338,22 +338,22 @@ export function registerUsageIPC(mainWindow: () => BrowserWindow | undefined, pe
   const importWindows = new WeakSet<BrowserWindow>();
   let applyingImport: Promise<unknown> | undefined;
   let pendingImport: { owner: BrowserWindow; preview: SaveImportPreview; progress: ImportedProgress } | undefined;
-  ipcMain.handle('companion:import-preview', async (event, format: unknown = 'mac') => {
+  ipcMain.handle('companion:import-preview', async event => {
     const owner = authorized(event);
     if (pickingImport) return null;
     pendingImport = undefined;
     pickingImport = true;
     try {
-      if (format !== 'windows' && format !== 'mac') throw new Error('저장 형식을 선택해 주세요.');
       const chosen = await dialog.showOpenDialog(owner, {
-        title: format === 'windows' ? 'Windows 백업 선택' : 'Mac에서 내보낸 PokeTokenBar 저장 선택',
+        title: 'Mac 또는 Windows에서 내보낸 PokeTokenBar 저장 선택',
         properties: ['openFile'],
         filters: [{ name: 'PokeTokenBar 저장', extensions: ['json', 'save'] }, { name: '모든 파일', extensions: ['*'] }],
       });
       const path = chosen.filePaths[0];
       if (chosen.canceled || !path || owner.isDestroyed()) return null;
-      const incoming = format === 'mac' ? await readMacSave(path) : {
-        progress: await readWindowsBackup(path), appVersion: app.getVersion(), sourceDevice: 'Windows', exportedAt: Date.now(),
+      const bytes = await readSaveBytes(path);
+      const incoming = detectSaveFormat(bytes) === 'mac' ? decodeMacSave(bytes) : {
+        progress: decodeWindowsBackup(bytes), appVersion: app.getVersion(), sourceDevice: 'Windows', exportedAt: Date.now(),
       };
       const { progress, ...metadata } = incoming;
       const preview = {
@@ -372,10 +372,10 @@ export function registerUsageIPC(mainWindow: () => BrowserWindow | undefined, pe
     } finally { pickingImport = false; }
   });
 
-  async function readWindowsBackup(path: string): Promise<ImportedProgress> {
-    const bytes = await readFile(path);
-    if (bytes.byteLength > 8 * 1024 * 1024) throw new Error('백업 파일이 너무 큽니다.');
-    return CompanionStore.decodeWindowsBackup(JSON.parse(bytes.toString('utf8')));
+  // Reports a broken Windows backup with its own message instead of the generic read failure.
+  function decodeWindowsBackup(bytes: Uint8Array): ImportedProgress {
+    try { return CompanionStore.decodeWindowsBackup(JSON.parse(new TextDecoder().decode(bytes))); }
+    catch { throw new SaveImportError('손상되었거나 지원하지 않는 Windows 백업 파일입니다.'); }
   }
 
   ipcMain.handle('settings:snapshots', event => { authorized(event); return companion.snapshots(); });

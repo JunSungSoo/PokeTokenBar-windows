@@ -167,6 +167,11 @@ export function decodeMacSave(data: Uint8Array): {
 }
 
 export async function readMacSave(path: string): Promise<ReturnType<typeof decodeMacSave>> {
+  return decodeMacSave(await readSaveBytes(path));
+}
+
+// Reads an exported save at most once and within the size limit.
+export async function readSaveBytes(path: string): Promise<Uint8Array> {
   const file = await open(path, 'r');
   try {
     const info = await file.stat();
@@ -181,6 +186,17 @@ export async function readMacSave(path: string): Promise<ReturnType<typeof decod
       offset += bytesRead;
     }
     if (offset !== info.size) throw new SaveImportError('읽는 동안 저장 파일이 변경되었습니다. 다시 선택해 주세요.');
-    return decodeMacSave(data.subarray(0, offset));
+    return data.subarray(0, offset);
   } finally { await file.close(); }
+}
+
+// Tells a Mac export from a Windows backup by the file's own format field.
+export function detectSaveFormat(data: Uint8Array): 'mac' | 'windows' {
+  let text = '';
+  try { text = new TextDecoder('utf-8', { fatal: true }).decode(data); } catch { /* reported below as an unknown file */ }
+  let format: unknown;
+  try { format = object(JSON.parse(text))?.format; } catch { format = /"format"\s*:\s*"([^"]+)"/.exec(text)?.[1]; }
+  if (format === 'poketokenbar.save') return 'mac';
+  if (format === 'poketokenbar.windows.backup') return 'windows';
+  throw new SaveImportError('PokeTokenBar에서 내보낸 저장 파일이 아닙니다. Mac 또는 Windows 앱에서 내보낸 파일을 선택해 주세요.');
 }

@@ -90,7 +90,7 @@ export interface UsageAPI {
   pokemonDetails(speciesID: number): Promise<PokemonDetailView>;
   setPokemonMove(change: import('./pokemon-loadout.js').MoveChange): Promise<CompanionView>;
   previewSnapshot(id: string): Promise<SaveImportPreview | null>;
-  previewImport(format?: 'mac' | 'windows'): Promise<SaveImportPreview | null>;
+  previewImport(): Promise<SaveImportPreview | null>;
   cancelImport(token: string): Promise<void>;
   confirmImport(token: string): Promise<SaveImportResult>;
   onCompanion(handler: (state: CompanionView | null) => void): void;
